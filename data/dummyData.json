@@ -1,0 +1,112 @@
+{
+  "id": 1,
+  "name": "John Doe",
+  "phone": "+1234567890",
+  "password": "hashed_password_here",
+  "role": "FREELANCER",
+  "createdAt": "2025-01-01T12:00:00Z",
+  "lastLogin": "2025-01-29T15:00:00Z",
+  "isActive": true,
+  "gadgets": [
+    {
+      "id": 1,
+      "freelancerId": 1,
+      "name": "Camera",
+      "model": "Canon 5D Mark IV",
+      "purchaseDate": "2023-06-15T00:00:00Z",
+      "cost": 2500,
+      "createdAt": "2023-06-15T00:00:00Z",
+      "updatedAt": "2023-06-15T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "freelancerId": 1,
+      "name": "Drone",
+      "model": "DJI Mavic Air 2",
+      "purchaseDate": "2024-03-10T00:00:00Z",
+      "cost": 900,
+      "createdAt": "2024-03-10T00:00:00Z",
+      "updatedAt": "2024-03-10T00:00:00Z"
+    }
+  ],
+  "earnings": {
+    "totalEarnings": 10000,
+    "totalExpenses": 2000,
+    "netEarnings": 8000,
+    "eventCount": 5,
+    "earningsByCompany": [
+      {
+        "companyId": 1,
+        "companyName": "Wedding Co.",
+        "amount": 5000,
+        "expenses": 1000
+      },
+      {
+        "companyId": 2,
+        "companyName": "Corporate Events LLC",
+        "amount": 5000,
+        "expenses": 1000
+      }
+    ]
+  },
+  "expenses": {
+    "totalExpenses": 2000,
+    "expensesByType": [
+      {
+        "type": "TRAVEL",
+        "totalAmount": 500
+      },
+      {
+        "type": "FOOD",
+        "totalAmount": 300
+      },
+      {
+        "type": "EQUIPMENT_RENTAL",
+        "totalAmount": 1000
+      }
+    ],
+    "eventExpenses": [
+      {
+        "eventId": 1,
+        "eventDate": "2024-12-10T00:00:00Z",
+        "company": "Wedding Co.",
+        "expenses": [
+          {
+            "id": 1,
+            "eventId": 1,
+            "type": "TRAVEL",
+            "amount": 500,
+            "description": "Flight tickets for the event",
+            "createdAt": "2024-12-10T00:00:00Z",
+            "updatedAt": "2024-12-10T00:00:00Z"
+          },
+          {
+            "id": 2,
+            "eventId": 1,
+            "type": "FOOD",
+            "amount": 300,
+            "description": "Catering for the event",
+            "createdAt": "2024-12-10T00:00:00Z",
+            "updatedAt": "2024-12-10T00:00:00Z"
+          }
+        ]
+      },
+      {
+        "eventId": 2,
+        "eventDate": "2025-01-15T00:00:00Z",
+        "company": "Corporate Events LLC",
+        "expenses": [
+          {
+            "id": 3,
+            "eventId": 2,
+            "type": "EQUIPMENT_RENTAL",
+            "amount": 1000,
+            "description": "Rental of audiovisual equipment",
+            "createdAt": "2025-01-15T00:00:00Z",
+            "updatedAt": "2025-01-15T00:00:00Z"
+          }
+        ]
+      }
+    ]
+  }
+}
