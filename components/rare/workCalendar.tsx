@@ -1,79 +1,82 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
-import { View, Text } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { CalendarPicker } from 'react-native-nepali-picker';
+import NepaliDate from 'nepali-date-converter';
 
-const WorkCalendar: React.FC<{ selectedDates?: Date[]; onDateChange: (dates: Date[]) => void }> = ({
-  selectedDates = [],
-  onDateChange,
-}) => {
-  const [showPicker, setShowPicker] = useState(false);
-  const [pickerDate, setPickerDate] = useState(new Date());
+interface WorkCalendarProps {
+  selectedDates?: Date[];
+  onDateChange: (dates: Date[]) => void;
+}
 
-  // Initialize state with selected dates
+const WorkCalendar: React.FC<WorkCalendarProps> = ({ selectedDates = [], onDateChange }) => {
+  const [visible, setVisible] = useState(false);
   const [dates, setDates] = useState<Date[]>(selectedDates);
 
-  const handleDateChange = (date?: Date) => {
-    if (date) {
-      setPickerDate(date);
-      setDates((prevDates) => {
-        const exists = prevDates.some((d) => d.toDateString() === date.toDateString());
-        const newDates = exists
-          ? prevDates.filter((d) => d.toDateString() !== date.toDateString()) // Remove if already selected
-          : [...prevDates, date]; // Add new date
+  const handleDateSelect = (pickedDate: string) => {
+    const newDate = new Date(pickedDate);
+    setDates((prevDates) => {
+      const exists = prevDates.some((d) => d.toDateString() === newDate.toDateString());
+      const newDates = exists
+        ? prevDates.filter((d) => d.toDateString() !== newDate.toDateString())
+        : [...prevDates, newDate];
 
-        // Log the updated dates to verify
-        console.log('Updated Dates:', newDates);
-
-        // Pass updated dates to parent component
-        onDateChange(newDates);
-        return newDates;
-      });
-    }
+      onDateChange(newDates);
+      return newDates;
+    });
   };
-
-  // Convert dates to marked format for Calendar component
-  const markedDates = dates.reduce(
-    (acc, date) => {
-      const formattedDate = date.toISOString().split('T')[0];
-      acc[formattedDate] = {
-        selected: true,
-        marked: true,
-        selectedColor: 'purple',
-      };
-      return acc;
-    },
-    {} as Record<string, any>
-  );
 
   return (
     <View className="mb-6">
       <Text className="mb-2 font-medium text-gray-700">Select Work Dates</Text>
 
+      <CalendarPicker
+        visible={visible}
+        onClose={() => setVisible(false)}
+        onDateSelect={handleDateSelect}
+        theme="light"
+        language="np"
+        brandColor="#6B46C1"
+      />
 
-      {showPicker && (
-        <View className="rounded-lg bg-white p-4 shadow">
-          <DateTimePicker
-            value={pickerDate}
-            mode="date"
-            display="default"
-            onChange={(event, date) => {
-              if (date) {
-                handleDateChange(date);
+      <TouchableOpacity onPress={() => setVisible(true)} className="rounded-lg bg-primary/75 p-3">
+        <Text className="text-center text-white">Select Dates</Text>
+      </TouchableOpacity>
+
+      {dates.length > 0 && (
+        <View className="mt-4">
+          <Text className="mb-2 font-medium text-gray-700">Selected Dates:</Text>
+
+          <FlatList
+            data={dates.sort((a, b) => a.getTime() - b.getTime())}
+            keyExtractor={(item, index) => index.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => {
+              let nepaliDateStr = '';
+              try {
+                // Format the date as YYYY/MM/DD
+                const year = item.getFullYear();
+                const month = (item.getMonth() + 1).toString().padStart(2, '0');
+                const day = item.getDate().toString().padStart(2, '0');
+                const dateStr = `${year}/${month}/${day}`;
+                console.log('Converting date:', dateStr);
+
+                const nepaliDate = new NepaliDate(dateStr);
+                nepaliDateStr = `${nepaliDate.format('MMMM DD, YYYY')} BS`;
+              } catch (error) {
+                console.log('Error converting date:', error);
+                nepaliDateStr = 'Date out of range';
               }
-              setShowPicker(false);
+
+              return (
+                <View className="mr-2 rounded-lg bg-purple-100 px-4 py-2">
+                  <Text className="text-sm text-primary">{nepaliDateStr}</Text>
+                </View>
+              );
             }}
           />
         </View>
       )}
-
-      <Calendar
-        markedDates={markedDates}
-        markingType={'multi-dot'}
-        onDayPress={(day: { dateString: string | number | Date }) =>
-          handleDateChange(new Date(day.dateString))
-        }
-      />
     </View>
   );
 };

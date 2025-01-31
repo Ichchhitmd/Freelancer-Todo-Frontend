@@ -16,6 +16,7 @@ import EarningDetailScreen from '~/screens/main/EarningDetailScreen';
 import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import DateDetails from '~/screens/main/DateDetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -26,32 +27,35 @@ function TabNavigator() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: { paddingBottom: 10, bottom: 0 },
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
+        tabBarIcon: ({ color, size, focused }) => {
+          let iconName: keyof typeof MaterialIcons.glyphMap;
 
-          switch (route.name) {
-            case 'Home':
-              iconName = 'home';
-              break;
-            case 'Work':
-              iconName = 'work';
-              break;
-            case 'Earnings':
-              iconName = 'attach-money';
-              break;
-            case 'Profile':
-              iconName = 'person';
-              break;
-            default:
-              iconName = 'help-outline';
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home';
+          } else if (route.name === 'Add Work') {
+            iconName = focused ? 'work' : 'work-outline';
+          } else if (route.name === 'Earnings') {
+            iconName = focused ? 'attach-money' : 'attach-money';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'help-outline';
           }
           return <MaterialIcons name={iconName} size={size} color={color} />;
         },
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Work" component={WorkScreen} />
+      <Tab.Screen name="Add Work" component={WorkScreen} />
       <Tab.Screen name="Earnings" component={EarningsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen
+        name="DateDetails"
+        component={DateDetails}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -65,14 +69,10 @@ export default function App() {
         <NavigationContainer>
           <StatusBar style="auto" />
           <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <>
-              <Stack.Screen name="LoginScreen" component={LoginScreen} />
-              <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
-            </>
-            <>
-              <Stack.Screen name="MainTabs" component={TabNavigator} />
-              <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
-            </>
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
+            <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>
