@@ -7,10 +7,13 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation';
 import BookedDates from 'components/rare/BookedDates';
+import { useSelector } from 'react-redux';
+import { RootState } from 'redux/store';
 
 const HomePage: React.FC = () => {
-  const user = { name: 'John Doe' }; // Mock user data
   const freelancer = {
     isActive: true,
     gadgets: [{ cost: 100 }, { cost: 200 }],
@@ -18,8 +21,9 @@ const HomePage: React.FC = () => {
   }; // Mock freelancer data
 
   const [isActive, setIsActive] = useState<boolean>(freelancer.isActive);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedDates, setSelectedDates] = useState<any[]>([]);
+  const user = useSelector((state: RootState) => state.auth.name);
 
   useEffect(() => {
     const loadBookedDates = async () => {
@@ -48,22 +52,26 @@ const HomePage: React.FC = () => {
   const handleDateClick = (dateDetails: { date: string; details: any }) => {
     navigation.navigate('DateDetails', { details: dateDetails });
   };
+ 
 
   return (
-    <SafeAreaView className="mb-4 flex-1 gap-4 bg-gray-100 ">
+    <SafeAreaView className="mb-4 flex-1 gap-6 bg-gray-100 ">
       <HeaderSection user={user} isActive={isActive} setIsActive={setIsActive} />
-      <ScrollView className="px-6 py-4" nestedScrollEnabled={true}>
-        <View className="flex items-center justify-center">
-          <Text className="mb-2 text-2xl font-bold text-gray-900">Your Booked Dates</Text>
-        </View>
-
+      <ScrollView className="px-6 py-4" nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
         <BookedDates selectedDates={selectedDates} handleDateClick={handleDateClick} />
 
         <StatsSection earnings={freelancer.earnings} freelancer={freelancer} />
         <EarningsByCompanySection earnings={freelancer.earnings} />
         <GadgetsSection freelancer={freelancer} />
       </ScrollView>
-      <FloatingActionButton />
+      <FloatingActionButton
+        onAddWork={() => {
+          /* Add work handler */
+        }}
+        onAddExpense={() => {
+          /* Add expense handler */
+        }}
+      />
     </SafeAreaView>
   );
 };

@@ -100,7 +100,6 @@ export default function RegisterScreen() {
           />
         </View>
 
-        {/* Location Input (Read-Only) */}
         <View className="mb-6 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
           <MaterialIcons name="location-on" size={20} className="mr-3 text-gray-500" />
           <TextInput
