@@ -18,7 +18,7 @@ interface StatsSectionProps {
 const StatsSection: React.FC<StatsSectionProps> = ({ monthlyData }) => {
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
-  const [currentIndex, setCurrentIndex] = useState(1); // Default to the middle card
+  const [currentIndex, setCurrentIndex] = useState(1);
 
   useEffect(() => {
     if (scrollViewRef.current) {

@@ -1,68 +1,87 @@
 import React from 'react';
-import { View, Text, Switch } from 'react-native';
+import { View, Text, Switch, Pressable, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getGreeting } from 'utils/utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface HeaderSectionProps {
-  user: any;
+  user: string;
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
+  onProfilePress?: () => void;
 }
 
-const HeaderSection: React.FC<HeaderSectionProps> = ({ user, isActive, setIsActive }) => {
+const HeaderSection: React.FC<HeaderSectionProps> = ({
+  user,
+  isActive,
+  setIsActive,
+  onProfilePress,
+}) => {
+  const insets = useSafeAreaInsets();
   const greeting = getGreeting();
 
+  const fadeAnim = React.useRef(new Animated.Value(1)).current;
+
+  const handleStatusChange = (newValue: boolean) => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0.5,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    setIsActive(newValue);
+  };
+
   return (
-    <View className="bg-white">
-      <View className="px-4 pb-8 pt-10">
-        <Text className="text-center text-lg font-semibold text-gray-800">{greeting}</Text>
+    <View className="bg-red-50" style={{ paddingTop: insets.top }}>
+      <View className="pb-3 pt-2">
+        <Text className="text-center text-xl font-semibold text-red-900">{greeting}</Text>
       </View>
 
-      <View className="relative">
-        <View className="mx-4 -mb-4 rounded-xl bg-white p-4 shadow-lg">
-          <View className="flex-row items-center">
-            <View className="mr-4">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <MaterialCommunityIcons name="account" size={32} color="#ef4444" />
-              </View>
-            </View>
-
-            <View className="flex-1">
-              <Text className="text-xl font-bold text-gray-800">{user}</Text>
-              <Text className="text-base text-gray-800">Photographer</Text>
-            </View>
-
-            <View className="items-center">
-              <Switch
-                value={isActive}
-                onValueChange={() => setIsActive(!isActive)}
-                trackColor={{ false: '#fca5a5', true: '#E50914' }}
-                thumbColor={isActive ? '#E50914' : '#f8fafc'}
-              />
-              <View className="mt-1 rounded-full bg-gray-100 px-3 py-1">
-                <Text className="text-xs font-medium text-gray-600">
-                  {isActive ? 'AVAILABLE' : 'OFFLINE'}
-                </Text>
-              </View>
+      <View className="bg-white">
+        <Pressable
+          onPress={onProfilePress}
+          className="flex-row items-center p-4"
+          android_ripple={{ color: 'rgba(239, 68, 68, 0.1)' }}>
+          <View className="mr-4">
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-red-50">
+              <MaterialCommunityIcons name="account" size={32} color="#ef4444" />
             </View>
           </View>
 
-          <View className="mt-4 flex-row justify-between border-t border-gray-100 pt-4">
-            <View className="items-center">
-              <Text className="text-sm font-medium text-gray-500">Total Events</Text>
-              <Text className="text-lg font-bold text-red-500">24</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-sm font-medium text-gray-500">This Month</Text>
-              <Text className="text-lg font-bold text-red-500">5</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-sm font-medium text-gray-500">Earnings</Text>
-              <Text className="text-lg font-bold text-red-500">₹45K</Text>
-            </View>
+          <View className="flex-1">
+            <Text className="mb-1 text-sm font-semibold text-red-400">Welcome back,</Text>
+            <Text className="text-xl font-extrabold text-red-800" numberOfLines={1}>
+              {user}
+            </Text>
           </View>
-        </View>
+
+          <Animated.View className="items-center" style={{ opacity: fadeAnim }}>
+            <Switch
+              value={isActive}
+              onValueChange={handleStatusChange}
+              trackColor={{ false: '#fecaca', true: '#fee2e2' }}
+              thumbColor={isActive ? '#ef4444' : '#f87171'}
+              ios_backgroundColor="#fecaca"
+              className="mb-2"
+            />
+            <View className={`rounded-full px-4 py-1.5 ${isActive ? 'bg-red-100' : 'bg-red-50'}`}>
+              <Text className={`text-xs font-bold ${isActive ? 'text-red-700' : 'text-red-400'}`}>
+                {isActive ? 'AVAILABLE' : 'OFFLINE'}
+              </Text>
+            </View>
+          </Animated.View>
+        </Pressable>
       </View>
+
+      <View className="h-3 bg-red-50" />
     </View>
   );
 };
