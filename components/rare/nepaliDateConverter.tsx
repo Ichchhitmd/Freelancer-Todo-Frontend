@@ -31,9 +31,19 @@ function engToNepNum(strNum: string): string {
 
 interface NepaliDateConverterProps {
   date: string;
+  className?: string; // Optional className prop
+  showDay?: boolean; // Prop to control day display
+  showMonth?: boolean; // Prop to control month display
+  showDate?: boolean; // Prop to control date display
 }
 
-const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({ date }) => {
+const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({
+  date,
+  className,
+  showDay = true,
+  showMonth = true,
+  showDate = true,
+}) => {
   const nepaliMonths = [
     'वैशाख',
     'जेष्ठ',
@@ -88,8 +98,12 @@ const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({ date }) => {
   }
 
   return (
-    <Text>
-      {nepaliDate.dayOfWeek} - {nepaliDate.month} {nepaliDate.day}
+    <Text className={className}>
+      {showDay && nepaliDate.dayOfWeek}
+      {showDay && showMonth && ' - '}
+      {showMonth && nepaliDate.month}
+      {showMonth && showDate && ' '}
+      {showDate && nepaliDate.day}
     </Text>
   );
 };
