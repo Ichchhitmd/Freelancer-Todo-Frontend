@@ -14,11 +14,11 @@ const BrideGroomDropdown: React.FC<{ value: string; onChange: (value: string) =>
     <View className="mb-4">
       <View className="mb-2 flex-row items-center">
         <MaterialCommunityIcons name="account-heart" size={20} color="#ef4444" />
-        <Text className="ml-2 font-medium text-gray-700">Select Event Type</Text>
+        <Text className="text-gray-700 ml-2 font-medium">Select Event Type</Text>
       </View>
 
       <TouchableOpacity
-        className="flex-row items-center justify-between rounded-xl border border-gray-200 bg-white p-4"
+        className="border-gray-200 flex-row items-center justify-between rounded-xl border bg-white p-4"
         onPress={() => setOpen(!open)}>
         <Text className={`text-gray-700 ${value ? 'font-medium' : 'text-gray-400'}`}>
           {value || 'Select Event Type'}
