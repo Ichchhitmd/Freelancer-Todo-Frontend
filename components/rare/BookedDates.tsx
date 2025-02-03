@@ -1,26 +1,67 @@
 import React from 'react';
-import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
-import { format } from 'date-fns';
+import { Text, TouchableOpacity, View, ScrollView, SafeAreaView, Pressable } from 'react-native';
 import NepaliDate from 'nepali-date-converter';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface BookedDatesProps {
   selectedDates: any[];
   handleDateClick: (dateDetails: any) => void;
 }
 
+interface DateDetails {
+  details: any;
+  nepaliDate: {
+    month: string;
+    day: string;
+  };
+}
+
+interface GroupedDates {
+  [month: string]: DateDetails[];
+}
+
+// Define the map of English numerals to Nepali numerals
+const tableOfEngNepNums = new Map([
+  [0, '०'],
+  [1, '१'],
+  [2, '२'],
+  [3, '३'],
+  [4, '४'],
+  [5, '५'],
+  [6, '६'],
+  [7, '७'],
+  [8, '८'],
+  [9, '९'],
+]);
+
+// Function to convert English numerals to Nepali numerals
+function engToNepNum(strNum: string): string {
+  return String(strNum)
+    .split('')
+    .map(function (ch) {
+      if (ch === '.' || ch === ',') {
+        return ch; // Preserve non-numeric characters like decimal points or commas
+      }
+      return tableOfEngNepNums.get(Number(ch)) ?? ch; // Convert English digits or return original if not found
+    })
+    .join('');
+}
+
 const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClick }) => {
   const getNepaliDate = (date: string) => {
     try {
       const d = new Date(date);
-      const year = d.getFullYear();
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const day = d.getDate().toString().padStart(2, '0');
-      const dateStr = `${year}/${month}/${day}`;
+      const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
       const nepaliDate = new NepaliDate(dateStr);
+
+      // Convert the day to Nepali numerals
+      const dayInEnglish = nepaliDate.format('DD');
+      const dayInNepali = engToNepNum(dayInEnglish);
+
       return {
-        month: nepaliDate.format('MMMM YYYY'),
-        day: nepaliDate.format('DD'),
+        month: nepaliDate.format('MMMM'), // Get the Nepali month name
+        day: dayInNepali, // Day in Nepali numerals
       };
     } catch (error) {
       console.log('Error converting date:', error);
@@ -28,81 +69,48 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
     }
   };
 
-  const groupedDates = selectedDates.reduce((acc, item) => {
+  const groupedDates: GroupedDates = selectedDates.reduce((acc, item) => {
     const nepaliDate = getNepaliDate(item.date);
-    const month = nepaliDate ? nepaliDate.month : format(new Date(item.date), 'MMMM yyyy');
-    if (!acc[month]) acc[month] = [];
-    acc[month].push({ ...item, nepaliDate });
+    if (!nepaliDate) return acc;
+    if (!acc[nepaliDate.month]) acc[nepaliDate.month] = [];
+    acc[nepaliDate.month].push({ ...item, nepaliDate });
     return acc;
   }, {});
 
-  const MonthSection = ({ month, dates }: { month: string; dates: any[] }) => (
-    <View className="mx-4 mb-6 rounded-2xl bg-white shadow-sm">
-      <View className="border-b border-gray-100 p-4">
-        <View className="flex-row items-center">
-          <MaterialCommunityIcons name="calendar-month" size={24} color="#ef4444" />
-          <Text className="ml-2 text-xl font-bold text-gray-900">{month}</Text>
-        </View>
-      </View>
-      <View className="p-4">
-        <View className="flex-row flex-wrap">
-          {dates.map((item: any, index: number) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => handleDateClick(item.details)}
-              className="m-1">
-              <View className="h-14 w-14 items-center justify-center rounded-xl border border-red-100 bg-red-50">
-                <Text className="text-lg font-bold text-red-500">
-                  {item.nepaliDate ? item.nepaliDate.day : format(new Date(item.date), 'dd')}
-                </Text>
-                <Text className="text-xs text-gray-500">{format(new Date(item.date), 'EEE')}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
   return (
-    <SafeAreaView className="flex-1 rounded-xl bg-gray-50">
-      <ScrollView className="flex-1">
-        <View className="rounded-xl bg-red-400 px-4 py-6">
-          <Text className="pt-5 text-center text-3xl font-bold text-white">Booked Dates</Text>
-          <Text className="mt-2 text-center text-lg text-blue-100">
-            {selectedDates.length} dates booked
-          </Text>
-        </View>
-
-        <View className="mx-4 -mt-4 rounded-xl bg-white p-4 shadow-lg">
-          <View className="items-center">
-            <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-              <MaterialCommunityIcons name="calendar-check" size={32} color="#ef4444" />
-            </View>
-            <Text className="mt-2 text-xl font-bold text-gray-900">Your Schedule</Text>
-            <Text className="mt-1 text-base text-gray-500">All your upcoming work dates</Text>
+    <SafeAreaView className="w-ful">
+      <ScrollView className="w-full flex-1">
+        {Object.keys(groupedDates).length === 0 ? (
+          <View className="w-full items-center rounded-xl bg-white p-6 shadow-sm">
+            <MaterialCommunityIcons name="calendar-blank" size={48} color="#f87171" />
+            <Text className="text-gray-900 mt-2 text-xl font-semibold">No Dates Found</Text>
+            <Text className="text-gray-500 mt-1 text-center text-base">
+              You haven't booked any dates yet
+            </Text>
           </View>
-        </View>
+        ) : (
+          Object.entries(groupedDates).map(([month, dates]: [string, DateDetails[]]) => (
+            <View
+              key={month}
+              className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
+              <View className="mb-2 flex-row items-center">
+                <MaterialCommunityIcons name="calendar-month" size={24} color="#ef4444" />
+                <Text className="text-gray-900 ml-2 text-xl font-bold">{month}</Text>
+              </View>
 
-        <View className="mt-6">
-          {Object.keys(groupedDates).length === 0 ? (
-            <View className="mx-4 rounded-xl bg-white p-6 shadow-sm">
-              <View className="items-center">
-                <MaterialCommunityIcons name="calendar-blank" size={48} color="#f87171" />
-                <Text className="mt-2 text-xl font-semibold text-gray-900">No Dates Found</Text>
-                <Text className="mt-1 text-center text-base text-gray-500">
-                  You haven't booked any dates yet
-                </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {dates.map((item: DateDetails, index: number) => (
+                  <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
+                    <View className="h-14 w-14 flex-col items-center justify-center  border border-gray/25 bg-gray/25">
+                      <Text className="text-lg font-bold text-black">{item.nepaliDate.day}</Text>
+                      <Text className="ml-3 text-xs font-bold text-black">16 Jan</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
-          ) : (
-            Object.entries(groupedDates).map(([month, dates]) => (
-              <MonthSection key={month} month={month} dates={dates} />
-            ))
-          )}
-        </View>
-
-        <View className="h-4" />
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );

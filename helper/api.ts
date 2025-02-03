@@ -1,18 +1,22 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
+
 const getBaseUrl = () => {
   if (__DEV__) {
     if (Platform.OS === 'android') {
-      if (Platform.constants.Release === null) {
-        return 'http://192.168.10.74:3000/users';
-      }
-      return 'http://192.168.10.74:3000/users';
+      return Platform.constants.Release === null
+        ? process.env.BASE_URL_ANDROID_SIM
+        : process.env.BASE_URL_ANDROID_DEV;
     }
-    return 'http://192.168.10.74:3000/users';
+    return process.env.BASE_URL_IOS_DEV;
   }
-  return 'https://192.168.10.74:3000/users';
+  return Platform.OS === 'android'
+    ? process.env.BASE_URL_ANDROID_PROD
+    : process.env.BASE_URL_IOS_PROD;
 };
+
+export default getBaseUrl;
 
 const API_URL = getBaseUrl();
 
