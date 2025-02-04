@@ -10,9 +10,9 @@ export const signupUser = async (userData: {
   role?: string;
   isActive?: boolean;
 }) => {
-  return await apiRequest('/signup', userData);
+  return await apiRequest('/auth/signup', userData);
 };
 
 export const loginUser = async (loginData: { phone: string; password: string; role: string }) => {
-  return await apiRequest('/login', loginData);
+  return await apiRequest('/auth/login', loginData);
 };
