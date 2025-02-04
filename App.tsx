@@ -16,6 +16,7 @@ import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
+import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -47,6 +48,12 @@ function TabNavigator() {
       <Tab.Screen name="Add Work" component={WorkScreen} />
       <Tab.Screen name="Earnings" component={EarningsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="ChangePassword" component={ChangePasswordScreen} 
+      options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
+        }}
+      />
       <Tab.Screen
         name="DateDetails"
         component={DateDetails}

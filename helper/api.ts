@@ -31,7 +31,7 @@ export const signupUser = async (userData: {
   isActive?: boolean;
 }) => {
   try {
-    const response = await axios.post(`${API_URL}/signup`, userData);
+    const response = await axios.post(`${API_URL}/auth/signup`, userData);
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
@@ -45,7 +45,7 @@ export const signupUser = async (userData: {
 
 export const loginUser = async (loginData: { phone: string; password: string; role: string }) => {
   try {
-    const response = await axios.post(`${API_URL}/login`, loginData);
+    const response = await axios.post(`${API_URL}/auth/login`, loginData);
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
