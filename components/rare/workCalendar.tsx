@@ -26,9 +26,7 @@ const WorkCalendar: React.FC<WorkCalendarProps> = ({ selectedDates = [], onDateC
   };
 
   return (
-    <View className="mb-6">
-      <Text className="mb-2 font-medium text-gray-700">Select Work Dates</Text>
-
+    <View className={`mb-6`}>
       <CalendarPicker
         visible={visible}
         onClose={() => setVisible(false)}
@@ -44,7 +42,7 @@ const WorkCalendar: React.FC<WorkCalendarProps> = ({ selectedDates = [], onDateC
 
       {dates.length > 0 && (
         <View className="mt-4">
-          <Text className="mb-2 font-medium text-gray-700">Selected Dates:</Text>
+          <Text className="text-gray-700 mb-2 font-medium">Selected Dates:</Text>
 
           <FlatList
             data={dates.sort((a, b) => a.getTime() - b.getTime())}

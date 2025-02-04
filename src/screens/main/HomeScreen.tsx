@@ -1,18 +1,27 @@
-import StatsSection from 'components/HomeScreen/StatsSection';
-import FloatingActionButton from 'components/rare/FAB';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
+import { useSelector } from 'react-redux';
+
+import { RootState } from 'redux/store';
+import NepaliDate from 'nepali-date-converter';
+
+import HeaderSection from 'components/HomeScreen/HeaderSection';
+import StatsSection from 'components/HomeScreen/StatsSection';
+import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
 import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
-import NepaliDate from 'nepali-date-converter';
 
 const HomePage: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedDates, setSelectedDates] = useState<any[]>([]);
+  const username = useSelector((state: RootState) => state.auth.name);
+
+  const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
     const loadBookedDates = async () => {
@@ -46,7 +55,6 @@ const HomePage: React.FC = () => {
   const getUpcomingEvents = () => {
     const today = new Date();
 
-    // Convert Nepali date to Gregorian and filter upcoming events
     const upcomingEvents = selectedDates
       .map((event) => {
         const nepaliDate = new NepaliDate(event.date); // Convert to Nepali date
@@ -63,7 +71,7 @@ const HomePage: React.FC = () => {
 
   const monthlyData = [
     {
-      month: 'August 2023',
+      month: 'February 2023',
       totalIncome: 50000,
       totalExpense: 20000,
       actualIncome: 30000,
@@ -71,7 +79,7 @@ const HomePage: React.FC = () => {
       gadgetsPurchased: 5,
     },
     {
-      month: 'October 2023',
+      month: 'March 2023',
       totalIncome: 50000,
       totalExpense: 20000,
       actualIncome: 30000,
@@ -79,7 +87,7 @@ const HomePage: React.FC = () => {
       gadgetsPurchased: 5,
     },
     {
-      month: 'September 2023',
+      month: 'January 2023',
       totalIncome: 45000,
       totalExpense: 18000,
       actualIncome: 27000,
@@ -90,10 +98,11 @@ const HomePage: React.FC = () => {
 
   return (
     <SafeAreaView className=" flex-1 bg-white">
-      <ScrollView className="mt-7" nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+      <HeaderSection user={username} isActive={isActive} setIsActive={setIsActive} />
+      <ScrollView className="mt-7" nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <BookedDates selectedDates={selectedDates} handleDateClick={handleDateClick} />
 
-        <StatsSection monthlyData={monthlyData} />
+        <SwipeableUnifiedCard monthlyData={monthlyData} />
         <View className="flex items-center justify-center ">
           <Text className="mb-4 text-2xl font-bold text-primary">Upcoming Events</Text>
         </View>

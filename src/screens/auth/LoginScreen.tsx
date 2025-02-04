@@ -1,12 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useLogin } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { setUser } from 'redux/slices/authSlices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
+import { useLogin } from 'hooks/useAuth';
 
 export default function LoginScreen() {
   const [formData, setFormData] = useState({
@@ -16,7 +17,9 @@ export default function LoginScreen() {
   });
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { mutate: login, error } = useLogin();
+
+  // Destructure to handle loading and errors from useLogin hook
+  const { mutate: loginUser, status, isError, error } = useLogin();
 
   useEffect(() => {
     checkCachedCredentials();
@@ -63,42 +66,50 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     const { phone, password, role } = formData;
-  
-    console.log('Login Request:', { phone, password, role });
-  
-    login(
+
+    // Trigger the login mutation
+    loginUser(
       { phone, password, role },
       {
         onSuccess: (data) => {
           console.log('Login Success:', data);
           dispatch(setUser(data));
-          AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
           navigation.navigate('MainTabs');
         },
         onError: (error) => {
-          Alert.alert('Login Error', error?.message || 'Something went wrong.');
+          console.error('Login Failed:', error);
+          const errorMessage = handleAxiosError(error); // Display user-friendly message
+          Alert.alert('Login Error', errorMessage);
         },
       }
     );
   };
-  
 
   const handleBiometricLogin = async () => {
     try {
+      // Start biometric authentication
       const { success } = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Authenticate to login',
       });
 
       if (success) {
         const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
+
         if (cachedCredentials) {
           const { phone, password } = JSON.parse(cachedCredentials);
-          login(
+
+          loginUser(
             { phone, password, role: 'freelancer' },
             {
               onSuccess: (data) => {
+                console.log('Login Success:', data);
                 dispatch(setUser(data));
                 navigation.navigate('MainTabs');
+              },
+              onError: (error) => {
+                console.error('Login Failed:', error);
+                const errorMessage = handleAxiosError(error); 
+                Alert.alert('Login Error', errorMessage);
               },
             }
           );
@@ -144,15 +155,20 @@ export default function LoginScreen() {
           />
         </View>
 
-        <Pressable
-          className="rounded-lg bg-primary py-4 shadow-md shadow-primary/30 active:bg-primary"
-          onPress={handleLogin}>
-          <Text className="text-center text-lg font-semibold text-white">Login</Text>
-        </Pressable>
+        {status === 'pending' ? (
+          <ActivityIndicator size="large" color="#0000ff" className="my-4" />
+        ) : (
+          <Pressable
+            className="rounded-lg bg-primary py-4 shadow-md shadow-primary/30 active:bg-primary"
+            onPress={handleLogin}>
+            <Text className="text-center text-lg font-semibold text-white">Login</Text>
+          </Pressable>
+        )}
 
         <Pressable
           className="mt-4 rounded-lg bg-green-500 py-4 shadow-md shadow-green-500/30 active:bg-green-600"
-          onPress={handleBiometricLogin}>
+          onPress={handleBiometricLogin}
+          disabled={status === 'pending'}>
           <Text className="text-center text-lg font-semibold text-white">
             Login with Fingerprint
           </Text>
@@ -163,6 +179,12 @@ export default function LoginScreen() {
             Don't have an account? <Text className="font-semibold text-primary">Sign up</Text>
           </Text>
         </Pressable>
+
+        {isError && (
+          <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+            {handleAxiosError(error)} {/* Displaying user-friendly error message */}
+          </Text>
+        )}
       </View>
     </View>
   );

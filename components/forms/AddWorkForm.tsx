@@ -6,6 +6,7 @@ import CompanyDropdown from 'components/rare/companyDropdown';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import WorkCalendar from 'components/rare/workCalendar';
+import SelectDropdown from 'components/rare/SelectDropdown';
 
 const EVENT_TYPES = [
   { id: 'unknown', label: 'Unknown', icon: 'help-circle' },
@@ -67,13 +68,12 @@ const AddWorkForm: React.FC = () => {
           <Text className="mt-2 text-center text-base text-red-100">Book your upcoming events</Text>
         </View>
 
-        <View className=" -mt-4 rounded-2xl bg-white p-6 shadow-sm">
+        <View className=" -mt-4 rounded-2xl bg-white p-2 py-4 shadow-sm">
           <View className="space-y-4">
-            <CompanyDropdown
-              value={formData.company}
-              onChange={(value) => handleChange('company', value)}
+            <SelectDropdown
+              data={['Hello', 'World']}
+              onSelect={(value) => handleChange('company', value)}
             />
-
             <InputField
               label="Event Name"
               placeholder="Enter event name"
@@ -115,8 +115,9 @@ const AddWorkForm: React.FC = () => {
               multiline
               icon="text-box-outline"
             />
-
-            <WorkCalendar selectedDates={selectedDates} onDateChange={handleDateChange} />
+            <View className="flex items-center justify-center">
+              <WorkCalendar selectedDates={selectedDates} onDateChange={handleDateChange} />
+            </View>
 
             <TouchableOpacity className="mt-2 rounded-xl bg-red-500 p-4" onPress={handleSubmit}>
               <Text className="text-center text-lg font-semibold text-white">Save Work</Text>
