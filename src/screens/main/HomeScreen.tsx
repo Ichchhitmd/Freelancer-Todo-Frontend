@@ -1,17 +1,20 @@
-import StatsSection from 'components/HomeScreen/StatsSection';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
+import { useSelector } from 'react-redux';
+
+import { RootState } from 'redux/store';
+import NepaliDate from 'nepali-date-converter';
+
+import HeaderSection from 'components/HomeScreen/HeaderSection';
+import StatsSection from 'components/HomeScreen/StatsSection';
+import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
 import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
-import NepaliDate from 'nepali-date-converter';
-import { RootState } from 'redux/store';
-import { useSelector } from 'react-redux';
-import HeaderSection from 'components/HomeScreen/HeaderSection';
-import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
 
 const HomePage: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -52,7 +55,6 @@ const HomePage: React.FC = () => {
   const getUpcomingEvents = () => {
     const today = new Date();
 
-    // Convert Nepali date to Gregorian and filter upcoming events
     const upcomingEvents = selectedDates
       .map((event) => {
         const nepaliDate = new NepaliDate(event.date); // Convert to Nepali date
@@ -97,10 +99,9 @@ const HomePage: React.FC = () => {
   return (
     <SafeAreaView className=" flex-1 bg-white">
       <HeaderSection user={username} isActive={isActive} setIsActive={setIsActive} />
-      <ScrollView className="mt-7" nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+      <ScrollView className="mt-7" nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <BookedDates selectedDates={selectedDates} handleDateClick={handleDateClick} />
 
-        <StatsSection monthlyData={monthlyData} />
         <SwipeableUnifiedCard monthlyData={monthlyData} />
         <View className="flex items-center justify-center ">
           <Text className="mb-4 text-2xl font-bold text-primary">Upcoming Events</Text>

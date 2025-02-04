@@ -98,15 +98,21 @@ export default function LoginScreen() {
         if (cachedCredentials) {
           const { phone, password } = JSON.parse(cachedCredentials);
 
-          try {
-            loginUser({ phone, password, role: 'freelancer' });
-            handleLogin();
-            navigation.navigate('MainTabs');
-          } catch (loginError) {
-            console.error('Login failed:', loginError);
-            const errorMessage = handleAxiosError(loginError);
-            Alert.alert('Login Error', errorMessage);
-          }
+          loginUser(
+            { phone, password, role: 'freelancer' },
+            {
+              onSuccess: (data) => {
+                console.log('Login Success:', data);
+                dispatch(setUser(data));
+                navigation.navigate('MainTabs');
+              },
+              onError: (error) => {
+                console.error('Login Failed:', error);
+                const errorMessage = handleAxiosError(error); 
+                Alert.alert('Login Error', errorMessage);
+              },
+            }
+          );
         } else {
           Alert.alert('Error', 'No cached credentials found. Please login manually.');
         }
