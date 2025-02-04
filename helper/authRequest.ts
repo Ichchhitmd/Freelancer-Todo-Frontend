@@ -1,18 +1,25 @@
-import { apiRequest } from './api';
+import { post } from './api';
+import { SignupData, LoginData, AuthResponse, ChangePasswordData, ChangePasswordResponse } from '../types/authTypes';
+import { store } from '../redux/store';
 
-export const signupUser = async (userData: {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  location: string;
-  experience?: string;
-  role?: string;
-  isActive?: boolean;
-}) => {
-  return await apiRequest('/auth/signup', userData);
+export const signupUser = async (userData: SignupData): Promise<AuthResponse> => {
+  return post<AuthResponse>('/auth/signup', userData);
 };
 
-export const loginUser = async (loginData: { phone: string; password: string; role: string }) => {
-  return await apiRequest('/auth/login', loginData);
+export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => {
+  return post<AuthResponse>('/auth/login', loginData);
 };
+
+export const changePassword = async (data: ChangePasswordData): Promise<ChangePasswordResponse> => {
+  const token = store.getState().auth.token;
+
+  if (!token) {
+    throw new Error('No authentication token available');
+  }
+  return post<ChangePasswordResponse>('/auth/change-password', data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+

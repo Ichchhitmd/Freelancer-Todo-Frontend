@@ -19,7 +19,7 @@ import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 const HomePage: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedDates, setSelectedDates] = useState<any[]>([]);
-  const username = useSelector((state: RootState) => state.auth.name);
+  const userName = useSelector((state: RootState) => state.auth.user?.name);
 
   const [isActive, setIsActive] = useState(false);
 
@@ -98,7 +98,7 @@ const HomePage: React.FC = () => {
 
   return (
     <SafeAreaView className=" flex-1 bg-white">
-      <HeaderSection user={username} isActive={isActive} setIsActive={setIsActive} />
+      <HeaderSection user={userName} isActive={isActive} setIsActive={setIsActive} />
       <ScrollView className="mt-7" nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <BookedDates selectedDates={selectedDates} handleDateClick={handleDateClick} />
 
