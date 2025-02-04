@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { setUser } from 'redux/slices/authSlices';
+import { loginSuccess, setLoading, setError } from 'redux/slices/authSlices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
@@ -73,7 +73,7 @@ export default function LoginScreen() {
       {
         onSuccess: (data) => {
           console.log('Login Success:', data);
-          dispatch(setUser(data));
+          dispatch(loginSuccess(data));
           navigation.navigate('MainTabs');
         },
         onError: (error) => {
@@ -103,7 +103,7 @@ export default function LoginScreen() {
             {
               onSuccess: (data) => {
                 console.log('Login Success:', data);
-                dispatch(setUser(data));
+                dispatch(loginSuccess(data));
                 navigation.navigate('MainTabs');
               },
               onError: (error) => {
