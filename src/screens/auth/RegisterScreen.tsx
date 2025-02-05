@@ -5,7 +5,6 @@ import { useSignup } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { loginSuccess, setLoading, setError, setUser } from 'redux/slices/authSlices';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -14,8 +13,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [location, setLocation] = useState('');
   const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const { mutate: signup, error } = useSignup();
+  const { mutate: signup } = useSignup();
 
   useEffect(() => {
     const getLocation = async () => {
@@ -42,7 +40,6 @@ export default function RegisterScreen() {
       { name, phone, password, email, location, role: 'freelancer' },
       {
         onSuccess: (data) => {
-          dispatch(loginSuccess(data));
           console.log(data);
           navigation.navigate('LoginScreen');
         },
