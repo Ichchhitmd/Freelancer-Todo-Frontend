@@ -18,6 +18,9 @@ import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
 import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
+import GadgetDetailsScreen from '~/screens/main/GadgetDetailsScreen';
+import AddGadgetScreen from '~/screens/main/AddGadgetScreen';
+import EditGadgetScreen from '~/screens/main/EditGadgetScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,7 +35,7 @@ function TabNavigator() {
           const iconName = (() => {
             switch (route.name) {
               case 'Home':
-                return focused ? 'home' : 'home-outline';
+                return focused ? 'home' : 'home';
               case 'Add Work':
                 return focused ? 'work' : 'work-outline';
               case 'Workings':
@@ -85,6 +88,9 @@ export default function App() {
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
+            <Stack.Screen name="GadgetDetails" component={GadgetDetailsScreen} />
+            <Stack.Screen name="AddGadget" component={AddGadgetScreen} />
+            <Stack.Screen name="EditGadget" component={EditGadgetScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>
