@@ -11,6 +11,7 @@ import ProfileScreen from './src/screens/main/ProfileScreen';
 import './global.css';
 import EarningsScreen from '~/screens/main/EarningsScreen';
 import WorkScreen from '~/screens/main/WorkScreen';
+import WorkingScreen from '~/screens/main/WorkingScreen';
 import EarningDetailScreen from '~/screens/main/EarningDetailScreen';
 import { Provider } from 'react-redux';
 import { store } from 'redux/store';
@@ -27,24 +28,29 @@ function TabNavigator() {
         headerShown: false,
         tabBarStyle: { paddingBottom: 10, bottom: 0 },
         tabBarIcon: ({ color, size, focused }) => {
-          let iconName: keyof typeof MaterialIcons.glyphMap;
+          const iconName = (() => {
+            switch (route.name) {
+              case 'Home':
+                return focused ? 'home' : 'home-outline';
+              case 'Add Work':
+                return focused ? 'work' : 'work-outline';
+              case 'Workings':
+                return focused ? 'work' : 'work-outline';
+              case 'Earnings':
+                return focused ? 'attach-money' : 'money-off';
+              case 'Profile':
+                return focused ? 'person' : 'person-outline';
+              default:
+                return 'help-outline';
+            }
+          })() as keyof typeof MaterialIcons.glyphMap;
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home';
-          } else if (route.name === 'Add Work') {
-            iconName = focused ? 'work' : 'work-outline';
-          } else if (route.name === 'Earnings') {
-            iconName = focused ? 'attach-money' : 'attach-money';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else {
-            iconName = 'help-outline';
-          }
           return <MaterialIcons name={iconName} size={size} color={color} />;
         },
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Add Work" component={WorkScreen} />
+      <Tab.Screen name="Workings" component={WorkingScreen} />
       <Tab.Screen name="Earnings" component={EarningsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen
