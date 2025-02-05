@@ -2,7 +2,6 @@ import React from 'react';
 import NepaliDate from 'nepali-date-converter';
 import { Text } from 'react-native';
 
-// Define the map of English numerals to Nepali numerals
 const tableOfEngNepNums = new Map([
   [0, '०'],
   [1, '१'],
@@ -16,25 +15,19 @@ const tableOfEngNepNums = new Map([
   [9, '९'],
 ]);
 
-// Function to convert English numerals to Nepali numerals
 function engToNepNum(strNum: string): string {
   return String(strNum)
     .split('')
-    .map(function (ch) {
-      if (ch === '.' || ch === ',') {
-        return ch; // Preserve non-numeric characters like decimal points or commas
-      }
-      return tableOfEngNepNums.get(Number(ch)) ?? ch; // Convert English digits or return original if not found
-    })
+    .map((ch) => tableOfEngNepNums.get(Number(ch)) ?? ch)
     .join('');
 }
 
 interface NepaliDateConverterProps {
   date: string;
-  className?: string; // Optional className prop
-  showDay?: boolean; // Prop to control day display
-  showMonth?: boolean; // Prop to control month display
-  showDate?: boolean; // Prop to control date display
+  className?: string;
+  showDay?: boolean;
+  showMonth?: boolean;
+  showDate?: boolean;
 }
 
 const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({
@@ -61,32 +54,28 @@ const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({
 
   const nepaliDays = ['आइतवार', 'सोमवार', 'मङ्गलवार', 'बुधवार', 'बिहीवार', 'शुक्रवार', 'शनिवार'];
 
-  // Converts English date to Nepali date format
-  const getNepaliDate = (date: string) => {
+  const getNepaliDate = (dateStr: string) => {
     try {
-      const d = new Date(date); // Make sure the input date is a valid JavaScript date
-      if (isNaN(d.getTime())) {
-        console.error('Invalid date:', date);
-        return null; // If the date is invalid, return null
-      }
+      // Handle multiple dates separated by commas
+      const dates = dateStr.split(',').map((d) => d.trim());
+      const firstDate = dates[0]; // We'll show the first date in case of multiple dates
 
-      const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-      const nepaliDate = new NepaliDate(dateStr);
+      // Convert AD date string to Date object
+      const d = new Date(firstDate);
+      if (isNaN(d.getTime())) throw new Error("Invalid date format");
 
-      const nepaliDay = nepaliDays[d.getDay()]; // Get the Nepali day of the week
-      const nepaliMonthIndex = nepaliDate.getMonth() - 1; // Get Nepali month index (1-based)
-      const nepaliMonth = nepaliMonths[nepaliMonthIndex];
-
-      const nepaliDayEng = nepaliDate.format('DD'); // Get the day in English numerals
-      const nepaliDayNep = engToNepNum(nepaliDayEng); // Convert the day to Nepali numerals
+      // Convert AD date to Nepali Date (BS)
+      const nepaliDate = new NepaliDate(d);
+      const dayOfWeek = nepaliDate.getDay();
 
       return {
-        month: nepaliMonth, // Nepali month
-        day: nepaliDayNep, // Nepali day number in Nepali numerals
-        dayOfWeek: nepaliDay, // Day of the week in Nepali
+        month: nepaliMonths[nepaliDate.getMonth()], // Month indexing corrected
+        day: engToNepNum(nepaliDate.format('DD')),
+        dayOfWeek: nepaliDays[dayOfWeek],
+        hasMultipleDates: dates.length > 1,
       };
     } catch (error) {
-      console.log('Error converting date:', error);
+      console.error('Error converting date:', error);
       return null;
     }
   };
@@ -94,7 +83,7 @@ const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({
   const nepaliDate = getNepaliDate(date);
 
   if (!nepaliDate) {
-    return <Text>Invalid Date</Text>; // If the date conversion failed, show an error message
+    return <Text>Invalid Date</Text>;
   }
 
   return (
@@ -104,6 +93,7 @@ const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({
       {showMonth && nepaliDate.month}
       {showMonth && showDate && ' '}
       {showDate && nepaliDate.day}
+      {nepaliDate.hasMultipleDates && ' +'}
     </Text>
   );
 };

@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, Method } from 'axios';
 import { Platform } from 'react-native';
+import { handleAxiosError } from './errorHandling/AxiosErrorHandle';
 
 const getBaseUrl = () => {
   if (__DEV__) {
@@ -30,7 +31,7 @@ export const apiRequest = async <T = any>(
 ): Promise<T> => {
   try {
     const { data, params, headers, ...rest } = config;
-    
+
     const axiosConfig: AxiosRequestConfig = {
       method,
       url: `${API_URL}${url}`,
@@ -54,36 +55,22 @@ export const apiRequest = async <T = any>(
     const response = await axios(axiosConfig);
     return response.data;
   } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-      console.error('Axios Error:', error.response?.data || error.message);
-      throw {
-        status: error.response?.status,
-        message: error.response?.data?.message || error.message,
-        data: error.response?.data
-      };
-    } else {
-      console.error('Unexpected Error:', error);
-      throw {
-        status: 500,
-        message: 'An unexpected error occurred',
-        error
-      };
-    }
+    throw handleAxiosError(error);
   }
+
 };
 
-// Convenience methods
-export const get = <T = any>(url: string, config?: ApiRequestConfig) => 
+export const get = <T = any>(url: string, config?: ApiRequestConfig) =>
   apiRequest<T>('GET', url, config);
 
-export const post = <T = any>(url: string, data?: any, config?: ApiRequestConfig) => 
+export const post = <T = any>(url: string, data?: any, config?: ApiRequestConfig) =>
   apiRequest<T>('POST', url, { ...config, data });
 
-export const put = <T = any>(url: string, data?: any, config?: ApiRequestConfig) => 
+export const put = <T = any>(url: string, data?: any, config?: ApiRequestConfig) =>
   apiRequest<T>('PUT', url, { ...config, data });
 
-export const patch = <T = any>(url: string, data?: any, config?: ApiRequestConfig) => 
+export const patch = <T = any>(url: string, data?: any, config?: ApiRequestConfig) =>
   apiRequest<T>('PATCH', url, { ...config, data });
 
-export const del = <T = any>(url: string, config?: ApiRequestConfig) => 
+export const del = <T = any>(url: string, config?: ApiRequestConfig) =>
   apiRequest<T>('DELETE', url, config);

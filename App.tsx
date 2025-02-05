@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Use MaterialCommunityIcons for custom icons like 'plus'
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegisterScreen from './src/screens/auth/RegisterScreen';
 import HomeScreen from './src/screens/main/HomeScreen';
@@ -17,7 +17,10 @@ import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
-import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
+import { View } from 'react-native';
+
+import { useEffect } from 'react';
+import { requestNotificationPermission } from 'utils/notification';
 import GadgetDetailsScreen from '~/screens/main/GadgetDetailsScreen';
 import AddGadgetScreen from '~/screens/main/AddGadgetScreen';
 import EditGadgetScreen from '~/screens/main/EditGadgetScreen';
@@ -30,39 +33,82 @@ function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { paddingBottom: 10, bottom: 0 },
+        tabBarStyle: {
+          position: 'absolute',
+          height: 70,
+          backgroundColor: '#fef2f2',
+          borderRadius: 15,
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 5 },
+          paddingBottom: 5,
+          paddingTop: 5,
+        },
         tabBarIcon: ({ color, size, focused }) => {
+          if (route.name === 'Add Work') {
+            return (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -25,
+                  backgroundColor: 'red',
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                }}>
+                <MaterialCommunityIcons name="plus" size={32} color="white" />
+              </View>
+            );
+          }
+
           const iconName = (() => {
             switch (route.name) {
               case 'Home':
-                return focused ? 'home' : 'home';
+                return focused ? 'home' : 'home-outline';
               case 'Add Work':
                 return focused ? 'work' : 'work-outline';
               case 'Workings':
-                return focused ? 'work' : 'work-outline';
+                return focused ? 'briefcase' : 'briefcase-outline';
               case 'Earnings':
-                return focused ? 'attach-money' : 'money-off';
+                return focused ? 'currency-usd' : 'cash-multiple';
               case 'Profile':
-                return focused ? 'person' : 'person-outline';
+                return focused ? 'account' : 'account-outline';
               default:
                 return 'help-outline';
             }
-          })() as keyof typeof MaterialIcons.glyphMap;
+          })() as keyof typeof MaterialCommunityIcons.glyphMap;
 
-          return <MaterialIcons name={iconName} size={size} color={color} />;
+          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          paddingBottom: 5,
         },
       })}>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Add Work" component={WorkScreen} />
-      <Tab.Screen name="Workings" component={WorkingScreen} />
-      <Tab.Screen name="Earnings" component={EarningsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="ChangePassword" component={ChangePasswordScreen} 
-      options={{
-          tabBarItemStyle: { display: 'none' },
-          tabBarButton: () => null,
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
+      <Tab.Screen name="Workings" component={WorkingScreen} options={{ tabBarLabel: 'My Works' }} />
+      <Tab.Screen
+        name="Add Work"
+        component={WorkScreen}
+        options={{
+          tabBarLabel: '',
         }}
       />
+      <Tab.Screen
+        name="Earnings"
+        component={EarningsScreen}
+        options={{ tabBarLabel: 'Earnings' }}
+      />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
       <Tab.Screen
         name="DateDetails"
         component={DateDetails}
@@ -76,6 +122,9 @@ function TabNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
   const queryClient = new QueryClient();
 
   return (

@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NepaliDateConverter from 'components/rare/nepaliDateConverter';
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Dimensions } from 'react-native';
 
 interface MonthlyData {
+  eventId: number;
   month: string;
   totalIncome: number;
   totalExpense: number;
@@ -37,113 +37,153 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K`;
     return amount.toString();
   };
+  const aggregateIncomeByEvent = (data: MonthlyData[]) => {
+    const eventIncomeMap: { [key: string]: { income: number; month: string } } = {};
 
-  const getDateForOffset = (offset: number) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + offset);
-    return date.toISOString();
+    data.forEach((item) => {
+      const key = `${item.eventId}-${item.month}`;
+
+      if (eventIncomeMap[key]) {
+        eventIncomeMap[key].income += item.totalIncome;
+      } else {
+        eventIncomeMap[key] = {
+          income: item.totalIncome,
+          month: item.month,
+        };
+      }
+    });
+
+    return eventIncomeMap;
   };
 
-  const MonthCard = ({ data, dateOffset }: { data: MonthlyData; dateOffset: number }) => (
-    <View style={{ width: screenWidth }}>
+  const MonthCard = ({
+    data1,
+    data2,
+    isSummary,
+  }: {
+    data1: MonthlyData;
+    data2?: MonthlyData;
+    isSummary?: boolean;
+  }) => (
+    <View style={{ width: screenWidth, paddingTop: 12 }}>
       <Pressable
         onPress={onPress}
         style={{
           width: '100%',
-          borderRadius: 12,
-          backgroundColor: '#fff',
-          padding: 16,
+          borderRadius: 16,
+          backgroundColor: '#ffffff',
+          padding: 20,
           shadowColor: '#000',
-          shadowOpacity: 0.1,
+          shadowOpacity: 0.2,
           shadowRadius: 8,
           shadowOffset: { width: 0, height: 4 },
-          elevation: 4,
+          elevation: 8,
+          marginBottom: 16,
         }}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
-        <View style={{ marginBottom: 16 }} className="flex items-center justify-between">
-          <MaterialCommunityIcons name="calendar-month" size={28} color="#000000" />
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ marginLeft: 8 }} className="flex items-center">
-              <NepaliDateConverter
-                date={getDateForOffset(dateOffset)}
-                className="text-3xl font-bold text-primary"
-                showDay={false}
-                showMonth={true}
-                showDate={false}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View>
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons name="cash" size={28} color="#008000" />
-              <Text style={{ color: '#008000', fontWeight: '600', marginLeft: 8 }}>
-                Estimated Income
+        {isSummary ? (
+          <View>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: '700',
+                textAlign: 'center',
+                marginBottom: 24,
+                color: '#333',
+              }}>
+              Summary
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontWeight: '600', color: '#008000', fontSize: 16 }}>
+                Total Income
+              </Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
+                Rs. {formatAmount(monthlyData.reduce((sum, item) => sum + item.totalIncome, 0))}
               </Text>
             </View>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#10B981' }}>
-              Rs. {formatAmount(data.totalIncome)}
-            </Text>
-          </View>
-
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons name="cash-minus" size={28} color="#E50914" />
-              <Text style={{ color: '#E50914', fontWeight: '600', marginLeft: 8 }}>
-                Total Expenses
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+              <Text style={{ fontWeight: '600', color: '#E50914', fontSize: 16 }}>
+                Total Expense
+              </Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#E50914' }}>
+                Rs. {formatAmount(monthlyData.reduce((sum, item) => sum + item.totalExpense, 0))}
               </Text>
             </View>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#E50914' }}>
-              Rs. {formatAmount(data.totalExpense)}
-            </Text>
           </View>
-
-          <View
-            style={{
-              marginTop: 8,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderTopWidth: 1,
-              borderColor: '#E5E7EB',
-              paddingTop: 8,
-            }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons name="cash-check" size={28} color="#3B82F6" />
-              <View style={{ marginLeft: 8 }}>
-                <Text style={{ color: '#3B82F6', fontWeight: '600' }}>Net Balance</Text>
-                <Text style={{ color: '#6B7280', fontSize: 12 }}>
-                  {data.eventCount} events planned
-                </Text>
-              </View>
-            </View>
-            <Text style={{ fontSize: 24, fontWeight: '700', color: '#3B82F6' }}>
-              Rs. {formatAmount(data.totalIncome - data.totalExpense)}
-            </Text>
+        ) : (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            {[data1, data2].map(
+              (data, index) =>
+                data && (
+                  <View key={index} style={{ flex: 1, marginHorizontal: 8 }}>
+                    <View className="flex items-center">
+                      <MaterialCommunityIcons name="calendar-month" size={32} color="#333" />
+                      <View className="flex items-center">
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#333' }}>
+                          {data.month}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{ marginTop: 24 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontWeight: '600', color: '#008000', fontSize: 16 }}>
+                          Income
+                        </Text>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
+                          Rs. {formatAmount(data.totalIncome)}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          marginTop: 12,
+                        }}>
+                        <Text style={{ fontWeight: '600', color: '#E50914', fontSize: 16 }}>
+                          Expense
+                        </Text>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#E50914' }}>
+                          Rs. {formatAmount(data.totalExpense)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )
+            )}
           </View>
-        </View>
+        )}
       </Pressable>
     </View>
   );
 
   return (
-    <View>
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={200}>
-        {monthlyData.map((data, index) => (
-          <MonthCard key={index} data={data} dateOffset={index - 1} />
-        ))}
-      </ScrollView>
-    </View>
+    <ScrollView
+      ref={scrollViewRef}
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      onScroll={handleScroll}
+      scrollEventThrottle={200}>
+      {monthlyData.map((_, index) => {
+        if (index % 2 === 0) {
+          return (
+            <MonthCard
+              key={index}
+              data1={monthlyData[index]}
+              data2={monthlyData[index + 1]} // Might be undefined if last item
+            />
+          );
+        }
+        return null;
+      })}
+
+      {monthlyData.length % 2 !== 0 && (
+        <MonthCard key={monthlyData.length - 1} data1={monthlyData[monthlyData.length - 1]} />
+      )}
+
+      {/* Summary card at the end */}
+      <MonthCard key="summary" data1={monthlyData[0]} isSummary />
+    </ScrollView>
   );
 };
 

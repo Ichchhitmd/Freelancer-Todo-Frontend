@@ -1,8 +1,14 @@
+import { EventDetails } from './eventTypes';
+
 // types/navigation.ts
 export type RootStackParamList = {
   LoginScreen: undefined;
   RegisterScreen: undefined;
   MainTabs: undefined;
+  'Add Work': {
+    isEditMode: boolean;
+    details: EventDetails;
+  };
   EarningDetailScreen: {
     earnings: {
       totalEarnings: number;
