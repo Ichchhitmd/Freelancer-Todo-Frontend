@@ -32,7 +32,7 @@
     "expo-location": "^18.0.5",
     "expo-router": "^4.0.17",
     "expo-status-bar": "~2.0.1",
-    "nativewind": "latest",
+    "nativewind": "^4.1.23",
     "nepali-date-converter": "^3.3.3",
     "react": "18.3.1",
     "react-native": "0.76.6",

@@ -105,7 +105,12 @@ const AddWorkForm: React.FC = () => {
               onChangeText={(text) => handleChange('estimatedEarning', text)}
               keyboardType="numeric"
               icon="currency-inr"
-            />
+            /></View>
+
+            <TouchableOpacity className="mt-2 rounded-xl bg-red-500 p-4" onPress={handleSubmit}>
+              <Text className="text-center text-lg font-semibold text-white">Save Work</Text>
+            </TouchableOpacity>
+          </View>
 
             <InputField
               label="Description"
@@ -117,12 +122,12 @@ const AddWorkForm: React.FC = () => {
             />
             <View className="flex items-center justify-center">
               <WorkCalendar selectedDates={selectedDates} onDateChange={handleDateChange} />
-            </View>
+            {/* </View>
 
             <TouchableOpacity className="mt-2 rounded-xl bg-red-500 p-4" onPress={handleSubmit}>
               <Text className="text-center text-lg font-semibold text-white">Save Work</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
     </SafeAreaView>
