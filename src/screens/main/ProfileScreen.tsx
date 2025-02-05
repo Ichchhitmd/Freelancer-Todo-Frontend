@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Image, 
-  ScrollView, 
-  Alert, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Alert,
   SafeAreaView,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from 'redux/store';
@@ -21,7 +21,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { updateUserProfilePicture } from 'helper/userRequest';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const GadgetCard: React.FC<{ gadget: GadgetResponse, onPress: () => void, onDelete: () => void }> = ({ gadget, onPress, onDelete }) => {
+const GadgetCard: React.FC<{
+  gadget: GadgetResponse;
+  onPress: () => void;
+  onDelete: () => void;
+}> = ({ gadget, onPress, onDelete }) => {
   const getIconName = (model: string) => {
     const modelLower = model.toLowerCase();
     if (modelLower.includes('laptop')) return 'laptop';
@@ -32,53 +36,34 @@ const GadgetCard: React.FC<{ gadget: GadgetResponse, onPress: () => void, onDele
   };
 
   return (
-    <TouchableOpacity 
-      onPress={onPress}
-      className="mb-4"
-    >
-      <LinearGradient
-        colors={['#F5F5F5', '#FFFFFF']}
-        className="rounded-2xl p-4 shadow-sm"
-      >
+    <TouchableOpacity onPress={onPress} className="mb-4">
+      <LinearGradient colors={['#F5F5F5', '#FFFFFF']} className="rounded-2xl p-4 shadow-sm">
         <View className="flex-row items-center">
-          <View className="bg-red-100 p-3 rounded-xl">
-            <MaterialCommunityIcons 
-              name={getIconName(gadget.model)} 
-              size={24} 
-              color="#E50914" 
-            />
+          <View className="rounded-xl bg-red-100 p-3">
+            <MaterialCommunityIcons name={getIconName(gadget.model)} size={24} color="#E50914" />
           </View>
-          
-          <View className="flex-1 ml-4">
-            <Text className="text-lg font-bold text-gray-800">{gadget.name}</Text>
-            <Text className="text-sm text-gray-500">{gadget.model}</Text>
-            <View className="flex-row items-center mt-1">
-              <Text className="text-xs text-gray-400 mr-4">
+
+          <View className="ml-4 flex-1">
+            <Text className="text-gray-800 text-lg font-bold">{gadget.name}</Text>
+            <Text className="text-gray-500 text-sm">{gadget.model}</Text>
+            <View className="mt-1 flex-row items-center">
+              <Text className="text-gray-400 mr-4 text-xs">
                 Cost: ${gadget.cost.toLocaleString()}
               </Text>
-              <Text className="text-xs text-gray-400">
+              <Text className="text-gray-400 text-xs">
                 Purchased: {new Date(gadget.purchaseDate).toLocaleDateString()}
               </Text>
             </View>
           </View>
 
           <View className="flex-row items-center">
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={onDelete}
               className="p-2"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialCommunityIcons 
-                name="delete-outline" 
-                size={24} 
-                color="#E50914" 
-              />
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <MaterialCommunityIcons name="delete-outline" size={24} color="#E50914" />
             </TouchableOpacity>
-            <MaterialCommunityIcons 
-              name="chevron-right" 
-              size={24} 
-              color="#888" 
-            />
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
           </View>
         </View>
       </LinearGradient>
@@ -86,10 +71,10 @@ const GadgetCard: React.FC<{ gadget: GadgetResponse, onPress: () => void, onDele
   );
 };
 
-const GadgetDetailsBottomSheet: React.FC<{ 
-  gadget: GadgetResponse | null, 
-  bottomSheetModalRef: React.RefObject<BottomSheetModal>,
-  snapPoints: string[]
+const GadgetDetailsBottomSheet: React.FC<{
+  gadget: GadgetResponse | null;
+  bottomSheetModalRef: React.RefObject<BottomSheetModal>;
+  snapPoints: string[];
 }> = ({ gadget, bottomSheetModalRef, snapPoints }) => {
   if (!gadget) return null;
 
@@ -98,33 +83,37 @@ const GadgetDetailsBottomSheet: React.FC<{
       ref={bottomSheetModalRef}
       index={0}
       snapPoints={snapPoints}
-      backgroundStyle={{ 
-        backgroundColor: '#FFFFFF', 
-        borderRadius: 24 
-      }}
-    >
-      <BottomSheetScrollView 
-        contentContainerStyle={{ 
-          padding: 16, 
-          alignItems: 'center' 
-        }}
-      >
-        <View className="w-full items-center mb-6">
-          <View className="bg-red-100 p-6 rounded-full mb-4">
-            <MaterialCommunityIcons 
-              name={gadget.model === 'laptop' ? 'laptop' : 
-                     gadget.model === 'lens' ? 'camera-iris' : 
-                     gadget.model === 'camera' ? 'camera' : 'drone'} 
-              size={48} 
-              color="#E50914" 
+      backgroundStyle={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+      }}>
+      <BottomSheetScrollView
+        contentContainerStyle={{
+          padding: 16,
+          alignItems: 'center',
+        }}>
+        <View className="mb-6 w-full items-center">
+          <View className="mb-4 rounded-full bg-red-100 p-6">
+            <MaterialCommunityIcons
+              name={
+                gadget.model === 'laptop'
+                  ? 'laptop'
+                  : gadget.model === 'lens'
+                    ? 'camera-iris'
+                    : gadget.model === 'camera'
+                      ? 'camera'
+                      : 'drone'
+              }
+              size={48}
+              color="#E50914"
             />
           </View>
-          <Text className="text-2xl font-bold text-gray-800">{gadget.name}</Text>
-          <Text className="text-base text-gray-500">{gadget.model}</Text>
+          <Text className="text-gray-800 text-2xl font-bold">{gadget.name}</Text>
+          <Text className="text-gray-500 text-base">{gadget.model}</Text>
         </View>
 
-        <View className="w-full bg-gray-100 rounded-2xl p-4 mb-4">
-          <View className="flex-row justify-between mb-2">
+        <View className="bg-gray-100 mb-4 w-full rounded-2xl p-4">
+          <View className="mb-2 flex-row justify-between">
             <Text className="text-gray-600">Cost</Text>
             <Text className="font-bold">${gadget.cost.toLocaleString()}</Text>
           </View>
@@ -134,16 +123,9 @@ const GadgetDetailsBottomSheet: React.FC<{
           </View>
         </View>
 
-        <TouchableOpacity 
-          className="w-full bg-red-500 rounded-xl p-4 flex-row justify-center items-center"
-        >
-          <MaterialCommunityIcons 
-            name="pencil" 
-            size={20} 
-            color="white" 
-            className="mr-2" 
-          />
-          <Text className="text-white font-bold">Edit Gadget</Text>
+        <TouchableOpacity className="w-full flex-row items-center justify-center rounded-xl bg-red-500 p-4">
+          <MaterialCommunityIcons name="pencil" size={20} color="white" className="mr-2" />
+          <Text className="font-bold text-white">Edit Gadget</Text>
         </TouchableOpacity>
       </BottomSheetScrollView>
     </BottomSheetModal>
@@ -154,15 +136,23 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { gadgets = [], loading = false, error = null } = useSelector((state: RootState) => state.gadgets) || { gadgets: [], loading: false, error: null };
+  const {
+    gadgets = [],
+    loading = false,
+    error = null,
+  } = useSelector((state: RootState) => state.gadgets) || {
+    gadgets: [],
+    loading: false,
+    error: null,
+  };
   const [locationName, setLocationName] = useState<string>('Loading location...');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const convertCoordinatesToLocation = useCallback(async (coordinates: string) => {
     try {
       // Split coordinates into latitude and longitude
-      const [latitude, longitude] = coordinates.split(',').map(coord => parseFloat(coord.trim()));
-      
+      const [latitude, longitude] = coordinates.split(',').map((coord) => parseFloat(coord.trim()));
+
       if (isNaN(latitude) || isNaN(longitude)) {
         throw new Error('Invalid coordinates format');
       }
@@ -171,8 +161,8 @@ export default function ProfileScreen() {
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
         {
           headers: {
-            'User-Agent': 'FreelancerTodoApp/1.0'
-          }
+            'User-Agent': 'FreelancerTodoApp/1.0',
+          },
         }
       );
 
@@ -182,12 +172,17 @@ export default function ProfileScreen() {
 
       const data = await response.json();
       const address = data.address;
-      const city = address.city || address.town || address.village || address.suburb || address.county || 'Unknown City';
+      const city =
+        address.city ||
+        address.town ||
+        address.village ||
+        address.suburb ||
+        address.county ||
+        'Unknown City';
       const country = address.country || 'Unknown Country';
 
       const locationString = `${city}, ${country}`;
       setLocationName(locationString);
-
     } catch (error) {
       console.error('Error converting coordinates:', error);
       setLocationName('Location not available');
@@ -233,16 +228,16 @@ export default function ProfileScreen() {
 
   const handleDeleteGadget = async (id: number) => {
     Alert.alert(
-      "Delete Gadget",
-      "Are you sure you want to delete this gadget? This action cannot be undone.",
+      'Delete Gadget',
+      'Are you sure you want to delete this gadget? This action cannot be undone.',
       [
         {
-          text: "Cancel",
-          style: "cancel"
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Delete",
-          style: "destructive",
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             try {
               await dispatch(removeGadget(id)).unwrap();
@@ -254,19 +249,22 @@ export default function ProfileScreen() {
                 Alert.alert('Error', 'Failed to delete gadget. Please try again later.');
               }
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
 
-  const handleGadgetPress = useCallback((gadget: GadgetResponse) => {
-    try {
-      navigation.navigate('GadgetDetails', { gadget });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to open gadget details. Please try again.');
-    }
-  }, [navigation]);
+  const handleGadgetPress = useCallback(
+    (gadget: GadgetResponse) => {
+      try {
+        navigation.navigate('GadgetDetails', { gadget });
+      } catch (error) {
+        Alert.alert('Error', 'Failed to open gadget details. Please try again.');
+      }
+    },
+    [navigation]
+  );
 
   const pickImage = useCallback(async () => {
     try {
@@ -309,42 +307,38 @@ export default function ProfileScreen() {
   }, [dispatch]);
 
   const HandleLogout = useCallback(() => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await dispatch(logout());
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'LoginScreen' }],
-              });
-            } catch (error) {
-              if (error instanceof Error) {
-                Alert.alert('Error', `Failed to logout: ${error.message}`);
-              } else {
-                Alert.alert('Error', 'Failed to logout. Please try again later.');
-              }
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await dispatch(logout());
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'LoginScreen' }],
+            });
+          } catch (error) {
+            if (error instanceof Error) {
+              Alert.alert('Error', `Failed to logout: ${error.message}`);
+            } else {
+              Alert.alert('Error', 'Failed to logout. Please try again later.');
             }
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   }, [dispatch, navigation]);
 
   const getInitials = useCallback((name: string) => {
     try {
       return name
         .split(' ')
-        .map(word => word[0])
+        .map((word) => word[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
@@ -358,19 +352,16 @@ export default function ProfileScreen() {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-red-500">User not found. Please login again.</Text>
-        <TouchableOpacity
-          onPress={HandleLogout}
-          className="mt-4 bg-red-500 px-6 py-3 rounded-full"
-        >
-          <Text className="text-white font-semibold">Return to Login</Text>
+        <TouchableOpacity onPress={HandleLogout} className="mt-4 rounded-full bg-red-500 px-6 py-3">
+          <Text className="font-semibold text-white">Return to Login</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView 
+    <SafeAreaView className="bg-gray-50 flex-1">
+      <ScrollView
         className="flex-1"
         refreshControl={
           <RefreshControl
@@ -379,8 +370,7 @@ export default function ProfileScreen() {
             colors={['#E50914']}
             tintColor="#E50914"
           />
-        }
-      >
+        }>
         <View className="bg-red-500 px-4 py-10">
           <Text className="pt-5 text-center text-3xl font-bold text-white">My Profile</Text>
           <Text className="mt-2 text-center text-base text-red-100">
@@ -389,38 +379,37 @@ export default function ProfileScreen() {
         </View>
 
         <View className="-mt-4 rounded-2xl bg-white p-4 shadow-sm">
-          <View className="items-center mb-6">
+          <View className="mb-6 items-center">
             <View className="relative mb-4">
               {user.photo ? (
-                <Image 
+                <Image
                   source={{ uri: `${process.env.UPLOADS_BASE_URL}/${user.photo}` }}
                   className="h-40 w-40 rounded-full border-4 border-red-500"
                   onError={() => dispatch(setError('Failed to load profile image'))}
                 />
               ) : (
-                <View className="h-40 w-40 rounded-full border-4 border-[#E50914] bg-red-100 items-center justify-center">
+                <View className="h-40 w-40 items-center justify-center rounded-full border-4 border-[#E50914] bg-red-100">
                   <Text className="text-4xl font-bold text-[#E50914]">
                     {getInitials(user.name)}
                   </Text>
                 </View>
               )}
-              <TouchableOpacity 
-                className="absolute bottom-0 right-0 bg-[#E50914] rounded-full p-3 shadow-lg"
-                onPress={pickImage}
-              >
+              <TouchableOpacity
+                className="absolute bottom-0 right-0 rounded-full bg-[#E50914] p-3 shadow-lg"
+                onPress={pickImage}>
                 <MaterialCommunityIcons name="pencil" size={24} color="white" />
               </TouchableOpacity>
             </View>
-            <Text className="text-2xl font-bold text-gray-800 mb-2">{user.name}</Text>
+            <Text className="text-gray-800 mb-2 text-2xl font-bold">{user.name}</Text>
           </View>
 
           <View className="space-y-4 px-2">
-            <View className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+            <View className="border-gray-200 mb-3 rounded-xl border bg-white p-4">
               <View className="flex-row items-center">
-                <MaterialCommunityIcons 
-                  name="email" 
-                  size={24} 
-                  color="#E50914" 
+                <MaterialCommunityIcons
+                  name="email"
+                  size={24}
+                  color="#E50914"
                   style={{ marginRight: 16 }}
                 />
                 <View className="flex-1">
@@ -429,28 +418,30 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
-            
-            <View className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+
+            <View className="border-gray-200 mb-3 rounded-xl border bg-white p-4">
               <View className="flex-row items-center">
-                <MaterialCommunityIcons 
-                  name="phone" 
-                  size={24} 
-                  color="#E50914" 
+                <MaterialCommunityIcons
+                  name="phone"
+                  size={24}
+                  color="#E50914"
                   style={{ marginRight: 16 }}
                 />
                 <View className="flex-1">
                   <Text className="text-gray-600 text-sm">Phone</Text>
-                  <Text className="text-gray-900 text-lg font-bold">{user.phone || 'Not provided'}</Text>
+                  <Text className="text-gray-900 text-lg font-bold">
+                    {user.phone || 'Not provided'}
+                  </Text>
                 </View>
               </View>
             </View>
-            
-            <View className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+
+            <View className="border-gray-200 mb-3 rounded-xl border bg-white p-4">
               <View className="flex-row items-center">
-                <MaterialCommunityIcons 
-                  name="map-marker" 
-                  size={24} 
-                  color="#E50914" 
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={24}
+                  color="#E50914"
                   style={{ marginRight: 16 }}
                 />
                 <View className="flex-1">
@@ -460,24 +451,20 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <View className="px-4 mt-4">
-              <View className="flex-row justify-between items-center mb-4">
+            <View className="mt-4 px-4">
+              <View className="mb-4 flex-row items-center justify-between">
                 <View>
-                  <Text className="text-2xl font-bold text-gray-800">My Gadgets</Text>
-                  <Text className="text-sm text-gray-500">
-                    {(gadgets || []).length} {(gadgets || []).length === 1 ? 'gadget' : 'gadgets'} registered
+                  <Text className="text-gray-800 text-2xl font-bold">My Gadgets</Text>
+                  <Text className="text-gray-500 text-sm">
+                    {(gadgets || []).length} {(gadgets || []).length === 1 ? 'gadget' : 'gadgets'}{' '}
+                    registered
                   </Text>
                 </View>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handleAddGadget}
-                  className="bg-red-500 px-4 py-2 rounded-full flex-row items-center"
-                >
-                  <MaterialCommunityIcons 
-                    name="plus" 
-                    size={20} 
-                    color="white" 
-                  />
-                  <Text className="text-white font-semibold ml-1">Add New</Text>
+                  className="flex-row items-center rounded-full bg-red-500 px-4 py-2">
+                  <MaterialCommunityIcons name="plus" size={20} color="white" />
+                  <Text className="ml-1 font-semibold text-white">Add New</Text>
                 </TouchableOpacity>
               </View>
 
@@ -486,39 +473,36 @@ export default function ProfileScreen() {
                   <ActivityIndicator size="large" color="#E50914" />
                 </View>
               ) : error ? (
-                <View className="py-8 px-4 bg-red-50 rounded-xl">
-                  <MaterialCommunityIcons 
-                    name="alert-circle-outline" 
-                    size={48} 
+                <View className="rounded-xl bg-red-50 px-4 py-8">
+                  <MaterialCommunityIcons
+                    name="alert-circle-outline"
+                    size={48}
                     color="#EF4444"
                     style={{ alignSelf: 'center' }}
                   />
-                  <Text className="text-red-500 text-center mt-4">{error}</Text>
-                  <TouchableOpacity 
+                  <Text className="mt-4 text-center text-red-500">{error}</Text>
+                  <TouchableOpacity
                     onPress={handleRefresh}
-                    className="mt-4 bg-red-500 px-6 py-3 rounded-full self-center"
-                  >
-                    <Text className="text-white font-semibold">Try Again</Text>
+                    className="mt-4 self-center rounded-full bg-red-500 px-6 py-3">
+                    <Text className="font-semibold text-white">Try Again</Text>
                   </TouchableOpacity>
                 </View>
               ) : !gadgets || gadgets.length === 0 ? (
-                <View className="py-8 px-4 bg-gray-50 rounded-xl">
-                  <MaterialCommunityIcons 
-                    name="devices" 
-                    size={48} 
+                <View className="bg-gray-50 rounded-xl px-4 py-8">
+                  <MaterialCommunityIcons
+                    name="devices"
+                    size={48}
                     color="#9CA3AF"
                     style={{ alignSelf: 'center' }}
                   />
-                  <Text className="text-gray-500 text-center mt-4">
+                  <Text className="text-gray-500 mt-4 text-center">
                     No gadgets added yet. Add your first gadget to get started!
                   </Text>
                 </View>
               ) : (
                 <View>
                   {(gadgets || []).map((gadget) => (
-                    <View
-                      key={gadget.id}
-                    >
+                    <View key={gadget.id}>
                       <GadgetCard
                         gadget={gadget}
                         onPress={() => handleGadgetPress(gadget)}
@@ -530,24 +514,21 @@ export default function ProfileScreen() {
               )}
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('ChangePassword')}
-              className="bg-[#E50914] rounded-xl p-4 flex-row items-center justify-center mb-3"
-            >
+              className="mb-3 flex-row items-center justify-center rounded-xl bg-[#E50914] p-4">
               <MaterialCommunityIcons name="lock-reset" size={24} color="white" className="mr-2" />
-              <Text className="text-white text-lg font-bold">Change Password</Text>
+              <Text className="text-lg font-bold text-white">Change Password</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={HandleLogout}
-              className="bg-black rounded-xl p-4 flex-row items-center justify-center"
-            >
+              className="flex-row items-center justify-center rounded-xl bg-black p-4">
               <MaterialCommunityIcons name="logout" size={24} color="white" className="mr-2" />
-              <Text className="text-white text-lg font-bold">Logout</Text>
+              <Text className="text-lg font-bold text-white">Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

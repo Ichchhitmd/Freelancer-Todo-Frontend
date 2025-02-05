@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
@@ -32,11 +32,12 @@ const HomePage: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [eventsData, setEventsData] = useState<EventResponse>();
   const [isActive, setIsActive] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const userName = useSelector((state: RootState) => state.auth.user?.name);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
-  const { data, isLoading, isError } = useGetEvents(userId || 0);
+  const { data, isLoading, isError, refetch } = useGetEvents(userId || 0);
 
   const parseDateString = (dateStr: string): Date[] => {
     const dates = dateStr.split(',').map((d) => d.trim());
@@ -181,11 +182,22 @@ const HomePage: React.FC = () => {
     return sortedKeys.map((key) => monthlyMap[key]);
   }, [eventsData]);
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    refetch().then(() => {
+      setRefreshing(false);
+    });
+  }, [refetch]);
+
   console.log('Monthly Data: ', monthlyData);
   return (
     <SafeAreaView className="mb-20 flex-1 bg-white">
       <HeaderSection user={userName} isActive={isActive} setIsActive={setIsActive} />
-      <ScrollView className="mt-7" nestedScrollEnabled showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="mt-7"
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <BookedDates selectedDates={transformedDates} handleDateClick={handleDateClick} />
         <SwipeableUnifiedCard monthlyData={monthlyData} />
         <View className="flex items-center justify-center">

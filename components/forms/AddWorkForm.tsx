@@ -49,10 +49,8 @@ const AddWorkForm: React.FC = () => {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   console.log(userId);
 
-  // Use the mutation hook here
   const { mutate: postEvent } = useEvents();
 
-  // Function to update form data
   const handleChange = (key: string, value: any) => {
     if (key === 'companyId') {
       const selectedCompany = companies?.find((company) => company.name === value);
@@ -66,7 +64,6 @@ const AddWorkForm: React.FC = () => {
     return <Text>Loading...</Text>;
   }
 
-  // Handle Date Selection
   const handleDateChange = (dates: string[]) => {
     setSelectedDates(dates);
     setFormData((prev) => ({ ...prev, eventDate: dates.join(', ') }));
@@ -161,7 +158,7 @@ const AddWorkForm: React.FC = () => {
             keyboardType="numeric"
             icon="phone"
           />
-          <TouchableOpacity className="-mt-5 rounded-xl bg-red-500 p-4" onPress={handleSubmit}>
+          <TouchableOpacity className="rounded-xl w-64 mx-auto bg-red-500 p-4 mb-40" onPress={handleSubmit}>
             <Text className="text-center text-lg font-semibold text-white">Save Work</Text>
           </TouchableOpacity>
         </View>
