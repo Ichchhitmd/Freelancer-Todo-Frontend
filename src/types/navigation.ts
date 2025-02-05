@@ -1,3 +1,5 @@
+import { GadgetResponse } from './gadgetTypes';
+
 export type RootStackParamList = {
   LoginScreen: undefined;
   RegisterScreen: undefined;
@@ -21,5 +23,12 @@ export type RootStackParamList = {
         expenses: number;
       }[];
     };
+  };
+  AddGadget: undefined;
+  EditGadget: {
+    gadget: GadgetResponse;
+  };
+  GadgetDetails: {
+    gadget: GadgetResponse;
   };
 };

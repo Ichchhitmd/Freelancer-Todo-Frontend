@@ -21,6 +21,9 @@ import { View } from 'react-native';
 
 import { useEffect } from 'react';
 import { requestNotificationPermission } from 'utils/notification';
+import GadgetDetailsScreen from '~/screens/main/GadgetDetailsScreen';
+import AddGadgetScreen from '~/screens/main/AddGadgetScreen';
+import EditGadgetScreen from '~/screens/main/EditGadgetScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -70,6 +73,8 @@ function TabNavigator() {
             switch (route.name) {
               case 'Home':
                 return focused ? 'home' : 'home-outline';
+              case 'Add Work':
+                return focused ? 'work' : 'work-outline';
               case 'Workings':
                 return focused ? 'briefcase' : 'briefcase-outline';
               case 'Earnings':
@@ -132,6 +137,9 @@ export default function App() {
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
+            <Stack.Screen name="GadgetDetails" component={GadgetDetailsScreen} />
+            <Stack.Screen name="AddGadget" component={AddGadgetScreen} />
+            <Stack.Screen name="EditGadget" component={EditGadgetScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>
