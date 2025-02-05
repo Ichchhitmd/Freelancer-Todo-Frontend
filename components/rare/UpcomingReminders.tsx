@@ -43,14 +43,17 @@ function engToNepNum(strNum: string): string {
     .join('');
 }
 
-// Helper function to format multiple dates in Nepali
 const formatMultipleDates = (dates: string[]) => {
   if (dates.length === 0) return 'No Dates';
 
   const nepaliDates = dates.map((date) => {
     try {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        throw new Error('Invalid date format');
+      }
+
       const nepaliDate = new NepaliDate(date, 'YYYY-MM-DD');
-      const day = engToNepNum(nepaliDate.format('DD')); // Convert day to Nepali numerals
+      const day = engToNepNum(nepaliDate.format('DD'));
       return day;
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -58,15 +61,19 @@ const formatMultipleDates = (dates: string[]) => {
     }
   });
 
+  if (nepaliDates.includes('Invalid Date')) {
+    return 'Invalid Date';
+  }
+
   const firstDate = dates[0];
   const nepaliDate = new NepaliDate(firstDate, 'YYYY-MM-DD');
   const nepaliMonth = nepaliDate.format('MMMM'); // Extract month in Nepali
 
   return `${nepaliMonth} - ${nepaliDates.join(', ')}`;
 };
+console.log('formatMultipleDates:', formatMultipleDates);
 
 const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events, handleClick }) => {
-  // Sort events by eventId to ensure they appear in correct order
   const sortedEvents = [...events].sort((a, b) => a.details.eventId - b.details.eventId);
 
   const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;

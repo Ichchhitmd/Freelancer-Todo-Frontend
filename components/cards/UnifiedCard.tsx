@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Dimensions } from 'react-native';
 
 interface MonthlyData {
-  eventId: string;
+  eventId: number;
   month: string;
   totalIncome: number;
   totalExpense: number;

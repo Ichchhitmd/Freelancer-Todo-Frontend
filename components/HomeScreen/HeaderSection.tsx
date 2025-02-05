@@ -5,7 +5,7 @@ import { getGreeting } from 'utils/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface HeaderSectionProps {
-  user: string;
+  user: string | undefined;
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
   onProfilePress?: () => void;
@@ -59,7 +59,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
           <View className="flex-1">
             <Text className="mb-1 text-sm font-semibold text-red-400">Welcome back,</Text>
             <Text className="text-xl font-extrabold text-red-800" numberOfLines={1}>
-              {user}
+              {user || 'Guest'}
             </Text>
           </View>
 
