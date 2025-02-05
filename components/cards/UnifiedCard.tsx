@@ -38,94 +38,104 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     return amount.toString();
   };
 
-  const getDateForOffset = (offset: number) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + offset);
-    return date.toISOString();
-  };
-
-  const MonthCard = ({ data, dateOffset }: { data: MonthlyData; dateOffset: number }) => (
-    <View style={{ width: screenWidth }}>
+  const MonthCard = ({
+    data1,
+    data2,
+    isSummary,
+  }: {
+    data1: MonthlyData;
+    data2?: MonthlyData;
+    isSummary?: boolean;
+  }) => (
+    <View style={{ width: screenWidth, paddingTop: 12 }}>
       <Pressable
         onPress={onPress}
         style={{
           width: '100%',
-          borderRadius: 12,
-          backgroundColor: '#fff',
-          padding: 16,
+          borderRadius: 16,
+          backgroundColor: '#ffffff',
+          padding: 20,
           shadowColor: '#000',
-          shadowOpacity: 0.1,
+          shadowOpacity: 0.2,
           shadowRadius: 8,
           shadowOffset: { width: 0, height: 4 },
-          elevation: 4,
+          elevation: 8,
+          marginBottom: 16,
         }}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
-        <View style={{ marginBottom: 16 }} className="flex items-center justify-between">
-          <MaterialCommunityIcons name="calendar-month" size={28} color="#000000" />
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ marginLeft: 8 }} className="flex items-center">
-              <NepaliDateConverter
-                date={getDateForOffset(dateOffset)}
-                className="text-3xl font-bold text-primary"
-                showDay={false}
-                showMonth={true}
-                showDate={false}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View>
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons name="cash" size={28} color="#008000" />
-              <Text style={{ color: '#008000', fontWeight: '600', marginLeft: 8 }}>
-                Estimated Income
+        {isSummary ? (
+          <View>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: '700',
+                textAlign: 'center',
+                marginBottom: 24,
+                color: '#333',
+              }}>
+              Summary
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{ fontWeight: '600', color: '#008000', fontSize: 16 }}>
+                Total Income
+              </Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
+                Rs. {formatAmount(monthlyData.reduce((sum, item) => sum + item.totalIncome, 0))}
               </Text>
             </View>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#10B981' }}>
-              Rs. {formatAmount(data.totalIncome)}
-            </Text>
-          </View>
-
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons name="cash-minus" size={28} color="#E50914" />
-              <Text style={{ color: '#E50914', fontWeight: '600', marginLeft: 8 }}>
-                Total Expenses
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+              <Text style={{ fontWeight: '600', color: '#E50914', fontSize: 16 }}>
+                Total Expense
+              </Text>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#E50914' }}>
+                Rs. {formatAmount(monthlyData.reduce((sum, item) => sum + item.totalExpense, 0))}
               </Text>
             </View>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#E50914' }}>
-              Rs. {formatAmount(data.totalExpense)}
-            </Text>
           </View>
-
-          <View
-            style={{
-              marginTop: 8,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderTopWidth: 1,
-              borderColor: '#E5E7EB',
-              paddingTop: 8,
-            }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MaterialCommunityIcons name="cash-check" size={28} color="#3B82F6" />
-              <View style={{ marginLeft: 8 }}>
-                <Text style={{ color: '#3B82F6', fontWeight: '600' }}>Net Balance</Text>
-                <Text style={{ color: '#6B7280', fontSize: 12 }}>
-                  {data.eventCount} events planned
-                </Text>
-              </View>
-            </View>
-            <Text style={{ fontSize: 24, fontWeight: '700', color: '#3B82F6' }}>
-              Rs. {formatAmount(data.totalIncome - data.totalExpense)}
-            </Text>
+        ) : (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            {[data1, data2].map(
+              (data, index) =>
+                data && (
+                  <View key={index} style={{ flex: 1, marginHorizontal: 8 }}>
+                    <View className="flex items-center">
+                      <MaterialCommunityIcons name="calendar-month" size={32} color="#333" />
+                      <NepaliDateConverter
+                        date={new Date().toISOString()}
+                        className="text-xl font-bold text-primary"
+                        showDay={false}
+                        showMonth
+                        showDate={false}
+                      />
+                    </View>
+                    <View style={{ marginTop: 24 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontWeight: '600', color: '#008000', fontSize: 16 }}>
+                          Income
+                        </Text>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#10B981' }}>
+                          Rs. {formatAmount(data.totalIncome)}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          marginTop: 12,
+                        }}>
+                        <Text style={{ fontWeight: '600', color: '#E50914', fontSize: 16 }}>
+                          Expense
+                        </Text>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#E50914' }}>
+                          Rs. {formatAmount(data.totalExpense)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )
+            )}
           </View>
-        </View>
+        )}
       </Pressable>
     </View>
   );
@@ -139,9 +149,12 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={200}>
-        {monthlyData.map((data, index) => (
-          <MonthCard key={index} data={data} dateOffset={index - 1} />
-        ))}
+        {monthlyData.map((_, index) =>
+          index % 2 === 0 && index < monthlyData.length - 1 ? (
+            <MonthCard key={index} data1={monthlyData[index]} data2={monthlyData[index + 1]} />
+          ) : null
+        )}
+        <MonthCard key={monthlyData.length} data1={monthlyData[0]} isSummary />
       </ScrollView>
     </View>
   );

@@ -1,27 +1,26 @@
 import React from 'react';
-import { Text, TouchableOpacity, View, ScrollView, SafeAreaView, Pressable } from 'react-native';
+import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
 import NepaliDate from 'nepali-date-converter';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface BookedDatesProps {
-  selectedDates: any[];
-  handleDateClick: (dateDetails: any) => void;
-}
-
-interface DateDetails {
+interface DateDetail {
+  date: string;
   details: any;
-  nepaliDate: {
+  nepaliDate?: {
     month: string;
     day: string;
   };
 }
 
-interface GroupedDates {
-  [month: string]: DateDetails[];
+interface BookedDatesProps {
+  selectedDates: DateDetail[];
+  handleDateClick: (dateDetails: any) => void;
 }
 
-// Define the map of English numerals to Nepali numerals
+interface GroupedDates {
+  [month: string]: DateDetail[];
+}
+
 const tableOfEngNepNums = new Map([
   [0, '०'],
   [1, '१'],
@@ -35,15 +34,14 @@ const tableOfEngNepNums = new Map([
   [9, '९'],
 ]);
 
-// Function to convert English numerals to Nepali numerals
 function engToNepNum(strNum: string): string {
   return String(strNum)
     .split('')
     .map(function (ch) {
       if (ch === '.' || ch === ',') {
-        return ch; // Preserve non-numeric characters like decimal points or commas
+        return ch;
       }
-      return tableOfEngNepNums.get(Number(ch)) ?? ch; // Convert English digits or return original if not found
+      return tableOfEngNepNums.get(Number(ch)) ?? ch;
     })
     .join('');
 }
@@ -55,30 +53,40 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
       const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
       const nepaliDate = new NepaliDate(dateStr);
 
-      // Convert the day to Nepali numerals
       const dayInEnglish = nepaliDate.format('DD');
       const dayInNepali = engToNepNum(dayInEnglish);
 
       return {
-        month: nepaliDate.format('MMMM'), // Get the Nepali month name
-        day: dayInNepali, // Day in Nepali numerals
+        month: nepaliDate.format('MMMM'),
+        day: dayInNepali,
       };
     } catch (error) {
-      console.log('Error converting date:', error);
+      console.error('Error converting date:', error);
       return null;
     }
   };
 
-  const groupedDates: GroupedDates = selectedDates.reduce((acc, item) => {
-    const nepaliDate = getNepaliDate(item.date);
-    if (!nepaliDate) return acc;
-    if (!acc[nepaliDate.month]) acc[nepaliDate.month] = [];
-    acc[nepaliDate.month].push({ ...item, nepaliDate });
-    return acc;
-  }, {});
+  const groupedDates: GroupedDates = React.useMemo(() => {
+    if (!selectedDates || selectedDates.length === 0) return {};
+
+    return selectedDates.reduce((acc: GroupedDates, item) => {
+      const nepaliDate = getNepaliDate(item.date);
+      if (!nepaliDate) return acc;
+
+      const month = nepaliDate.month;
+      if (!acc[month]) acc[month] = [];
+
+      acc[month].push({
+        ...item,
+        nepaliDate,
+      });
+
+      return acc;
+    }, {});
+  }, [selectedDates]);
 
   return (
-    <SafeAreaView className="w-ful">
+    <SafeAreaView className="w-full">
       <ScrollView className="w-full flex-1">
         {Object.keys(groupedDates).length === 0 ? (
           <View className="w-full items-center rounded-xl bg-white p-6 shadow-sm">
@@ -89,7 +97,7 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
             </Text>
           </View>
         ) : (
-          Object.entries(groupedDates).map(([month, dates]: [string, DateDetails[]]) => (
+          Object.entries(groupedDates).map(([month, dates]: [string, DateDetail[]]) => (
             <View
               key={month}
               className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
@@ -99,11 +107,16 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
               </View>
 
               <View className="flex-row flex-wrap gap-2">
-                {dates.map((item: DateDetails, index: number) => (
+                {dates.map((item: DateDetail, index: number) => (
                   <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
-                    <View className="h-14 w-14 flex-col items-center justify-center  border border-gray/25 bg-gray/25">
-                      <Text className="text-lg font-bold text-black">{item.nepaliDate.day}</Text>
-                      <Text className="ml-3 text-xs font-bold text-black">16 Jan</Text>
+                    <View className="h-14 w-14 flex-col items-center justify-center border border-gray/25 bg-gray/25">
+                      <Text className="text-lg font-bold text-black">{item.nepaliDate?.day}</Text>
+                      <Text className="ml-3 text-xs font-bold text-black">
+                        {new Date(item.date).toLocaleDateString('en-US', {
+                          day: '2-digit',
+                          month: 'short',
+                        })}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 ))}

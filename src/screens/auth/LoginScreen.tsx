@@ -108,7 +108,7 @@ export default function LoginScreen() {
               },
               onError: (error) => {
                 console.error('Login Failed:', error);
-                const errorMessage = handleAxiosError(error); 
+                const errorMessage = handleAxiosError(error);
                 Alert.alert('Login Error', errorMessage);
               },
             }
@@ -158,21 +158,21 @@ export default function LoginScreen() {
         {status === 'pending' ? (
           <ActivityIndicator size="large" color="#0000ff" className="my-4" />
         ) : (
-          <Pressable
-            className="rounded-lg bg-primary py-4 shadow-md shadow-primary/30 active:bg-primary"
-            onPress={handleLogin}>
-            <Text className="text-center text-lg font-semibold text-white">Login</Text>
-          </Pressable>
+          <View>
+            <Pressable
+              className="rounded-lg bg-primary py-4 shadow-md shadow-primary/30 active:bg-primary"
+              onPress={handleLogin}>
+              <Text className="text-center text-lg font-semibold text-white">Login</Text>
+            </Pressable>
+            <Pressable
+              className="mt-4 rounded-lg bg-green-500 py-4 shadow-md shadow-green-500/30 active:bg-green-600"
+              onPress={handleBiometricLogin}>
+              <Text className="text-center text-lg font-semibold text-white">
+                Login with Fingerprint
+              </Text>
+            </Pressable>
+          </View>
         )}
-
-        <Pressable
-          className="mt-4 rounded-lg bg-green-500 py-4 shadow-md shadow-green-500/30 active:bg-green-600"
-          onPress={handleBiometricLogin}
-          disabled={status === 'pending'}>
-          <Text className="text-center text-lg font-semibold text-white">
-            Login with Fingerprint
-          </Text>
-        </Pressable>
 
         <Pressable className="mt-6" onPress={() => navigation.navigate('RegisterScreen')}>
           <Text className="text-gray-900 text-center text-sm">

@@ -70,13 +70,13 @@ const InputField: React.FC<InputFieldProps> = ({
   return (
     <View className="mb-5">
       <View
-        className="bg-gray-50 relative h-16 rounded-xl 
-        border border-slate-200">
-        <Animated.Text style={labelStyle} className="bg-gray-50 absolute left-14 z-0 font-medium">
+        className="bg-gray-50 relative h-16
+        border border-gray/10">
+        <Animated.Text style={labelStyle} className="bg-gray-50 absolute left-12 z-0 font-medium">
           {label}
         </Animated.Text>
 
-        <View className="h-full w-full flex-row items-center px-4">
+        <View className="h-full w-full flex-row items-center gap-2 px-2">
           <MaterialCommunityIcons
             name={icon}
             size={25}
@@ -84,7 +84,7 @@ const InputField: React.FC<InputFieldProps> = ({
           />
 
           <TextInput
-            className={`text-gray-900 ml-4 flex-1 text-base ${disabled ? 'opacity-50' : ''}`}
+            className={`text-gray-900 flex-1 text-base ${disabled ? 'opacity-50' : ''}`}
             placeholder={isFocused ? placeholder : ''}
             value={value}
             onChangeText={onChangeText}
