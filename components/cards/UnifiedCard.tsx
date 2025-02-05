@@ -1,9 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NepaliDateConverter from 'components/rare/nepaliDateConverter';
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Dimensions } from 'react-native';
 
 interface MonthlyData {
+  eventId: string;
   month: string;
   totalIncome: number;
   totalExpense: number;
@@ -36,6 +36,24 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     if (amount >= 100000) return `${(amount / 100000).toFixed(1)}L`;
     if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K`;
     return amount.toString();
+  };
+  const aggregateIncomeByEvent = (data: MonthlyData[]) => {
+    const eventIncomeMap: { [key: string]: { income: number; month: string } } = {};
+
+    data.forEach((item) => {
+      const key = `${item.eventId}-${item.month}`;
+
+      if (eventIncomeMap[key]) {
+        eventIncomeMap[key].income += item.totalIncome;
+      } else {
+        eventIncomeMap[key] = {
+          income: item.totalIncome,
+          month: item.month,
+        };
+      }
+    });
+
+    return eventIncomeMap;
   };
 
   const MonthCard = ({
@@ -100,13 +118,11 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
                   <View key={index} style={{ flex: 1, marginHorizontal: 8 }}>
                     <View className="flex items-center">
                       <MaterialCommunityIcons name="calendar-month" size={32} color="#333" />
-                      <NepaliDateConverter
-                        date={new Date().toISOString()}
-                        className="text-xl font-bold text-primary"
-                        showDay={false}
-                        showMonth
-                        showDate={false}
-                      />
+                      <View className="flex items-center">
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#333' }}>
+                          {data.month}
+                        </Text>
+                      </View>
                     </View>
                     <View style={{ marginTop: 24 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -141,22 +157,33 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
   );
 
   return (
-    <View>
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={200}>
-        {monthlyData.map((_, index) =>
-          index % 2 === 0 && index < monthlyData.length - 1 ? (
-            <MonthCard key={index} data1={monthlyData[index]} data2={monthlyData[index + 1]} />
-          ) : null
-        )}
-        <MonthCard key={monthlyData.length} data1={monthlyData[0]} isSummary />
-      </ScrollView>
-    </View>
+    <ScrollView
+      ref={scrollViewRef}
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      onScroll={handleScroll}
+      scrollEventThrottle={200}>
+      {monthlyData.map((_, index) => {
+        if (index % 2 === 0) {
+          return (
+            <MonthCard
+              key={index}
+              data1={monthlyData[index]}
+              data2={monthlyData[index + 1]} // Might be undefined if last item
+            />
+          );
+        }
+        return null;
+      })}
+
+      {monthlyData.length % 2 !== 0 && (
+        <MonthCard key={monthlyData.length - 1} data1={monthlyData[monthlyData.length - 1]} />
+      )}
+
+      {/* Summary card at the end */}
+      <MonthCard key="summary" data1={monthlyData[0]} isSummary />
+    </ScrollView>
   );
 };
 

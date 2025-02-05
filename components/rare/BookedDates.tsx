@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
 import NepaliDate from 'nepali-date-converter';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { NepaliDateToEnglish } from 'utils/nepaliDateToEnglish';
 
 interface DateDetail {
   date: string;
@@ -111,12 +112,7 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
                   <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
                     <View className="h-14 w-14 flex-col items-center justify-center border border-gray/25 bg-gray/25">
                       <Text className="text-lg font-bold text-black">{item.nepaliDate?.day}</Text>
-                      <Text className="ml-3 text-xs font-bold text-black">
-                        {new Date(item.date).toLocaleDateString('en-US', {
-                          day: '2-digit',
-                          month: 'short',
-                        })}
-                      </Text>
+                      <Text className="text-sm text-black">{NepaliDateToEnglish(item.date)}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}

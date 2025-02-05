@@ -17,8 +17,10 @@ import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
-import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
 import { View } from 'react-native';
+
+import { useEffect } from 'react';
+import { requestNotificationPermission } from 'utils/notification';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -102,11 +104,22 @@ function TabNavigator() {
         options={{ tabBarLabel: 'Earnings' }}
       />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+      <Tab.Screen
+        name="DateDetails"
+        component={DateDetails}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
+        }}
+      />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
   const queryClient = new QueryClient();
 
   return (
@@ -119,7 +132,6 @@ export default function App() {
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
-            <Stack.Screen name="DateDetails" component={DateDetails} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>

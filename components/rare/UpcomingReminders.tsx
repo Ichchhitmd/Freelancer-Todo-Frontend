@@ -1,54 +1,118 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NepaliDateConverter from './nepaliDateConverter';
+import NepaliDate from 'nepali-datetime'; // Use nepali-datetime for Nepali date handling
+
+interface EventDetails {
+  eventId: number;
+  eventType: string;
+  side: string;
+  earnings: string;
+  contactPerson: string;
+  company: {
+    name: string;
+  };
+  eventDate: string; // Add eventDate to the EventDetails interface
+}
 
 interface UpcomingEventReminderProps {
   events: {
     date: string;
-    details: {
-      eventName: string;
-      brideGroom: string;
-      estimatedEarning: string;
-    };
+    details: EventDetails;
   }[];
-  onPress: (eventId: number) => void; // Passing eventId to handle which event is pressed
+  handleClick: (dateDetails: any) => void;
 }
 
-const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events, onPress }) => {
+const tableOfEngNepNums = new Map([
+  [0, '०'],
+  [1, '१'],
+  [2, '२'],
+  [3, '३'],
+  [4, '४'],
+  [5, '५'],
+  [6, '६'],
+  [7, '७'],
+  [8, '८'],
+  [9, '९'],
+]);
+
+function engToNepNum(strNum: string): string {
+  return String(strNum)
+    .split('')
+    .map((ch) => tableOfEngNepNums.get(Number(ch)) ?? ch)
+    .join('');
+}
+
+// Helper function to format multiple dates in Nepali
+const formatMultipleDates = (dates: string[]) => {
+  if (dates.length === 0) return 'No Dates';
+
+  const nepaliDates = dates.map((date) => {
+    try {
+      const nepaliDate = new NepaliDate(date, 'YYYY-MM-DD');
+      const day = engToNepNum(nepaliDate.format('DD')); // Convert day to Nepali numerals
+      return day;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  });
+
+  const firstDate = dates[0];
+  const nepaliDate = new NepaliDate(firstDate, 'YYYY-MM-DD');
+  const nepaliMonth = nepaliDate.format('MMMM'); // Extract month in Nepali
+
+  return `${nepaliMonth} - ${nepaliDates.join(', ')}`;
+};
+
+const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events, handleClick }) => {
+  // Sort events by eventId to ensure they appear in correct order
+  const sortedEvents = [...events].sort((a, b) => a.details.eventId - b.details.eventId);
+
+  const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;
+
+  const getDisplayName = (details: EventDetails) => details.contactPerson || details.company.name;
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {events.slice(0, 4).map((nextEvent, index) => (
-        <TouchableOpacity
-          key={index}
-          onPress={() => onPress(index)} // You can handle this with the eventId or index
-          activeOpacity={0.8}
-          style={styles.card}>
-          <View style={styles.cardContent}>
-            <Text style={styles.eventName}>{nextEvent.details.eventName}</Text>
+    <View>
+      {sortedEvents.map((event, index) => {
+        const dates = event.date.split(',').map((d: string) => d.trim());
 
-            <View style={styles.eventDetailRow}>
-              <MaterialCommunityIcons name="account-group" size={22} color="#4B5563" />
-              <Text style={styles.eventDetailText}>Event with {nextEvent.details.brideGroom}</Text>
-            </View>
-
-            <View style={styles.eventDetailRow}>
-              <MaterialCommunityIcons name="calendar" size={22} color="#4B5563" />
-              <Text style={styles.eventDateText}>
-                <NepaliDateConverter date={nextEvent.date} />
+        return (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleClick(event.details)}
+            activeOpacity={0.8}
+            style={styles.card}>
+            <View style={styles.cardContent}>
+              <Text style={styles.eventName} numberOfLines={1}>
+                {formatEventName(event.details)}
               </Text>
-            </View>
 
-            <View style={styles.eventDetailRow}>
-              <MaterialCommunityIcons name="currency-usd" size={22} color="#10B981" />
-              <Text style={styles.earningsText}>
-                Estimated: {nextEvent.details.estimatedEarning}
-              </Text>
+              <View style={styles.eventDetailRow}>
+                <MaterialCommunityIcons name="account-group" size={22} color="#4B5563" />
+                <Text style={styles.eventDetailText} numberOfLines={1}>
+                  Event with {getDisplayName(event.details)}
+                </Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <MaterialCommunityIcons name="calendar" size={22} color="#4B5563" />
+                <Text style={styles.eventDateText}>{formatMultipleDates(dates)}</Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <MaterialCommunityIcons name="currency-usd" size={22} color="#10B981" />
+                <Text style={styles.earningsText}>
+                  Estimated: Rs.{' '}
+                  {engToNepNum(parseFloat(event.details.earnings).toLocaleString())}
+                </Text>
+              </View>
             </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 };
 
@@ -58,39 +122,38 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 3,
-    padding: 16,
     borderWidth: 1,
-    borderColor: '#ddd', // Light border color for paper
-    overflow: 'hidden',
-    position: 'relative',
+    borderColor: '#E5E7EB',
   },
   cardContent: {
-    position: 'relative',
+    padding: 16,
   },
   eventName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-    fontFamily: 'serif', // More notepad-like font
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'normal',
+    textTransform: 'capitalize',
   },
   eventDetailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   eventDetailText: {
+    flex: 1,
     fontSize: 14,
-    color: '#666',
+    color: '#4B5563',
     marginLeft: 8,
   },
   eventDateText: {
     fontSize: 14,
-    color: '#999',
+    color: '#6B7280',
     marginLeft: 8,
   },
   earningsText: {

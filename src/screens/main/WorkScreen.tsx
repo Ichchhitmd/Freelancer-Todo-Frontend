@@ -5,7 +5,7 @@ import { View } from 'react-native';
 const WorkScreen = () => {
   return (
     <View className="flex-1 bg-gray-50">
-      <AddWorkForm />
+      <AddWorkForm isEditMode={false} />
     </View>
   );
 };

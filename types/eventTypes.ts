@@ -17,3 +17,16 @@ export interface EventResponse extends EventRequest {
   updatedAt: string;
   freelancerId?: number | null;
 }
+
+export type EventDetails = {
+  userId: number;
+  companyId: number;
+  contactPerson: string;
+  contactInfo: string;
+  workType: string;
+  side: string;
+  eventType: string;
+  estimatedEarning: number;
+  actualEarning?: number;
+  eventDate: string;
+};
