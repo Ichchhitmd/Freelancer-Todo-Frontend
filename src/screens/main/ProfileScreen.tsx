@@ -1,229 +1,554 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, Image, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Image, 
+  ScrollView, 
+  Alert, 
+  SafeAreaView,
+  ActivityIndicator,
+  RefreshControl
+} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from 'redux/store';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { logout, updatePhoto, setError } from 'redux/slices/authSlices';
+import { fetchGadgets, removeGadget } from 'redux/slices/gadgetSlices';
+import { GadgetResponse } from 'types/gadgetTypes';
 import * as ImagePicker from 'expo-image-picker';
 import { updateUserProfilePicture } from 'helper/userRequest';
-import GadgetsSection from 'components/HomeScreen/GadgetSection';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const GadgetCard: React.FC<{ gadget: GadgetResponse, onPress: () => void, onDelete: () => void }> = ({ gadget, onPress, onDelete }) => {
+  const getIconName = (model: string) => {
+    const modelLower = model.toLowerCase();
+    if (modelLower.includes('laptop')) return 'laptop';
+    if (modelLower.includes('camera')) return 'camera';
+    if (modelLower.includes('lens')) return 'camera-iris';
+    if (modelLower.includes('drone')) return 'drone';
+    return 'devices';
+  };
+
+  return (
+    <TouchableOpacity 
+      onPress={onPress}
+      className="mb-4"
+    >
+      <LinearGradient
+        colors={['#F5F5F5', '#FFFFFF']}
+        className="rounded-2xl p-4 shadow-sm"
+      >
+        <View className="flex-row items-center">
+          <View className="bg-red-100 p-3 rounded-xl">
+            <MaterialCommunityIcons 
+              name={getIconName(gadget.model)} 
+              size={24} 
+              color="#E50914" 
+            />
+          </View>
+          
+          <View className="flex-1 ml-4">
+            <Text className="text-lg font-bold text-gray-800">{gadget.name}</Text>
+            <Text className="text-sm text-gray-500">{gadget.model}</Text>
+            <View className="flex-row items-center mt-1">
+              <Text className="text-xs text-gray-400 mr-4">
+                Cost: ${gadget.cost.toLocaleString()}
+              </Text>
+              <Text className="text-xs text-gray-400">
+                Purchased: {new Date(gadget.purchaseDate).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+
+          <View className="flex-row items-center">
+            <TouchableOpacity 
+              onPress={onDelete}
+              className="p-2"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons 
+                name="delete-outline" 
+                size={24} 
+                color="#E50914" 
+              />
+            </TouchableOpacity>
+            <MaterialCommunityIcons 
+              name="chevron-right" 
+              size={24} 
+              color="#888" 
+            />
+          </View>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+};
+
+const GadgetDetailsBottomSheet: React.FC<{ 
+  gadget: GadgetResponse | null, 
+  bottomSheetModalRef: React.RefObject<BottomSheetModal>,
+  snapPoints: string[]
+}> = ({ gadget, bottomSheetModalRef, snapPoints }) => {
+  if (!gadget) return null;
+
+  return (
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={0}
+      snapPoints={snapPoints}
+      backgroundStyle={{ 
+        backgroundColor: '#FFFFFF', 
+        borderRadius: 24 
+      }}
+    >
+      <BottomSheetScrollView 
+        contentContainerStyle={{ 
+          padding: 16, 
+          alignItems: 'center' 
+        }}
+      >
+        <View className="w-full items-center mb-6">
+          <View className="bg-red-100 p-6 rounded-full mb-4">
+            <MaterialCommunityIcons 
+              name={gadget.model === 'laptop' ? 'laptop' : 
+                     gadget.model === 'lens' ? 'camera-iris' : 
+                     gadget.model === 'camera' ? 'camera' : 'drone'} 
+              size={48} 
+              color="#E50914" 
+            />
+          </View>
+          <Text className="text-2xl font-bold text-gray-800">{gadget.name}</Text>
+          <Text className="text-base text-gray-500">{gadget.model}</Text>
+        </View>
+
+        <View className="w-full bg-gray-100 rounded-2xl p-4 mb-4">
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-gray-600">Cost</Text>
+            <Text className="font-bold">${gadget.cost.toLocaleString()}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-600">Purchase Date</Text>
+            <Text className="font-bold">{new Date(gadget.purchaseDate).toLocaleDateString()}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity 
+          className="w-full bg-red-500 rounded-xl p-4 flex-row justify-center items-center"
+        >
+          <MaterialCommunityIcons 
+            name="pencil" 
+            size={20} 
+            color="white" 
+            className="mr-2" 
+          />
+          <Text className="text-white font-bold">Edit Gadget</Text>
+        </TouchableOpacity>
+      </BottomSheetScrollView>
+    </BottomSheetModal>
+  );
+};
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [locationName, setLocationName] = useState('');
+  const { gadgets = [], loading = false, error = null } = useSelector((state: RootState) => state.gadgets) || { gadgets: [], loading: false, error: null };
+  const [locationName, setLocationName] = useState<string>('Loading location...');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const convertCoordinatesToLocation = useCallback(async (coordinates: string) => {
+    try {
+      // Split coordinates into latitude and longitude
+      const [latitude, longitude] = coordinates.split(',').map(coord => parseFloat(coord.trim()));
+      
+      if (isNaN(latitude) || isNaN(longitude)) {
+        throw new Error('Invalid coordinates format');
+      }
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'FreelancerTodoApp/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch location data');
+      }
+
+      const data = await response.json();
+      const address = data.address;
+      const city = address.city || address.town || address.village || address.suburb || address.county || 'Unknown City';
+      const country = address.country || 'Unknown Country';
+
+      const locationString = `${city}, ${country}`;
+      setLocationName(locationString);
+
+    } catch (error) {
+      console.error('Error converting coordinates:', error);
+      setLocationName('Location not available');
+    }
+  }, []);
 
   useEffect(() => {
-    const getLocationName = async () => {
-      try {
-        if (user?.location) {
-          
-          const coordinates = user.location.split(',').map(coord => {
-            const parsed = parseFloat(coord.trim());
-            if (isNaN(parsed)) {
-              throw new Error(`Invalid coordinate: ${coord}`);
-            }
-            return parsed;
-          });
-          
-          const [latitude, longitude] = coordinates;
-          
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
-            {
-              headers: {
-                'User-Agent': 'YourAppName/1.0 (your@email.com)'
+    if (user?.location) {
+      convertCoordinatesToLocation(user.location);
+    } else {
+      setLocationName('Location not available');
+    }
+  }, [user?.location, convertCoordinatesToLocation]);
+
+  const fetchGadgetsData = useCallback(async () => {
+    try {
+      await dispatch(fetchGadgets()).unwrap();
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert('Error', `Failed to fetch gadgets: ${error.message}`);
+      } else {
+        Alert.alert('Error', 'Failed to fetch gadgets. Please try again later.');
+      }
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchGadgetsData();
+  }, [fetchGadgetsData]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchGadgetsData();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetchGadgetsData]);
+
+  const handleAddGadget = () => {
+    navigation.navigate('AddGadget');
+  };
+
+  const handleDeleteGadget = async (id: number) => {
+    Alert.alert(
+      "Delete Gadget",
+      "Are you sure you want to delete this gadget? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await dispatch(removeGadget(id)).unwrap();
+              Alert.alert('Success', 'Gadget deleted successfully');
+            } catch (error) {
+              if (error instanceof Error) {
+                Alert.alert('Error', `Failed to delete gadget: ${error.message}`);
+              } else {
+                Alert.alert('Error', 'Failed to delete gadget. Please try again later.');
               }
             }
-          );
-          
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Fetch error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}`);
           }
-          
-          const data = await response.json();
-          
-          const address = data.address;
-          let formattedLocation = '';
-          
-          if (address.city) formattedLocation = address.city;
-          else if (address.town) formattedLocation = address.town;
-          else if (address.village) formattedLocation = address.village;
-          else if (address.county) formattedLocation = address.county;
-          
-          if (address.country) {
-            formattedLocation += formattedLocation ? `, ${address.country}` : address.country;
-          }
-          
-          setLocationName(formattedLocation || 'Location not available');
         }
-      } catch (error) {
-        console.error('Full error converting coordinates:', error);
-        
-        if (error instanceof Error) {
-          Alert.alert('Location Error', `Unable to convert location: ${error.message}`);
-        }
-        
-        setLocationName(user?.location || 'Location not available');
-      }
-    };
-
-    if (user?.location) {
-      getLocationName();
-    }
-  }, [user?.location]);
-
-  const getInitials = (name: string) => {
-    if (!name) return '';
-    const names = name.split(' ');
-    if (names.length >= 2) {
-      return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
-    }
-    return name.charAt(0).toUpperCase();
+      ]
+    );
   };
 
-  const uploadImage = async (uri: string) => {
+  const handleGadgetPress = useCallback((gadget: GadgetResponse) => {
     try {
-      const formData = new FormData();
-      const filename = uri.split('/').pop() || 'image.jpg';
-      
-      formData.append('photo', {
-        uri,
-        name: filename,
-        type: 'image/jpeg',
-      } as any);
-  
-      const response = await updateUserProfilePicture(formData);
-      
-      if (response.photo) {
-        dispatch(updatePhoto(response.photo));
-        Alert.alert('Success', 'Profile picture updated successfully!');
-      }
-    } catch (error: any) {
-      dispatch(setError(error.message));
-      Alert.alert('Error', error.message || 'Failed to upload image');
+      navigation.navigate('GadgetDetails', { gadget });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to open gadget details. Please try again.');
     }
-  };
+  }, [navigation]);
 
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Sorry, we need camera roll permissions to update your profile picture!');
-        return;
-      }
-
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        await uploadImage(result.assets[0].uri);
+      if (!result.canceled) {
+        const formData = new FormData();
+        formData.append('photo', {
+          uri: result.assets[0].uri,
+          type: 'image/jpeg',
+          name: 'profile.jpg',
+        } as any);
+
+        try {
+          const response = await updateUserProfilePicture(formData);
+          if (response.photo) {
+            dispatch(updatePhoto(response.photo));
+            Alert.alert('Success', 'Profile picture updated successfully');
+          }
+        } catch (error) {
+          if (error instanceof Error) {
+            Alert.alert('Error', `Failed to update profile picture: ${error.message}`);
+          } else {
+            Alert.alert('Error', 'Failed to update profile picture. Please try again later.');
+          }
+        }
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      if (error instanceof Error) {
+        Alert.alert('Error', `Failed to pick image: ${error.message}`);
+      } else {
+        Alert.alert('Error', 'Failed to pick image. Please try again later.');
+      }
     }
-  };
+  }, [dispatch]);
 
-  const ProfileInfoCard = () => (
-    <View className="bg-white rounded-b-xl shadow-md p-4 mb-4">
-      <View className="flex-row items-center mb-3">
-        <MaterialCommunityIcons name="email" size={24} color="black" className="mr-4" />
-        <View>
-          <Text className="text-gray-600 text-sm">Email</Text>
-          <Text className="text-gray-900 text-lg font-bold">{user.email}</Text>
-        </View>
-      </View>
-      
-      <View className="flex-row items-center mb-3 border-t border-gray-200 pt-3">
-        <MaterialCommunityIcons name="phone" size={24} color="black" className="mr-4" />
-        <View>
-          <Text className="text-gray-600 text-sm">Phone</Text>
-          <Text className="text-gray-900 text-lg font-bold">{user.phone}</Text>
-        </View>
-      </View>
-      
-      <View className="flex-row items-center border-t border-gray-200 pt-3">
-        <MaterialCommunityIcons name="map-marker" size={24} color="black" className="mr-4" />
-        <View>
-          <Text className="text-gray-600 text-sm">Location</Text>
-          <Text className="text-gray-900 text-lg font-bold">
-            {locationName || user.location || 'Location not available'}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
+  const HandleLogout = useCallback(() => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await dispatch(logout()).unwrap();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'LoginScreen' }],
+              });
+            } catch (error) {
+              if (error instanceof Error) {
+                Alert.alert('Error', `Failed to logout: ${error.message}`);
+              } else {
+                Alert.alert('Error', 'Failed to logout. Please try again later.');
+              }
+            }
+          }
+        }
+      ]
+    );
+  }, [dispatch, navigation]);
 
-  const HandleLogout = () => {
-    dispatch(logout());
-    navigation.navigate('LoginScreen');
-  };
+  const getInitials = useCallback((name: string) => {
+    try {
+      return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    } catch (error) {
+      console.error('Error getting initials:', error);
+      return 'U';
+    }
+  }, []);
 
   if (!user) {
-    return null;
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-red-500">User not found. Please login again.</Text>
+        <TouchableOpacity
+          onPress={HandleLogout}
+          className="mt-4 bg-red-500 px-6 py-3 rounded-full"
+        >
+          <Text className="text-white font-semibold">Return to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="bg-red-500 h-1/2.5 rounded-b-3xl pt-4">
-        <View className="p-6">
-          <View className="items-center mb-10 mt-6">
-            <View className="relative mb-6">
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView 
+        className="flex-1"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={['#E50914']}
+            tintColor="#E50914"
+          />
+        }
+      >
+        <View className="bg-red-500 px-4 py-10">
+          <Text className="pt-5 text-center text-3xl font-bold text-white">My Profile</Text>
+          <Text className="mt-2 text-center text-base text-red-100">
+            Manage your personal information
+          </Text>
+        </View>
+
+        <View className="-mt-4 rounded-2xl bg-white p-4 shadow-sm">
+          <View className="items-center mb-6">
+            <View className="relative mb-4">
               {user.photo ? (
                 <Image 
                   source={{ uri: `${process.env.UPLOADS_BASE_URL}/${user.photo}` }}
-                  className="h-40 w-40 rounded-full border-4 border-blue-500"
+                  className="h-40 w-40 rounded-full border-4 border-red-500"
                   onError={() => dispatch(setError('Failed to load profile image'))}
                 />
               ) : (
-                <View className="h-40 w-40 rounded-full border-4 border-blue-500 bg-blue-200 items-center justify-center">
-                  <Text className="text-4xl font-bold text-blue-600">
+                <View className="h-40 w-40 rounded-full border-4 border-[#E50914] bg-red-100 items-center justify-center">
+                  <Text className="text-4xl font-bold text-[#E50914]">
                     {getInitials(user.name)}
                   </Text>
                 </View>
               )}
-              <Pressable 
-                className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2"
+              <TouchableOpacity 
+                className="absolute bottom-0 right-0 bg-[#E50914] rounded-full p-3 shadow-lg"
                 onPress={pickImage}
               >
-                <MaterialCommunityIcons name="pencil" size={20} color="white" />
-              </Pressable>
+                <MaterialCommunityIcons name="pencil" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+            <Text className="text-2xl font-bold text-gray-800 mb-2">{user.name}</Text>
+          </View>
+
+          <View className="space-y-4 px-2">
+            <View className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons 
+                  name="email" 
+                  size={24} 
+                  color="#E50914" 
+                  style={{ marginRight: 16 }}
+                />
+                <View className="flex-1">
+                  <Text className="text-gray-600 text-sm">Email</Text>
+                  <Text className="text-gray-900 text-lg font-bold">{user.email}</Text>
+                </View>
+              </View>
+            </View>
+            
+            <View className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons 
+                  name="phone" 
+                  size={24} 
+                  color="#E50914" 
+                  style={{ marginRight: 16 }}
+                />
+                <View className="flex-1">
+                  <Text className="text-gray-600 text-sm">Phone</Text>
+                  <Text className="text-gray-900 text-lg font-bold">{user.phone || 'Not provided'}</Text>
+                </View>
+              </View>
+            </View>
+            
+            <View className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons 
+                  name="map-marker" 
+                  size={24} 
+                  color="#E50914" 
+                  style={{ marginRight: 16 }}
+                />
+                <View className="flex-1">
+                  <Text className="text-gray-600 text-sm">Location</Text>
+                  <Text className="text-gray-900 text-lg font-bold">{locationName}</Text>
+                </View>
+              </View>
             </View>
 
-            <Text className="text-2xl font-bold text-white mb-2">{user.name}</Text>
+            <View className="px-4 mt-4">
+              <View className="flex-row justify-between items-center mb-4">
+                <View>
+                  <Text className="text-2xl font-bold text-gray-800">My Gadgets</Text>
+                  <Text className="text-sm text-gray-500">
+                    {(gadgets || []).length} {(gadgets || []).length === 1 ? 'gadget' : 'gadgets'} registered
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={handleAddGadget}
+                  className="bg-red-500 px-4 py-2 rounded-full flex-row items-center"
+                >
+                  <MaterialCommunityIcons 
+                    name="plus" 
+                    size={20} 
+                    color="white" 
+                  />
+                  <Text className="text-white font-semibold ml-1">Add New</Text>
+                </TouchableOpacity>
+              </View>
+
+              {loading ? (
+                <View className="py-8">
+                  <ActivityIndicator size="large" color="#E50914" />
+                </View>
+              ) : error ? (
+                <View className="py-8 px-4 bg-red-50 rounded-xl">
+                  <MaterialCommunityIcons 
+                    name="alert-circle-outline" 
+                    size={48} 
+                    color="#EF4444"
+                    style={{ alignSelf: 'center' }}
+                  />
+                  <Text className="text-red-500 text-center mt-4">{error}</Text>
+                  <TouchableOpacity 
+                    onPress={handleRefresh}
+                    className="mt-4 bg-red-500 px-6 py-3 rounded-full self-center"
+                  >
+                    <Text className="text-white font-semibold">Try Again</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : !gadgets || gadgets.length === 0 ? (
+                <View className="py-8 px-4 bg-gray-50 rounded-xl">
+                  <MaterialCommunityIcons 
+                    name="devices" 
+                    size={48} 
+                    color="#9CA3AF"
+                    style={{ alignSelf: 'center' }}
+                  />
+                  <Text className="text-gray-500 text-center mt-4">
+                    No gadgets added yet. Add your first gadget to get started!
+                  </Text>
+                </View>
+              ) : (
+                <View>
+                  {(gadgets || []).map((gadget) => (
+                    <View
+                      key={gadget.id}
+                    >
+                      <GadgetCard
+                        gadget={gadget}
+                        onPress={() => handleGadgetPress(gadget)}
+                        onDelete={() => handleDeleteGadget(gadget.id)}
+                      />
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('ChangePassword')}
+              className="bg-[#E50914] rounded-xl p-4 flex-row items-center justify-center mb-3"
+            >
+              <MaterialCommunityIcons name="lock-reset" size={24} color="white" className="mr-2" />
+              <Text className="text-white text-lg font-bold">Change Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={HandleLogout}
+              className="bg-black rounded-xl p-4 flex-row items-center justify-center"
+            >
+              <MaterialCommunityIcons name="logout" size={24} color="white" className="mr-2" />
+              <Text className="text-white text-lg font-bold">Logout</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
 
-      <View className="px-2">
-        <ProfileInfoCard />
-        
-        <Pressable 
-          onPress={() => navigation.navigate('ChangePassword')}
-          className="bg-black rounded-xl shadow-md p-4 mb-4 flex-row items-center justify-center"
-        >
-          <MaterialCommunityIcons name="lock-reset" size={24} color="white" className="mr-2" />
-          <Text className="text-white text-lg font-bold">Change Password</Text>
-        </Pressable>
-
-        <Pressable 
-          onPress={HandleLogout}
-          className="bg-red-500 rounded-xl shadow-md p-4 mb-4 flex-row items-center justify-center"
-        >
-          <MaterialCommunityIcons name="logout" size={24} color="white" className="mr-2" />
-          <Text className="text-white text-lg font-bold">Logout</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

@@ -11,6 +11,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "^5.0.6",
+    "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "^2.1.0",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
@@ -25,6 +27,7 @@
     "dayjs": "^1.11.13",
     "expo": "^52.0.28",
     "expo-image-picker": "^16.0.5",
+    "expo-linear-gradient": "^14.0.2",
     "expo-local-authentication": "^15.0.2",
     "expo-location": "^18.0.5",
     "expo-router": "^4.0.17",

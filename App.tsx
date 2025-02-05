@@ -17,6 +17,9 @@ import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
 import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
+import GadgetDetailsScreen from '~/screens/main/GadgetDetailsScreen';
+import AddGadgetScreen from '~/screens/main/AddGadgetScreen';
+import EditGadgetScreen from '~/screens/main/EditGadgetScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -79,6 +82,9 @@ export default function App() {
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
+            <Stack.Screen name="GadgetDetails" component={GadgetDetailsScreen} />
+            <Stack.Screen name="AddGadget" component={AddGadgetScreen} />
+            <Stack.Screen name="EditGadget" component={EditGadgetScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>
