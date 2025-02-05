@@ -35,7 +35,7 @@ function TabNavigator() {
           const iconName = (() => {
             switch (route.name) {
               case 'Home':
-                return focused ? 'home' : 'home-outline';
+                return focused ? 'home' : 'home';
               case 'Add Work':
                 return focused ? 'work' : 'work-outline';
               case 'Workings':

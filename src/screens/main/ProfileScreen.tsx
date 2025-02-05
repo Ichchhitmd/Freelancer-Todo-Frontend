@@ -322,7 +322,7 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await dispatch(logout()).unwrap();
+              await dispatch(logout());
               navigation.reset({
                 index: 0,
                 routes: [{ name: 'LoginScreen' }],
