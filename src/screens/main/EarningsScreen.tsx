@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector } from 'react-redux';
 import { useGetEvents } from 'hooks/events';
-import { RootState } from 'redux/store';
+import { RootState } from 'redux/store'; 
 
 interface MonthlyData {
   eventId: number;

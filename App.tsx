@@ -26,6 +26,7 @@ import AddGadgetScreen from '~/screens/main/AddGadgetScreen';
 import EditGadgetScreen from '~/screens/main/EditGadgetScreen';
 import ReimbursementForm from 'components/forms/ReimbursementForm';
 import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
+import CompanyDetails from '~/screens/main/CompanyDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -143,6 +144,7 @@ export default function App() {
             <Stack.Screen name="EditGadget" component={EditGadgetScreen} />
             <Stack.Screen name="ReimbursementForm" component={ReimbursementForm} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+            <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
           </Stack.Navigator>
         </NavigationContainer>
       </Provider>

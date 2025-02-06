@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -26,8 +26,8 @@ const GadgetCard: React.FC<{
   onPress: () => void;
   onDelete: () => void;
 }> = ({ gadget, onPress, onDelete }) => {
-  const getIconName = (model: string) => {
-    const modelLower = model.toLowerCase();
+  const getIconName = (name: string) => {
+    const modelLower = name.toLowerCase();
     if (modelLower.includes('laptop')) return 'laptop';
     if (modelLower.includes('camera')) return 'camera';
     if (modelLower.includes('lens')) return 'camera-iris';
@@ -68,67 +68,6 @@ const GadgetCard: React.FC<{
         </View>
       </LinearGradient>
     </TouchableOpacity>
-  );
-};
-
-const GadgetDetailsBottomSheet: React.FC<{
-  gadget: GadgetResponse | null;
-  bottomSheetModalRef: React.RefObject<BottomSheetModal>;
-  snapPoints: string[];
-}> = ({ gadget, bottomSheetModalRef, snapPoints }) => {
-  if (!gadget) return null;
-
-  return (
-    <BottomSheetModal
-      ref={bottomSheetModalRef}
-      index={0}
-      snapPoints={snapPoints}
-      backgroundStyle={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-      }}>
-      <BottomSheetScrollView
-        contentContainerStyle={{
-          padding: 16,
-          alignItems: 'center',
-        }}>
-        <View className="mb-6 w-full items-center">
-          <View className="mb-4 rounded-full bg-red-100 p-6">
-            <MaterialCommunityIcons
-              name={
-                gadget.model === 'laptop'
-                  ? 'laptop'
-                  : gadget.model === 'lens'
-                    ? 'camera-iris'
-                    : gadget.model === 'camera'
-                      ? 'camera'
-                      : 'drone'
-              }
-              size={48}
-              color="#E50914"
-            />
-          </View>
-          <Text className="text-gray-800 text-2xl font-bold">{gadget.name}</Text>
-          <Text className="text-gray-500 text-base">{gadget.model}</Text>
-        </View>
-
-        <View className="bg-gray-100 mb-4 w-full rounded-2xl p-4">
-          <View className="mb-2 flex-row justify-between">
-            <Text className="text-gray-600">Cost</Text>
-            <Text className="font-bold">${gadget.cost.toLocaleString()}</Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-gray-600">Purchase Date</Text>
-            <Text className="font-bold">{new Date(gadget.purchaseDate).toLocaleDateString()}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity className="w-full flex-row items-center justify-center rounded-xl bg-red-500 p-4">
-          <MaterialCommunityIcons name="pencil" size={20} color="white" className="mr-2" />
-          <Text className="font-bold text-white">Edit Gadget</Text>
-        </TouchableOpacity>
-      </BottomSheetScrollView>
-    </BottomSheetModal>
   );
 };
 

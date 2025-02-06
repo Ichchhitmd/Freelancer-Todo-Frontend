@@ -6,6 +6,7 @@ import {
   View,
   RefreshControl,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +21,7 @@ import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEvents } from 'hooks/events';
 import { EventResponse } from 'types/eventTypes';
 import { scheduleEventNotification } from 'utils/eventNotification';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface Event {
   date: string;
@@ -239,6 +241,9 @@ const HomePage: React.FC = () => {
           <Text className="mb-4 text-2xl font-bold text-primary">Upcoming Events</Text>
         </View>
         <UpcomingEventReminder events={upcomingEvents} handleClick={handleDateClick} />
+        <TouchableOpacity onPress={() => navigation.navigate('CompanyDetails')}>
+          <Text>Click Me</Text>
+          </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

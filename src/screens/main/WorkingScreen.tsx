@@ -3,13 +3,15 @@ import {
   View, 
   Text, 
   StyleSheet,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 import { useGetEvents } from 'hooks/events';
 import { EventResponse } from 'types/eventTypes';
+import { useNavigation } from '@react-navigation/native';
 
 // Nepali month names
 const nepaliMonths = [
@@ -59,9 +61,11 @@ interface SimplifiedWorkItem {
   side: string;
   workType: string;
   earnings: string;
+  companyId: number
 }
 
 const WorkingScreen = () => {
+  const navigation = useNavigation();
   const [simplifiedEvents, setSimplifiedEvents] = useState<SimplifiedWorkItem[]>([]);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const { data, isLoading, isError } = useGetEvents(userId || 0);
@@ -74,8 +78,9 @@ const WorkingScreen = () => {
       
       const simplified = eventsArray.map(event => ({
         companyName: event.company?.name || 'Unknown Company',
+        companyId: event.company?.id || 0,
         // Convert to Nepali date format
-        eventDate: event.eventDate 
+        eventDate: event.eventDate
           ? convertToNepaliDate(event.eventDate) 
           : 'No Date',
         eventType: event.eventType || 'Unspecified',
@@ -88,10 +93,17 @@ const WorkingScreen = () => {
     }
   }, [data, isLoading, isError]);
 
+  const handleCompanyClick = (companyId: number) => {
+    navigation.navigate('CompanyDetails', { companyId });
+    console.log('Company ID:', companyId);
+};
+
   const renderWorkItem = (item: SimplifiedWorkItem, index: number) => (
     <View key={index} style={styles.workItem}>
       <View style={styles.workItemHeader}>
+        <TouchableOpacity onPress={() => handleCompanyClick(item.companyId)}>
         <Text style={styles.companyName}>{item.companyName}</Text>
+        </TouchableOpacity>
       </View>
       
       <ScrollView 
@@ -169,7 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   workItem: {
-    backgroundColor: 'white', // White background for cards
+    backgroundColor: 'white',
     borderRadius: 10,
     padding: 15,
     marginVertical: 8,
@@ -189,7 +201,7 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#E50914', // Netflix red for emphasis
+    color: '#E50914',
     textTransform: 'uppercase',
   },
   detailsContainer: {
@@ -204,27 +216,27 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginRight: 8,
     marginBottom: 5,
-    backgroundColor: '#F0F0F0', // Light gray background
+    backgroundColor: '#F0F0F0',
   },
   badgeText: {
-    color: '#333', // Dark text for contrast
+    color: '#333',
     fontSize: 12,
     fontWeight: '600',
   },
   dateBadge: {
-    backgroundColor: '#E50914', // Netflix red
+    backgroundColor: '#E50914',
     color: 'white',
   },
   typeBadge: {
-    backgroundColor: '#4CAF50', // Green for variety
+    backgroundColor: '#4CAF50',
     color: 'white',
   },
   sideBadge: {
-    backgroundColor: '#2196F3', // Blue for contrast
+    backgroundColor: '#2196F3',
     color: 'white',
   },
   workTypeBadge: {
-    backgroundColor: '#FF9800', // Orange for visibility
+    backgroundColor: '#FF9800',
     color: 'white',
   },
   earningsContainer: {
@@ -234,7 +246,7 @@ const styles = StyleSheet.create({
   earningsText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#E50914', // Netflix red for earnings
+    color: '#E50914',
   },
   emptyState: {
     flex: 1,
