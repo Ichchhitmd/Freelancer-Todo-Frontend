@@ -25,7 +25,7 @@ const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({
 }) => {
   return (
     <View className="mb-6">
-      <View className="mb-3 flex-row items-center px-4">
+      <View className="mb-3 flex-row items-center px-2">
         <MaterialCommunityIcons name={icon} size={24} color="primary" />
         <Text className="text-gray-900 ml-2 text-lg font-semibold">{label}</Text>
       </View>
@@ -33,7 +33,7 @@ const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="pl-4"
+        className="pl-2"
         contentContainerStyle={{ paddingRight: 16 }}>
         {options.map((option) => {
           const isSelected = value === option.id;

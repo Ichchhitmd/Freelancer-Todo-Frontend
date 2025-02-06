@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View, RefreshControl } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
@@ -32,6 +39,7 @@ const HomePage: React.FC = () => {
   const [eventsData, setEventsData] = useState<EventResponse>();
   const [isActive, setIsActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isEverythingLoaded, setIsEverythingLoaded] = useState(false);
 
   const userName = useSelector((state: RootState) => state.auth.user?.name);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -109,6 +117,7 @@ const HomePage: React.FC = () => {
           console.error('Error scheduling notification:', error);
         }
       });
+      setIsEverythingLoaded(true);
     }
   }, [data, isLoading, isError]);
 
@@ -207,8 +216,17 @@ const HomePage: React.FC = () => {
   }, [refetch]);
 
   console.log('Monthly Data: ', monthlyData);
+
+  if (!isEverythingLoaded) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView className="mb-20 flex-1 bg-white">
+    <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
       <HeaderSection user={userName} isActive={isActive} setIsActive={setIsActive} />
       <ScrollView
         className="mt-7"

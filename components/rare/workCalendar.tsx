@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, Easing } from 'react-native';
 import { CalendarPicker } from 'react-native-nepali-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,9 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 interface WorkCalendarProps {
   selectedDates?: string[];
   onDateChange: (dates: string[]) => void;
+  initialDate?: string;
 }
 
-const WorkCalendar: React.FC<WorkCalendarProps> = ({ selectedDates = [], onDateChange }) => {
+const WorkCalendar: React.FC<WorkCalendarProps> = ({
+  selectedDates = [],
+  onDateChange,
+  initialDate,
+}) => {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [localDates, setLocalDates] = useState<string[]>(selectedDates);
   const [animation] = useState(new Animated.Value(0));
@@ -21,6 +26,16 @@ const WorkCalendar: React.FC<WorkCalendarProps> = ({ selectedDates = [], onDateC
       return dateString;
     }
   };
+  useEffect(() => {
+    if (initialDate && !localDates.includes(initialDate)) {
+      setLocalDates([initialDate]);
+      onDateChange([initialDate]);
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
+    setLocalDates(selectedDates);
+  }, [selectedDates]);
 
   const handleSelect = (date: string) => {
     const newDates = localDates.includes(date)
@@ -50,23 +65,25 @@ const WorkCalendar: React.FC<WorkCalendarProps> = ({ selectedDates = [], onDateC
 
   return (
     <View className="my-2">
-      <TouchableOpacity onPress={toggleCalendar} className="flex-row items-center border border-gray/5 bg-white p-4 shadow-sm">
-        <View className="mr-2">
-          <Ionicons name="calendar" size={20} color="#6B46C1" />
-        </View>
-        <View className="flex-1">
-          <Text className="text-base text-gray-800">{formattedDates || 'Select Event Dates'}</Text>
+      <TouchableOpacity
+        onPress={toggleCalendar}
+        className="flex-row items-center justify-between rounded-lg border border-gray/10 bg-white p-3">
+        <View className="flex-row items-center">
+          <Ionicons name="calendar-outline" size={24} color="#4B5563" />
+          <Text className="text-gray-700 ml-2">
+            {localDates.map(formatDate).join(', ') || 'Select Event Dates'}
+          </Text>
         </View>
         <Ionicons
           name={isCalendarVisible ? 'chevron-up' : 'chevron-down'}
-          size={20}
-          color="#6B46C1"
+          size={24}
+          color="#4B5563"
         />
       </TouchableOpacity>
 
       <Animated.View
         style={[{ transform: [{ translateY: calendarTranslateY }] }]}
-        className="mt-2 rounded-xl overflow-hidden bg-white shadow-sm">
+        className="mt-2 overflow-hidden rounded-xl bg-white shadow-sm">
         <CalendarPicker
           visible={isCalendarVisible}
           onClose={() => setIsCalendarVisible(false)}
