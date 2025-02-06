@@ -17,7 +17,8 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const AddWorkForm: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation<NavigationProp>();
-  const { isEditMode, details } = route.params as RootStackParamList['Add Work'];
+  const { isEditMode = false, details = null } =
+    (route.params as RootStackParamList['Add Work']) || {};
 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [estimatedEarning, setEstimatedEarning] = useState('');
@@ -29,7 +30,6 @@ const AddWorkForm: React.FC = () => {
   const [eventType, setEventType] = useState('');
   const [companyId, setCompanyId] = useState(0);
 
-  // Populate form with existing data if in edit mode
   useEffect(() => {
     if (isEditMode && details) {
       setSelectedDates([details.eventDate]);
@@ -170,7 +170,7 @@ const AddWorkForm: React.FC = () => {
               const selectedCompany = companies?.find((company) => company.name === value);
               setCompanyId(selectedCompany?.id ?? 0);
             }}
-            defaultButtonText={isEditMode ? details?.company.name : 'Select Company'} // Add this prop
+            defaultButtonText={isEditMode ? details?.company.name : 'Select Company'}
           />
           <HorizontalSelector
             label="Event Type"
@@ -200,13 +200,15 @@ const AddWorkForm: React.FC = () => {
             keyboardType="numeric"
             icon="currency-inr"
           />
-          <InputField
-            placeholder="Enter actual receieved amount"
-            value={actualEarning}
-            onChangeText={setActualEarning}
-            keyboardType="numeric"
-            icon="currency-inr"
-          />
+          {isEditMode && (
+            <InputField
+              placeholder="Enter actual receieved amount"
+              value={actualEarning}
+              onChangeText={setActualEarning}
+              keyboardType="numeric"
+              icon="currency-inr"
+            />
+          )}
           <InputField
             placeholder="Enter contact person"
             value={contactPerson}
@@ -214,7 +216,6 @@ const AddWorkForm: React.FC = () => {
             icon="account"
           />
           <InputField
-            label="Contact Info"
             placeholder="Enter contact info"
             value={contactInfo}
             onChangeText={setContactInfo}

@@ -100,9 +100,8 @@ function TabNavigator() {
       <Tab.Screen
         name="Add Work"
         component={WorkScreen}
-        options={{
-          tabBarLabel: '',
-        }}
+        initialParams={{ isEditMode: false, details: null }}
+        options={{ tabBarLabel: '' }}
       />
       <Tab.Screen
         name="Earnings"
