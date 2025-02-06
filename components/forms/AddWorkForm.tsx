@@ -149,7 +149,7 @@ const AddWorkForm: React.FC = () => {
   return (
     <SafeAreaView className="bg-gray-50 flex-1">
       <ScrollView className="flex-1">
-        <View className="bg-red-500 px-4 py-10">
+        <View className="sticky bg-red-500 px-4 py-10">
           <Text className="pt-5 text-center text-3xl font-bold text-white">
             {isEditMode ? 'Edit Work' : 'Add New Work'}
           </Text>
@@ -162,7 +162,7 @@ const AddWorkForm: React.FC = () => {
           <WorkCalendar
             selectedDates={selectedDates}
             onDateChange={handleDateChange}
-            initialDate={isEditMode ? details?.eventDate : undefined} // Add this prop
+            initialDate={isEditMode ? details?.eventDate : undefined}
           />{' '}
           <SelectDropdown
             data={companies?.map((company) => company.name) || []}
