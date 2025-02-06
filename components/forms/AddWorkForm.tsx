@@ -3,13 +3,13 @@ import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-na
 import { useRoute, useNavigation } from '@react-navigation/native';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
-import WorkCalendar from 'components/rare/workCalendar';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import SelectDropdown from 'components/rare/SelectDropdown';
+import WorkCalendar from 'components/rare/workCalendar';
 import { useGetCompanies } from 'hooks/companies';
 import { useEvents } from 'hooks/events';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from 'types/navigation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
