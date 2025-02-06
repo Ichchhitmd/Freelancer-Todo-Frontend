@@ -17,7 +17,6 @@ import { scheduleEventNotification } from 'utils/eventNotification';
 interface Event {
   date: string;
   details: any;
-  dateObj?: Date;
 }
 interface MonthlyData {
   eventId: number;
@@ -39,18 +38,29 @@ const HomePage: React.FC = () => {
 
   const { data, isLoading, isError, refetch } = useGetEvents(userId || 0);
 
-  const parseDateString = (dateStr: string): Date[] => {
+  const parseDateString = (dateStr: string): { year: number; month: number; day: number; }[] => {
     const dates = dateStr.split(',').map((d) => d.trim());
 
     try {
       return dates.map((date) => {
-        const [year, month, day] = date.split('-').map(Number);
-        const parsedDate = new Date(year, month - 1, day);
-        if (isNaN(parsedDate.getTime())) {
-          throw new Error('Invalid date');
+        const [yearStr, monthStr, dayStr] = date.split('-');
+        const year = parseInt(yearStr, 10);
+        const month = parseInt(monthStr, 10);
+        const day = parseInt(dayStr, 10);
+
+        // Basic validation
+        if (isNaN(year) || isNaN(month) || isNaN(day)) {
+          throw new Error('Invalid date components');
         }
-        return parsedDate;
-      });
+        if (month < 1 || month > 12) {
+          throw new Error('Invalid month');
+        }
+        if (day < 1 || day > 32) {
+          throw new Error('Invalid day');
+        }
+
+        return { year, month, day };
+      }).filter(date => date); // Remove any undefined values
     } catch (error) {
       console.error('Error parsing date:', error);
       return [];
@@ -63,12 +73,11 @@ const HomePage: React.FC = () => {
     const transformEvent = (event: any): Event[] => {
       const dates = parseDateString(event.eventDate);
       return dates.map((date) => ({
-        date: date.toISOString().split('T')[0],
+        date: `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`,
         details: {
           ...event,
-          eventDate: date.toISOString().split('T')[0],
+          eventDate: `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`,
         },
-        dateObj: date,
       }));
     };
 
@@ -93,8 +102,12 @@ const HomePage: React.FC = () => {
       setEventsData(data);
       const eventsToSchedule = Array.isArray(data) ? data : [data];
       eventsToSchedule.forEach((event) => {
-        console.log('Scheduling event notification for:', event.eventDate, event);
-        scheduleEventNotification(event.eventDate, event);
+        try {
+          console.log('Scheduling event notification for:', event.eventDate, event);
+          scheduleEventNotification(event.eventDate, event);
+        } catch (error) {
+          console.error('Error scheduling notification:', error);
+        }
       });
     }
   }, [data, isLoading, isError]);
@@ -115,7 +128,11 @@ const HomePage: React.FC = () => {
 
   const upcomingEvents = React.useMemo(() => {
     const uniqueUpcoming = transformedDates.filter(
-      (event) => event.dateObj && event.dateObj > new Date()
+      (event) => {
+        const dateParts = event.date.split('-').map(Number);
+        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        return date > new Date();
+      }
     );
     return [...new Map(uniqueUpcoming.map((event) => [event.date, event])).values()];
   }, [transformedDates]);

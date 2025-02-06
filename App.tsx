@@ -52,7 +52,7 @@ function TabNavigator() {
               <View
                 style={{
                   position: 'absolute',
-                  top: -25,
+                  top: -5,
                   backgroundColor: 'red',
                   width: 60,
                   height: 60,

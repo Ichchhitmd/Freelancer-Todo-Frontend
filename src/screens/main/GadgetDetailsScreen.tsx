@@ -46,9 +46,9 @@ export default function GadgetDetailsScreen() {
   }
 
   const renderDetailRow = useCallback(({ label, value, icon }: { label: string; value: string | number; icon?: string }) => (
-    <View className="flex-row items-center bg-white p-4 rounded-xl mb-3 shadow-sm border border-gray-100">
+    <View className="flex-row items-center py-4">
       {icon && (
-        <View className="bg-red-50 p-2 rounded-lg mr-3">
+        <View className="mr-3">
           <MaterialCommunityIcons 
             name={icon as any}
             size={24} 
@@ -156,34 +156,36 @@ export default function GadgetDetailsScreen() {
             </Text>
           </View>
 
-          <View className="space-y-4">
-            {renderDetailRow({ 
-              label: 'Name', 
-              value: gadget.name,
-              icon: 'tag'
-            })}
-            {renderDetailRow({ 
-              label: 'Model', 
-              value: gadget.model,
-              icon: 'information'
-            })}
-            {renderDetailRow({ 
-              label: 'Cost', 
-              value: `$${gadget.cost.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}`,
-              icon: 'cash'
-            })}
-            {renderDetailRow({ 
-              label: 'Purchase Date', 
-              value: new Date(gadget.purchaseDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }),
-              icon: 'calendar'
-            })}
+          <View className="bg-white rounded-xl p-4">
+            <View className="divide-y divide-gray-100">
+              {renderDetailRow({ 
+                label: 'Name', 
+                value: gadget.name,
+                icon: 'tag'
+              })}
+              {renderDetailRow({ 
+                label: 'Model', 
+                value: gadget.model,
+                icon: 'information'
+              })}
+              {renderDetailRow({ 
+                label: 'Cost', 
+                value: `$${gadget.cost.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}`,
+                icon: 'cash'
+              })}
+              {renderDetailRow({ 
+                label: 'Purchase Date', 
+                value: new Date(gadget.purchaseDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }),
+                icon: 'calendar'
+              })}
+            </View>
           </View>
 
           <View className="flex-row mt-8 space-x-4 gap-6">

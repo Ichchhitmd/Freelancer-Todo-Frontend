@@ -54,23 +54,58 @@ export default function EditGadgetScreen() {
 
       setIsSubmitting(true);
 
-      const updatedGadget = {
-        ...gadget,
+      // Create the update data object
+      const updateData = {
         name: formData.name.trim(),
         model: formData.model.trim(),
         cost: cost,
         purchaseDate: formData.purchaseDate.toISOString()
       };
 
-      await dispatch(editGadget({ id: gadget.id, data: updatedGadget })).unwrap();
+      // Log the update attempt
+      console.log('Attempting to update gadget:', {
+        gadgetId: gadget.id,
+        updateData,
+        originalGadget: gadget
+      });
+
+      const result = await dispatch(editGadget({ 
+        id: gadget.id, 
+        data: updateData 
+      })).unwrap();
+      
+      console.log('Update response:', result);
+
       Alert.alert('Success', 'Gadget updated successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        error instanceof Error ? error.message : 'Failed to update gadget'
-      );
+    } catch (error: any) {
+      console.error('Update error details:', {
+        error,
+        errorMessage: error?.message,
+        errorStack: error?.stack,
+        errorResponse: error?.response?.data,
+        errorStatus: error?.response?.status,
+        requestData: {
+          id: gadget.id,
+          formData: formData
+        }
+      });
+
+      let errorMessage = 'Failed to update gadget. ';
+      if (error?.response?.status === 401) {
+        errorMessage += 'Please check if you are logged in and try again.';
+      } else if (error?.response?.status === 404) {
+        errorMessage += 'The gadget could not be found.';
+      } else if (error?.response?.status === 400) {
+        errorMessage += 'Please check your input and try again.';
+      } else if (error?.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Please check your connection and try again.';
+      }
+
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -210,27 +245,28 @@ export default function EditGadgetScreen() {
           )}
 
           {/* Submit Button */}
-          <View className="mt-8">
-            <TouchableOpacity 
-              onPress={handleSubmitEditing}
-              disabled={isSubmitting}
-              className="bg-red-500 p-4 rounded-xl flex-row items-center justify-center shadow-sm"
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons 
-                    name="content-save" 
-                    size={24} 
-                    color="white" 
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text className="text-white font-bold text-lg">Save Changes</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity 
+            onPress={handleSubmitEditing}
+            disabled={isSubmitting}
+            className={`mt-8 flex-row items-center justify-center rounded-xl p-4 ${isSubmitting ? 'bg-gray-400' : 'bg-[#E50914]'}`}
+          >
+            {isSubmitting ? (
+              <>
+                <ActivityIndicator color="white" style={{ marginRight: 8 }} />
+                <Text className="text-lg font-bold text-white">Updating...</Text>
+              </>
+            ) : (
+              <>
+                <MaterialCommunityIcons 
+                  name="content-save" 
+                  size={24} 
+                  color="white" 
+                  style={{ marginRight: 8 }}
+                />
+                <Text className="text-lg font-bold text-white">Save Changes</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
