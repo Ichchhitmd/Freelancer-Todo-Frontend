@@ -120,12 +120,13 @@ const DateDetails: React.FC = () => {
           <View className="p-4">
             <View className="bg-gray-300 mx-auto mb-4 h-1 w-12 rounded-full" />
             <Text className="text-gray-900 mb-4 text-center text-xl font-bold">Select Action</Text>
-
             <TouchableOpacity
               className="bg-gray-50 mb-3 flex-row items-center rounded-xl p-4"
               onPress={() => {
                 navigation.navigate('Add Work', { isEditMode: true, details });
-                {console.log('Detailsss:',details)}
+                {
+                  console.log('Details : ', details);
+                }
                 setIsDrawerVisible(false);
               }}>
               <MaterialCommunityIcons name="pencil" size={24} color="#ef4444" />
@@ -134,10 +135,12 @@ const DateDetails: React.FC = () => {
                 <Text className="text-gray-500 text-sm">Modify work details</Text>
               </View>
             </TouchableOpacity>
-
             <TouchableOpacity
               className="bg-gray-50 mb-3 flex-row items-center rounded-xl p-4"
-              onPress={() => setIsDrawerVisible(false)}>
+              onPress={() => {
+                navigation.navigate('ReimbursementForm');
+                setIsDrawerVisible(false);
+              }}>
               <MaterialCommunityIcons name="cash-plus" size={24} color="#ef4444" />
               <View className="ml-4">
                 <Text className="text-gray-900 text-lg font-semibold">Add Reimbursements</Text>

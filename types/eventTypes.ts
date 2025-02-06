@@ -18,15 +18,36 @@ export interface EventResponse extends EventRequest {
   freelancerId?: number | null;
 }
 
-export type EventDetails = {
-  userId: number;
-  companyId: number;
-  contactPerson: string;
+export interface Company {
+  bio: string | null;
   contactInfo: string;
-  workType: string;
-  side: string;
-  eventType: string;
-  estimatedEarning: number;
-  actualEarning?: number;
+  contactPerson: string | null;
+  id: number;
+  name: string;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  phone: string;
+}
+
+export interface EventDetails {
+  actualEarnings: string | null;
+  company: Company;
+  companyId: number;
+  contactInfo: string;
+  contactPerson: string;
+  createdAt: string;
+  earnings: string;
   eventDate: string;
-};
+  eventTime: string | null;
+  eventType: string;
+  freelancerId: number | null;
+  id: number;
+  side: 'BRIDE' | 'GROOM';
+  updatedAt: string;
+  user: User;
+  userId: number;
+  workType: string;
+}

@@ -13,9 +13,14 @@ import {
 interface SelectDropdownProps {
   data: string[];
   onSelect: (item: string) => void;
+  defaultButtonText?: string;
 }
 
-const SelectDropdown: React.FC<SelectDropdownProps> = ({ data, onSelect }) => {
+const SelectDropdown: React.FC<SelectDropdownProps> = ({
+  data,
+  onSelect,
+  defaultButtonText = 'Select a company',
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
@@ -60,6 +65,11 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({ data, onSelect }) => {
     inputRange: [0, 1],
     outputRange: [0, 250],
   });
+  useEffect(() => {
+    if (defaultButtonText && defaultButtonText !== 'Select a company') {
+      setSelectedItem(defaultButtonText);
+    }
+  }, [defaultButtonText]);
 
   return (
     <View className="relative z-10 mb-4 w-full">
@@ -82,7 +92,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({ data, onSelect }) => {
           onPress={toggleDropdown}
           activeOpacity={0.9}>
           <Text className={`text-base ${selectedItem ? 'text-slate-900' : 'text-slate-500'}`}>
-            {selectedItem || 'Select a company'}
+            {selectedItem || defaultButtonText}
           </Text>
           <Text className="text-slate-500">{isOpen ? '▲' : '▼'}</Text>
         </TouchableOpacity>

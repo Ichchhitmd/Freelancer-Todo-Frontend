@@ -1,9 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 interface InputFieldProps {
-  label: string;
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -16,7 +15,6 @@ interface InputFieldProps {
 }
 
 const InputField: React.FC<InputFieldProps> = ({
-  label,
   placeholder,
   value,
   onChangeText,
@@ -28,83 +26,42 @@ const InputField: React.FC<InputFieldProps> = ({
   disabled = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const labelPosition = useRef(new Animated.Value(value ? 1 : 0)).current;
 
-  const handleFocus = () => {
-    setIsFocused(true);
-    animateLabel(1);
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-    if (!value) animateLabel(0);
-  };
-
-  const animateLabel = (toValue: number) => {
-    Animated.timing(labelPosition, {
-      toValue,
-      duration: 150,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const labelStyle = {
-    transform: [
-      {
-        translateY: labelPosition.interpolate({
-          inputRange: [0, 1],
-          outputRange: [19, 0],
-        }),
-      },
-    ],
-    fontSize: labelPosition.interpolate({
-      inputRange: [0, 1],
-      outputRange: [16, 14],
-    }),
-    color: labelPosition.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['#6b7280', error ? '#ef4444' : '#3b82f6'],
-    }),
-  };
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => setIsFocused(false);
 
   return (
     <View className="mb-5">
       <View
-        className="bg-gray-50 relative h-16
-        border border-gray/10">
-        <Animated.Text style={labelStyle} className="bg-gray-50 absolute left-12 z-0 font-medium">
-          {label}
-        </Animated.Text>
+        className={`${multiline ? 'h-20' : 'h-14'} bg-gray-50 rounded border flex-row items-center px-2
+          ${error ? 'border-red-500' : isFocused ? 'border-blue-500' : 'border-gray-100'}`}
+      >
+        <MaterialCommunityIcons
+          name={icon}
+          size={25}
+          color={error ? '#ef4444' : isFocused ? '#3b82f6' : '#6b7280'}
+        />
 
-        <View className="h-full w-full flex-row items-center gap-2 px-2">
-          <MaterialCommunityIcons
-            name={icon}
-            size={25}
-            color={error ? '#ef4444' : isFocused ? '#3b82f6' : '#6b7280'}
-          />
+        <TextInput
+          className={`flex-1 ml-2 text-base text-gray-900 ${disabled ? 'opacity-50' : ''}`}
+          placeholder={placeholder}
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType}
+          multiline={multiline}
+          numberOfLines={multiline ? 4 : 1}
+          placeholderTextColor="#9ca3af"
+          secureTextEntry={secureTextEntry}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          editable={!disabled}
+        />
 
-          <TextInput
-            className={`text-gray-900 flex-1 text-base ${disabled ? 'opacity-50' : ''}`}
-            placeholder={isFocused ? placeholder : ''}
-            value={value}
-            onChangeText={onChangeText}
-            keyboardType={keyboardType}
-            multiline={multiline}
-            numberOfLines={multiline ? 4 : 1}
-            placeholderTextColor="#9ca3af"
-            secureTextEntry={secureTextEntry}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            editable={!disabled}
-            style={{ paddingVertical: multiline ? 12 : 0 }}
-          />
-
-          {!!value && !disabled && (
-            <TouchableOpacity onPress={() => onChangeText('')} className="ml-2">
-              <MaterialCommunityIcons name="close-circle" size={18} color="#9ca3af" />
-            </TouchableOpacity>
-          )}
-        </View>
+        {!!value && !disabled && (
+          <TouchableOpacity onPress={() => onChangeText('')} className="ml-2 p-2">
+            <MaterialCommunityIcons name="close-circle" size={18} color="#9ca3af" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {error && (
