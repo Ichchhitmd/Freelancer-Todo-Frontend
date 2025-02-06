@@ -360,9 +360,10 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="bg-gray-50 flex-1">
+    <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -378,7 +379,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View className="-mt-4 rounded-2xl bg-white p-4 shadow-sm">
+        <View className="-mt-4 rounded-t-2xl bg-white p-4 shadow-sm">
           <View className="mb-6 items-center">
             <View className="relative mb-4">
               {user.photo ? (
@@ -404,54 +405,52 @@ export default function ProfileScreen() {
           </View>
 
           <View className="space-y-4 px-2">
-            <View className="border-gray-200 mb-3 rounded-xl border bg-white p-4">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="email"
-                  size={24}
-                  color="#E50914"
-                  style={{ marginRight: 16 }}
-                />
-                <View className="flex-1">
-                  <Text className="text-gray-600 text-sm">Email</Text>
-                  <Text className="text-gray-900 text-lg font-bold">{user.email}</Text>
+            <View className="bg-white p-4">
+              <View className="space-y-4">
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons
+                    name="email"
+                    size={24}
+                    color="#E50914"
+                    style={{ marginRight: 16 }}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-gray-600 text-sm">Email</Text>
+                    <Text className="text-gray-900 text-lg font-bold">{user.email}</Text>
+                  </View>
+                </View>
+
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons
+                    name="phone"
+                    size={24}
+                    color="#E50914"
+                    style={{ marginRight: 16 }}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-gray-600 text-sm">Phone</Text>
+                    <Text className="text-gray-900 text-lg font-bold">
+                      {user.phone || 'Not provided'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons
+                    name="map-marker"
+                    size={24}
+                    color="#E50914"
+                    style={{ marginRight: 16 }}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-gray-600 text-sm">Location</Text>
+                    <Text className="text-gray-900 text-lg font-bold">{locationName}</Text>
+                  </View>
                 </View>
               </View>
             </View>
 
-            <View className="border-gray-200 mb-3 rounded-xl border bg-white p-4">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="phone"
-                  size={24}
-                  color="#E50914"
-                  style={{ marginRight: 16 }}
-                />
-                <View className="flex-1">
-                  <Text className="text-gray-600 text-sm">Phone</Text>
-                  <Text className="text-gray-900 text-lg font-bold">
-                    {user.phone || 'Not provided'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View className="border-gray-200 mb-3 rounded-xl border bg-white p-4">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="map-marker"
-                  size={24}
-                  color="#E50914"
-                  style={{ marginRight: 16 }}
-                />
-                <View className="flex-1">
-                  <Text className="text-gray-600 text-sm">Location</Text>
-                  <Text className="text-gray-900 text-lg font-bold">{locationName}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View className="mt-4 px-4">
+            <View className="mt-6">
               <View className="mb-4 flex-row items-center justify-between">
                 <View>
                   <Text className="text-gray-800 text-2xl font-bold">My Gadgets</Text>
@@ -516,14 +515,14 @@ export default function ProfileScreen() {
 
             <TouchableOpacity
               onPress={() => navigation.navigate('ChangePassword')}
-              className="mb-3 flex-row items-center justify-center rounded-xl bg-[#E50914] p-4">
+              className="mt-6 flex-row items-center justify-center rounded-xl bg-[#E50914] p-4">
               <MaterialCommunityIcons name="lock-reset" size={24} color="white" className="mr-2" />
               <Text className="text-lg font-bold text-white">Change Password</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={HandleLogout}
-              className="flex-row items-center justify-center rounded-xl bg-black p-4">
+              className="mt-4 mb-12 flex-row items-center justify-center rounded-xl bg-black p-4">
               <MaterialCommunityIcons name="logout" size={24} color="white" className="mr-2" />
               <Text className="text-lg font-bold text-white">Logout</Text>
             </TouchableOpacity>
