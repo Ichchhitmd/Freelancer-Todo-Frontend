@@ -13,7 +13,6 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
     const dateStrings = nepaliDate.split(',').map((d) => d.trim());
 
     for (const dateStr of dateStrings) {
-
       const englishDate = convertNepaliToEnglish(dateStr);
       if (!englishDate) {
         continue;
@@ -36,10 +35,9 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
         continue;
       }
 
-      // Calculate seconds until notification
-      const seconds = Math.floor((notificationDate.getTime() - Date.now()) / 1000);
+      console.log('Scheduling notification for:', notificationDate);
 
-      // Schedule the notification
+      // Schedule the notification with direct date trigger
       await Notifications.scheduleNotificationAsync({
         content: {
           title: `Upcoming Event Tomorrow`,
@@ -49,8 +47,7 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
           data: { ...eventDetails, originalDate: dateStr },
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: Math.max(0, seconds),
+          date: notificationDate,  // Direct date trigger
         },
       });
 
@@ -64,3 +61,4 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
     });
   }
 }
+
