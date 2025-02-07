@@ -9,6 +9,7 @@ interface HeaderSectionProps {
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
   onProfilePress?: () => void;
+  remainingAmount: number | undefined;
 }
 
 const HeaderSection: React.FC<HeaderSectionProps> = ({
@@ -16,6 +17,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   isActive,
   setIsActive,
   onProfilePress,
+  remainingAmount,
 }) => {
   const insets = useSafeAreaInsets();
   const greeting = getGreeting();
@@ -61,6 +63,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
             <Text className="text-xl font-extrabold text-red-800" numberOfLines={1}>
               {user || 'Guest'}
             </Text>
+            <Text>{remainingAmount || 0}</Text>
           </View>
 
           <Animated.View className="items-center" style={{ opacity: fadeAnim }}>

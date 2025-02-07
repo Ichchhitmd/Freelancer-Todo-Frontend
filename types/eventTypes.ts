@@ -1,5 +1,4 @@
 export interface EventRequest {
-  userId: number;
   companyId: number;
   eventDate: string;
   eventType: string;
@@ -8,6 +7,7 @@ export interface EventRequest {
   contactPerson: string;
   contactInfo: string;
   earnings: number;
+  actualEarnings?: number | null;
 }
 
 export interface EventResponse extends EventRequest {
