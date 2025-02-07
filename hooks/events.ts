@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getEvent, postEvent } from 'helper/eventRequest';
+import { getEvent, patchEvent, postEvent } from 'helper/eventRequest';
 
 export const useEvents = () => {
   return useMutation({
@@ -11,5 +11,11 @@ export const useGetEvents = (userId: number) => {
   return useQuery({
     queryKey: ['events', userId],
     queryFn: () => getEvent(userId),
+  });
+};
+
+export const usePatchEvent = () => {
+  return useMutation({
+    mutationFn: patchEvent,
   });
 };

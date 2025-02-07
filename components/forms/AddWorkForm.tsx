@@ -9,8 +9,7 @@ import { useGetCompanies } from 'hooks/companies';
 import { useEvents } from 'hooks/events';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, FlatList } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { setCompany } from 'redux/slices/companySlices';
+import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 import type { RootStackParamList } from 'types/navigation';
 
@@ -96,6 +95,44 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
+    if (!companyId) {
+      alert('Please select a company.');
+      return;
+    }
+
+    if (!eventType) {
+      alert('Please select an event type.');
+      return;
+    }
+
+    if (!workType) {
+      alert('Please select a work type.');
+      return;
+    }
+
+    if (!side) {
+      alert('Please select a side.');
+      return;
+    }
+
+    if (!estimatedEarning) {
+      alert('Please enter an estimated earning.');
+      return;
+    }
+
+    if (!contactPerson) {
+      alert('Please enter a contact person.');
+      return;
+    }
+
+    if (!contactInfo) {
+      alert('Please enter contact info.');
+      return;
+    }
+
+    // Convert eventType to uppercase
+    const formattedEventType = eventType.toUpperCase();
+
     const formattedData = {
       userId: userId,
       earnings: parseFloat(estimatedEarning) || 0,
@@ -105,7 +142,7 @@ const AddWorkForm: React.FC = () => {
       contactInfo: contactInfo,
       workType: workType,
       side: side,
-      eventType: eventType,
+      eventType: formattedEventType, // Use the formatted eventType
       eventDate: selectedDates[0],
       ...(isEditMode && details ? { id: details.id } : {}),
     };
@@ -119,6 +156,16 @@ const AddWorkForm: React.FC = () => {
         navigation.goBack();
       }
       console.log(`Work ${isEditMode ? 'updated' : 'posted'} successfully!`, formattedData);
+
+      setSelectedDates([]);
+      setCompanyId(0);
+      setEstimatedEarning('');
+      setActualEarning('');
+      setContactPerson('');
+      setContactInfo('');
+      setWorkType('');
+      setSide('');
+      setEventType('');
     } catch (e) {
       console.error('Error saving data:', e);
       alert('Failed to save work details. Please try again.');
@@ -188,7 +235,7 @@ const AddWorkForm: React.FC = () => {
             className="border-gray-200 my-3 overflow-hidden rounded-md border bg-white">
             <FlatList
               data={EVENT_TYPES}
-              keyExtractor={(item) => item.label}
+              keyExtractor={(item) => item.id.toString()}
               nestedScrollEnabled={true}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}

@@ -3,10 +3,10 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { loginSuccess, setLoading, setError } from 'redux/slices/authSlices';
+import { loginSuccess } from 'redux/slices/authSlices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as LocalAuthentication from 'expo-local-authentication';
 import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useLogin } from 'hooks/useAuth';
 
 export default function LoginScreen() {
@@ -18,7 +18,6 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  // Destructure to handle loading and errors from useLogin hook
   const { mutate: loginUser, status, isError, error } = useLogin();
 
   useEffect(() => {
