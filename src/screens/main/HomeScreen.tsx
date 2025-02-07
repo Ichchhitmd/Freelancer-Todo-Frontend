@@ -7,6 +7,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
+  Modal,
+  StyleSheet,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -46,6 +48,7 @@ const HomePage: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isEverythingLoaded, setIsEverythingLoaded] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const userName = useSelector((state: RootState) => state.auth.user?.name);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -307,9 +310,6 @@ const HomePage: React.FC = () => {
           <Text className="mb-4 text-2xl font-bold text-primary">Upcoming Events</Text>
         </View>
         <UpcomingEventReminder events={upcomingEvents} handleClick={handleDateClick} />
-        <TouchableOpacity onPress={() => navigation.navigate('CompanyDetails')}>
-          <Text>Click Me</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

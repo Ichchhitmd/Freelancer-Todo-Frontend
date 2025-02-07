@@ -4,8 +4,10 @@ import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import { usePostReimbursement } from 'hooks/reimbursements';
-import { useRoute } from '@react-navigation/native';
+import SelectDropdown from 'components/rare/SelectDropdown';
+import { useGetCompanies } from 'hooks/companies';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { usePostExpense } from 'hooks/expenses';
 
 const EXPENSE_TYPES = [
   { id: 'TRAVEL', label: 'Travel', icon: 'car' },
@@ -15,17 +17,17 @@ const EXPENSE_TYPES = [
   { id: 'OTHER', label: 'Other', icon: 'help-circle' },
 ];
 
-const ReimbursementForm = () => {
-  const route = useRoute();
+const ExpenseForm = () => {
   const navigation = useNavigation();
-  const { mutate: postReimbursement } = usePostReimbursement();
-  const { detailsId } = route.params as { detailsId: number };
-  console.log('Details ID:', detailsId);
+  const { data: companies, isLoading: companiesLoading } = useGetCompanies();
+  const [companyId, setCompanyId] = useState(0);
+  const { mutate: postExpense } = usePostExpense();
   const [expense, setExpense] = useState({
     type: '',
-    amount: 0,
+    amount: '',
     description: '',
-    image: '',
+    screenshotUrl: null,
+    company: null,
   });
 
   const pickImage = async () => {
@@ -37,45 +39,66 @@ const ReimbursementForm = () => {
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setExpense({ ...expense, image: result.assets[0].uri || null });
+      setExpense({ ...expense, image: result.assets[0].uri || null,
+        screenshotUrl: result.assets[0].uri || null,
+       });
     }
   };
 
   const handleSubmit = () => {
-    console.log(expense);
-    if (!expense.type || !expense.amount || !expense.description ) {
+    if (!expense.type || !expense.amount || !expense.description || !expense.company) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    postReimbursement(
-      {
-        type: expense.type,
-        amount: expense.amount,
-        description: expense.description,
-        image: expense.image || "",
-        eventId: detailsId,
-      },
-      {
-        onSuccess: (data) => {
-          console.log(data);
-          Alert.alert('Success', 'Reimbursement request submitted!');
-          navigation.goBack();
+    postExpense(
+        {
+            title: expense.type,
+            amount: expense.amount,
+            description: expense.description,
+            screenshotUrl: expense.screenshotUrl,
+            companyId: companyId
         },
-        onError: (error) => {
-          Alert.alert('Error', 'Failed to submit reimbursement. Please try again.');
-          console.error(error);
+        {
+            onSuccess: (data) => {
+                console.log(data);
+                Alert.alert('Success', 'Expense request submitted!');
+                navigation.goBack();
+            },
+            onError: (error) => {
+                Alert.alert('Error', 'Failed to submit expense. Please try again.');
+                console.error(error);
+            }
         }
-      }
-    );
+
+    )
   };
+
+  if (companiesLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9f9f9' }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         <View style={{ backgroundColor: '#FF5A5F', paddingVertical: 55, paddingHorizontal: 24 }}>
+        <TouchableOpacity 
+            onPress={() => navigation.goBack()}
+            className="absolute left-6 top-16 z-10"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons 
+              name="arrow-left" 
+              size={24} 
+              color="white" 
+            />
+          </TouchableOpacity>
           <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
-            Reimbursement Form
+            Expense Form
           </Text>
           <Text style={{ fontSize: 16, color: 'white', textAlign: 'center', marginTop: 8 }}>
             Submit your expenses for reimbursement
@@ -94,6 +117,15 @@ const ReimbursementForm = () => {
             shadowOpacity: 0.1,
             shadowRadius: 8,
           }}>
+            <SelectDropdown
+            data={companies?.map((company) => company.name) || []}
+            onSelect={(value) => {
+              const selectedCompany = companies?.find((company) => company.name === value);
+              setCompanyId(selectedCompany?.id ?? 0);
+              setExpense((prev) => ({ ...prev, company: selectedCompany ?? null }));
+            }}
+            defaultButtonText= 'Select Company'
+          />
           <HorizontalSelector
             label="Expense Type"
             icon="tag"
@@ -102,13 +134,13 @@ const ReimbursementForm = () => {
             onChange={(type) => setExpense({ ...expense, type })}
           />
 
-         <InputField
-         placeholder="Enter amount"
-         value={expense.amount ? String(expense.amount) : ''}
-         onChangeText={(text) => setExpense({ ...expense, amount: Number(text) || 0 })}
-         keyboardType="numeric"
-         icon="currency-inr"
-         />
+          <InputField
+            placeholder="Enter amount"
+            value={expense.amount}
+            onChangeText={(text) => setExpense({ ...expense, amount: text })}
+            keyboardType="numeric"
+            icon="currency-inr"
+          />
 
           <InputField
             placeholder="Enter description"
@@ -157,4 +189,4 @@ const ReimbursementForm = () => {
   );
 };
 
-export default React.memo(ReimbursementForm);
+export default React.memo(ExpenseForm);
