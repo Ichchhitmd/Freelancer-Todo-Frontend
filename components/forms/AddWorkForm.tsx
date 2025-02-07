@@ -155,7 +155,6 @@ const AddWorkForm: React.FC = () => {
         await postEvent(formattedData);
         navigation.goBack();
       }
-      console.log(`Work ${isEditMode ? 'updated' : 'posted'} successfully!`, formattedData);
 
       setSelectedDates([]);
       setCompanyId(0);
@@ -167,7 +166,6 @@ const AddWorkForm: React.FC = () => {
       setSide('');
       setEventType('');
     } catch (e) {
-      console.error('Error saving data:', e);
       alert('Failed to save work details. Please try again.');
     }
   }, [

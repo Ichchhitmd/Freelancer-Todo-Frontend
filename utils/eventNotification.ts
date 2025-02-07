@@ -5,8 +5,6 @@ import { convertNepaliToEnglish } from './dateConversionToAd';
 const scheduledEventIds = new Set<string>();
 
 export async function scheduleEventNotification(nepaliDate: string, eventDetails: any) {
-  console.log('[Notification] Starting scheduling for event:', eventDetails.id);
-  console.log('[Notification] Original Nepali dates:', nepaliDate);
 
   try {
     // Split and process multiple dates
@@ -35,7 +33,6 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
         continue;
       }
 
-      console.log('Scheduling notification for:', notificationDate);
 
       // Schedule the notification with direct date trigger
       await Notifications.scheduleNotificationAsync({

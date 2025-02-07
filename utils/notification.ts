@@ -4,7 +4,6 @@ import * as Notifications from 'expo-notifications';
 export async function requestNotificationPermission() {
   const { status } = await Notifications.requestPermissionsAsync();
   if (status !== 'granted') {
-    console.log('Notification permissions not granted!');
     return false;
   }
   return true;

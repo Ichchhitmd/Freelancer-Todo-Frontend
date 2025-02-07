@@ -32,31 +32,9 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
     ]).start();
   }, []);
 
-  // const getStatusColor = (status?: string) => {
-  //   switch (status) {
-  //     case 'confirmed':
-  //       return 'bg-blue-500';
-  //     case 'completed':
-  //       return 'bg-green-500';
-  //     case 'cancelled':
-  //       return 'bg-gray-500';
-  //     default:
-  //       return 'bg-yellow-500'; // pending
-  //   }
-  // };
-
-  // const getStatusIcon = (status?: string) => {
-  //   switch (status) {
-  //     case 'confirmed':
-  //       return 'check-circle';
-  //     case 'completed':
-  //       return 'check-circle-outline';
-  //     case 'cancelled':
-  //       return 'close-circle';
-  //     default:
-  //       return 'clock-outline'; // pending
-  //   }
-  // };
+  const handleWorkPress = () => {
+    onPress();
+  };
 
   return (
     <Animated.View
@@ -65,8 +43,11 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
         transform: [{ translateY }],
       }}
       className="mb-3">
+        <ScrollView>
+
+
       <TouchableOpacity
-        onPress={onPress}
+        onPress={handleWorkPress}
         className="active:bg-gray-50 overflow-hidden rounded-xl bg-white"
         style={{
           elevation: 2,
@@ -75,18 +56,15 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
           shadowOpacity: 0.1,
           shadowRadius: 2,
         }}>
-        {/* <View className={`${getStatusColor(item.status)} px-4 py-1`}>
-          <Text className="text-xs font-medium text-white">
-            <MaterialCommunityIcons name={getStatusIcon(item.status)} size={12} />{' '}
-            {item.status || 'Pending'}
-          </Text>
-        </View> */}
 
         <View className="mt-5 p-4">
           <View className="flex-row">
             <DateDisplay date={item.eventDate} isUpcoming={item.isUpcoming} />
             <View className="ml-4 flex-1">
+              <TouchableOpacity onPress={onPress}>
+
               <Text className="text-gray-800 text-xl font-bold">{item.companyName}</Text>
+              </TouchableOpacity>
               <View className="mt-1 flex-row items-center">
                 <MaterialCommunityIcons
                   name={item.isUpcoming ? 'calendar-plus' : 'calendar-check'}
@@ -123,6 +101,7 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
           </View>
         </View>
       </TouchableOpacity>
+        </ScrollView>
     </Animated.View>
   );
 };

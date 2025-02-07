@@ -18,10 +18,15 @@ const getBaseUrl = () => {
 
 const API_URL = getBaseUrl();
 
+interface Headers {
+  'Content-Type'?: string;
+  [key: string]: string | undefined;
+}
+
 interface ApiRequestConfig extends Omit<AxiosRequestConfig, 'url' | 'method'> {
   data?: any;
   params?: object;
-  headers?: object;
+  headers?: Headers;
 }
 
 export const apiRequest = async <T = any>(
@@ -30,24 +35,28 @@ export const apiRequest = async <T = any>(
   config: ApiRequestConfig = {}
 ): Promise<T> => {
   try {
-    const { data, params, headers, ...rest } = config;
+    const { data, params, headers = {} as Headers, ...rest } = config;
 
     const axiosConfig: AxiosRequestConfig = {
       method,
       url: `${API_URL}${url}`,
       headers: {
-        'Content-Type': 'application/json',
         ...headers,
       },
       ...rest,
     };
 
-    // Add data for POST, PUT, PATCH methods
+    if (!headers['Content-Type']?.includes('multipart/form-data')) {
+      axiosConfig.headers = {
+        ...axiosConfig.headers,
+        'Content-Type': 'application/json',
+      };
+    }
+
     if (['POST', 'PUT', 'PATCH'].includes(method.toUpperCase()) && data) {
       axiosConfig.data = data;
     }
 
-    // Add query params for GET, DELETE methods
     if (params) {
       axiosConfig.params = params;
     }
@@ -57,7 +66,6 @@ export const apiRequest = async <T = any>(
   } catch (error: any) {
     throw handleAxiosError(error);
   }
-
 };
 
 export const get = <T = any>(url: string, config?: ApiRequestConfig) =>

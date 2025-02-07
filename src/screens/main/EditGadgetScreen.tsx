@@ -62,19 +62,13 @@ export default function EditGadgetScreen() {
         purchaseDate: formData.purchaseDate.toISOString()
       };
 
-      // Log the update attempt
-      console.log('Attempting to update gadget:', {
-        gadgetId: gadget.id,
-        updateData,
-        originalGadget: gadget
-      });
+  
 
       const result = await dispatch(editGadget({ 
         id: gadget.id, 
         data: updateData 
       })).unwrap();
       
-      console.log('Update response:', result);
 
       Alert.alert('Success', 'Gadget updated successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }

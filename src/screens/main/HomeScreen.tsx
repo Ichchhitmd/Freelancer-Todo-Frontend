@@ -6,9 +6,6 @@ import {
   View,
   RefreshControl,
   ActivityIndicator,
-  TouchableOpacity,
-  Modal,
-  StyleSheet,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -48,7 +45,6 @@ const HomePage: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isEverythingLoaded, setIsEverythingLoaded] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
 
   const userName = useSelector((state: RootState) => state.auth.user?.name);
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -60,9 +56,6 @@ const HomePage: React.FC = () => {
       refetch();
     }, [refetch])
   );
-  console.log('Data hoooooooooooooooooooooooooo', data);
-
-  console.log('Earningsssssssssssssssss', data?.earnings, data?.actualEarnings);
   const eventsArray = Array.isArray(data) ? data : [data];
 
   const earningsData: Earnings[] = eventsArray.map((event) => ({
@@ -72,24 +65,9 @@ const HomePage: React.FC = () => {
 
   const totalEarnings = earningsData.reduce((sum, data) => sum + (Number(data.earnings) || 0), 0);
 
-  // Calculate sum of total actual earnings
   const totalActualEarnings = earningsData.reduce((sum, data) => sum + (Number(data.actualEarnings) || 0), 0);
 
   const remainingAmount = totalEarnings - totalActualEarnings;
-
-  console.log('Total Actual Earnings:', totalActualEarnings);
-
-  console.log('Total Earnings:', totalEarnings);
-
-  console.log('Remaining Amount:', remainingAmount);
-
-  console.log('Earnings Data:', earningsData);
-
-  // const remainingAmount = earningsData?.map(
-  //   (event) => event.earnings - (event.actualEarnings || 0)
-  // );
-
-  // console.log('Remaining Amountssssssssssssssssssssssssssss:', remainingAmount);
 
   const parseDateString = (dateStr: string): { year: number; month: number; day: number }[] => {
     const dates = dateStr.split(',').map((d) => d.trim());
@@ -116,7 +94,6 @@ const HomePage: React.FC = () => {
         })
         .filter((date) => date);
     } catch (error) {
-      console.error('Error parsing date:', error);
       return [];
     }
   };
@@ -261,7 +238,6 @@ const HomePage: React.FC = () => {
           });
 
           futureDates.forEach((dateStr) => {
-            console.log('Scheduling event notification for:', dateStr, event);
             scheduleEventNotification(dateStr, event);
           });
         } catch (error) {

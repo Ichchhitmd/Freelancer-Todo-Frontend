@@ -48,7 +48,6 @@ export default function LoginScreen() {
         );
       }
     } catch (error) {
-      console.error('Failed to load cached credentials', error);
     }
   };
 

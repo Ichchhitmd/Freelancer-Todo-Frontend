@@ -1,6 +1,10 @@
 import { post } from './api';
-import { CreateReimbursement, ReimbursementResponse } from 'types/reimburesmentTypes';
+import { ReimbursementResponse } from 'types/reimburesmentTypes';
 
-export const postReimbursement = async (reimbursementData: CreateReimbursement): Promise<any> => {
-    return post<any>('/event-expenses', reimbursementData);
+export const postReimbursement = async (formData: FormData): Promise<ReimbursementResponse> => {
+    return post<ReimbursementResponse>('/event-expenses', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
 }

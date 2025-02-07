@@ -62,7 +62,6 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
         day: dayInNepali,
       };
     } catch (error) {
-      console.error('Error converting date:', error);
       return null;
     }
   };

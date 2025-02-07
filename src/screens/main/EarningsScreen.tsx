@@ -79,7 +79,6 @@ export default function EarningsScreen() {
             validDate = { year, month };
             break;
           } catch (err) {
-            console.error('Error parsing date:', dateStr, err);
             continue;
           }
         }
@@ -105,7 +104,6 @@ export default function EarningsScreen() {
         monthlyMap[monthKey].totalExpense += expenses;
         monthlyMap[monthKey].eventCount += 1;
       } catch (error) {
-        console.error('Error processing event:', event, error);
       }
     });
 
@@ -123,7 +121,6 @@ export default function EarningsScreen() {
 
         return nepaliMonths.indexOf(bMonth) - nepaliMonths.indexOf(aMonth);
       } catch (error) {
-        console.error('Error sorting months:', error);
         return 0;
       }
     });

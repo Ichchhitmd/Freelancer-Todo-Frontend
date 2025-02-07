@@ -79,12 +79,10 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
           setNewCompany({ name: '', contactPerson: '', contactInfo: '' });
         },
         onError: (error) => {
-          console.error('Error adding company:', error);
           alert('Failed to add company. Please try again.');
         },
       });
     } catch (error) {
-      console.error('Error in handleAddCompany:', error);
       alert('Failed to add company. Please try again.');
     }
   };

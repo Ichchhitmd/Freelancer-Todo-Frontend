@@ -56,7 +56,6 @@ const formatMultipleDates = (dates: string[]) => {
       const day = engToNepNum(nepaliDate.format('DD'));
       return day;
     } catch (error) {
-      console.error('Error formatting date:', error);
       return 'Invalid Date';
     }
   });
@@ -71,7 +70,6 @@ const formatMultipleDates = (dates: string[]) => {
 
   return `${nepaliMonth} - ${nepaliDates.join(', ')}`;
 };
-console.log('formatMultipleDates:', formatMultipleDates);
 
 const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events, handleClick }) => {
   const sortedEvents = [...events].sort((a, b) => a.details.eventId - b.details.eventId);

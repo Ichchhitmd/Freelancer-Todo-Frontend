@@ -20,7 +20,6 @@ const CompanyDetails: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [imageError, setImageError] = useState(false);
   const { data: company, isLoading, error } = useGetCompaniesById(companyId);
-  console.log(company);
 
   const handleImageError = useCallback(() => {
     setImageError(true);

@@ -12,7 +12,7 @@ import { useDispatch } from 'react-redux';
 import { removeGadget } from 'redux/slices/gadgetSlices';
 import { GadgetResponse } from 'types/gadgetTypes';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 
 export default function GadgetDetailsScreen() {
   const navigation = useNavigation();
@@ -71,6 +71,7 @@ export default function GadgetDetailsScreen() {
       Alert.alert('Error', 'Failed to navigate to edit screen. Please try again.');
     }
   }, [navigation, gadget]);
+
 
   const handleDelete = useCallback(async () => {
     Alert.alert(

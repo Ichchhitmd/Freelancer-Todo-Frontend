@@ -23,7 +23,7 @@ export const FilterBar = ({
   setShowFilters,
 }: FilterBarProps) => (
   <Animated.View 
-    className="border-gray-100 border-b bg-white shadow-sm"
+    className="border-gray-100 border-b bg-white shadow-sm z-10"
     entering={FadeIn.duration(200)}
     exiting={FadeOut.duration(200)}>
     <TouchableOpacity
@@ -50,43 +50,51 @@ export const FilterBar = ({
         className="p-4"
         entering={SlideInDown.duration(200)}
         exiting={SlideOutDown.duration(200)}>
-        <Text className="text-gray-600 mb-2 text-sm font-medium">Event Type</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
-          <FilterButton
-            label="All Events"
-            isActive={activeFilter === 'all'}
-            onPress={() => setActiveFilter('all')}
-          />
-          <FilterButton
-            label="Upcoming"
-            isActive={activeFilter === 'upcoming'}
-            onPress={() => setActiveFilter('upcoming')}
-          />
-          <FilterButton
-            label="Past Events"
-            isActive={activeFilter === 'past'}
-            onPress={() => setActiveFilter('past')}
-          />
-        </ScrollView>
+        <View>
+          <Text className="text-gray-500 mb-2 font-medium">Filter By</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+            <FilterButton
+              active={activeFilter === 'all'}
+              onPress={() => setActiveFilter('all')}
+              icon="calendar-month"
+              label="All"
+            />
+            <FilterButton
+              active={activeFilter === 'upcoming'}
+              onPress={() => setActiveFilter('upcoming')}
+              icon="calendar-arrow-right"
+              label="Upcoming"
+            />
+            <FilterButton
+              active={activeFilter === 'past'}
+              onPress={() => setActiveFilter('past')}
+              icon="calendar-arrow-left"
+              label="Past"
+            />
+          </ScrollView>
 
-        <Text className="text-gray-600 mb-2 text-sm font-medium">Sort By</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <FilterButton
-            label="Latest Date"
-            isActive={activeSort === 'date-desc'}
-            onPress={() => setActiveSort('date-desc')}
-          />
-          <FilterButton
-            label="Earliest Date"
-            isActive={activeSort === 'date-asc'}
-            onPress={() => setActiveSort('date-asc')}
-          />
-          <FilterButton
-            label="Company Name"
-            isActive={activeSort === 'company'}
-            onPress={() => setActiveSort('company')}
-          />
-        </ScrollView>
+          <Text className="text-gray-500 mb-2 font-medium">Sort By</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <FilterButton
+              active={activeSort === 'date-desc'}
+              onPress={() => setActiveSort('date-desc')}
+              icon="sort-calendar-descending"
+              label="Latest First"
+            />
+            <FilterButton
+              active={activeSort === 'date-asc'}
+              onPress={() => setActiveSort('date-asc')}
+              icon="sort-calendar-ascending"
+              label="Oldest First"
+            />
+            <FilterButton
+              active={activeSort === 'company'}
+              onPress={() => setActiveSort('company')}
+              icon="sort-alphabetical-ascending"
+              label="Company"
+            />
+          </ScrollView>
+        </View>
       </Animated.View>
     )}
   </Animated.View>

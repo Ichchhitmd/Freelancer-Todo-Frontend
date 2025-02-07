@@ -2,16 +2,18 @@ export interface Expense {
     title: string;
     amount: string;
     description: string;
-    screenshotUrl: null | string;
+    screenshot: null | string;
     companyId: number;
+    userId: number;
 }
 
 export interface CreateExpense {
     title: string;
     amount: string;
     description: string;
-    screenshotUrl: null | string;
+    screenshot: null | string;
     companyId: number;
+    userId: number;
 }
 
 export interface ExpenseResponse {
@@ -23,4 +25,5 @@ export interface ExpenseResponse {
     companyId: number;
     createdAt: string;
     updatedAt: string;
+    userId: number;
 }
