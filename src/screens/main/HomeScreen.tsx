@@ -21,7 +21,6 @@ import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEvents } from 'hooks/events';
 import { EventResponse } from 'types/eventTypes';
 import { scheduleEventNotification } from 'utils/eventNotification';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface Event {
   date: string;
@@ -83,7 +82,7 @@ const HomePage: React.FC = () => {
     const transformEvent = (event: any): Event[] => {
       const dates = parseDateString(event.eventDate);
       const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
+      currentDate.setHours(10, 0, 0, 0);
 
       return dates
         .map((date) => {
