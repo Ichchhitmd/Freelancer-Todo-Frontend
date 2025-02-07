@@ -31,6 +31,7 @@ export default function GadgetDetailsScreen() {
             size={64} 
             color="#EF4444" 
           />
+          
           <Text className="text-red-500 text-lg font-bold mt-4">
             Gadget not found
           </Text>
