@@ -1,17 +1,18 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, FlatList } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import SelectDropdown from 'components/rare/SelectDropdown';
 import WorkCalendar from 'components/rare/workCalendar';
 import { useGetCompanies } from 'hooks/companies';
 import { useEvents } from 'hooks/events';
-import { useSelector } from 'react-redux';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, FlatList } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCompany } from 'redux/slices/companySlices';
 import { RootState } from 'redux/store';
 import type { RootStackParamList } from 'types/navigation';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -76,6 +77,7 @@ const AddWorkForm: React.FC = () => {
   );
 
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
+
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
 

@@ -32,31 +32,31 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
     ]).start();
   }, []);
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-blue-500';
-      case 'completed':
-        return 'bg-green-500';
-      case 'cancelled':
-        return 'bg-gray-500';
-      default:
-        return 'bg-yellow-500'; // pending
-    }
-  };
+  // const getStatusColor = (status?: string) => {
+  //   switch (status) {
+  //     case 'confirmed':
+  //       return 'bg-blue-500';
+  //     case 'completed':
+  //       return 'bg-green-500';
+  //     case 'cancelled':
+  //       return 'bg-gray-500';
+  //     default:
+  //       return 'bg-yellow-500'; // pending
+  //   }
+  // };
 
-  const getStatusIcon = (status?: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'check-circle';
-      case 'completed':
-        return 'check-circle-outline';
-      case 'cancelled':
-        return 'close-circle';
-      default:
-        return 'clock-outline'; // pending
-    }
-  };
+  // const getStatusIcon = (status?: string) => {
+  //   switch (status) {
+  //     case 'confirmed':
+  //       return 'check-circle';
+  //     case 'completed':
+  //       return 'check-circle-outline';
+  //     case 'cancelled':
+  //       return 'close-circle';
+  //     default:
+  //       return 'clock-outline'; // pending
+  //   }
+  // };
 
   return (
     <Animated.View
@@ -75,14 +75,14 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
           shadowOpacity: 0.1,
           shadowRadius: 2,
         }}>
-        <View className={`${getStatusColor(item.status)} px-4 py-1`}>
+        {/* <View className={`${getStatusColor(item.status)} px-4 py-1`}>
           <Text className="text-xs font-medium text-white">
             <MaterialCommunityIcons name={getStatusIcon(item.status)} size={12} />{' '}
             {item.status || 'Pending'}
           </Text>
-        </View>
+        </View> */}
 
-        <View className="p-4">
+        <View className="mt-5 p-4">
           <View className="flex-row">
             <DateDisplay date={item.eventDate} isUpcoming={item.isUpcoming} />
             <View className="ml-4 flex-1">
