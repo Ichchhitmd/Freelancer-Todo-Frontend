@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, FlatList } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
@@ -11,6 +11,7 @@ import { useEvents } from 'hooks/events';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 import type { RootStackParamList } from 'types/navigation';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -164,6 +165,10 @@ const AddWorkForm: React.FC = () => {
             onDateChange={handleDateChange}
             initialDate={isEditMode ? details?.eventDate : undefined}
           />{' '}
+          <View className="mb-3 flex-row items-center">
+            <MaterialCommunityIcons name="office-building" size={20} color="#000000" />
+            <Text className="text-gray-800 ml-2 text-lg font-semibold">Select Company</Text>
+          </View>
           <SelectDropdown
             data={companies?.map((company) => company.name) || []}
             onSelect={(value) => {
@@ -172,13 +177,46 @@ const AddWorkForm: React.FC = () => {
             }}
             defaultButtonText={isEditMode ? details?.company.name : 'Select Company'}
           />
-          <HorizontalSelector
-            label="Event Type"
-            icon="calendar-text"
-            options={EVENT_TYPES}
-            value={eventType}
-            onChange={setEventType}
-          />
+          <View className="mb-3 flex-row items-center">
+            <MaterialCommunityIcons name="calendar-star" size={20} color="#000000" />
+            <Text className="text-gray-800 ml-2 text-lg font-semibold">Event Type</Text>
+          </View>
+          <View
+            style={{ height: 120, width: '100%' }}
+            className="border-gray-200 my-3 overflow-hidden rounded-md border bg-white">
+            <FlatList
+              data={EVENT_TYPES}
+              keyExtractor={(item) => item.label}
+              nestedScrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const isSelected = eventType === item.label;
+                return (
+                  <View className="border-gray-300 w-full border-b">
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: isSelected ? '#E50914' : 'white',
+                      }}
+                      className="w-full"
+                      onPress={() => setEventType(item.label)}>
+                      <View className="flex-row items-center justify-center p-3">
+                        <MaterialCommunityIcons
+                          name={item.icon}
+                          size={20}
+                          color={isSelected ? 'white' : '#374151'}
+                        />
+                        <Text
+                          className={`ml-2 text-lg font-medium ${isSelected ? 'text-white' : 'text-black'}`}>
+                          {item.label}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                );
+              }}
+            />
+          </View>
           <HorizontalSelector
             label="Pick Side"
             icon="account-heart"

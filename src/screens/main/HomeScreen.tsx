@@ -27,6 +27,7 @@ interface Event {
   date: string;
   details: any;
 }
+
 interface MonthlyData {
   eventId: number;
   month: string;
@@ -58,19 +59,18 @@ const HomePage: React.FC = () => {
         const month = parseInt(monthStr, 10);
         const day = parseInt(dayStr, 10);
 
-        // Basic validation
         if (isNaN(year) || isNaN(month) || isNaN(day)) {
           throw new Error('Invalid date components');
         }
         if (month < 1 || month > 12) {
           throw new Error('Invalid month');
         }
-        if (day < 1 || day > 32) {
+        if (day < 1 || day > 31) {
           throw new Error('Invalid day');
         }
 
         return { year, month, day };
-      }).filter(date => date); // Remove any undefined values
+      }).filter(date => date);
     } catch (error) {
       console.error('Error parsing date:', error);
       return [];
@@ -82,13 +82,24 @@ const HomePage: React.FC = () => {
 
     const transformEvent = (event: any): Event[] => {
       const dates = parseDateString(event.eventDate);
-      return dates.map((date) => ({
-        date: `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`,
-        details: {
-          ...event,
-          eventDate: `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`,
-        },
-      }));
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      return dates
+        .map((date) => {
+          const eventDate = new Date(date.year, date.month - 1, date.day);
+          if (eventDate >= currentDate) {
+            return {
+              date: `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`,
+              details: {
+                ...event,
+                eventDate: `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`,
+              },
+            };
+          }
+          return null;
+        })
+        .filter((event): event is Event => event !== null);
     };
 
     if (!Array.isArray(eventsData)) {
@@ -97,7 +108,7 @@ const HomePage: React.FC = () => {
 
     const allEvents = eventsData.flatMap(transformEvent);
 
-    const uniqueEvents = allEvents.reduce((unique: any[], event: any) => {
+    const uniqueEvents = allEvents.reduce((unique: Event[], event: Event) => {
       if (!unique.some((e) => e.date === event.date && e.details.id === event.details.id)) {
         unique.push(event);
       }
@@ -107,44 +118,16 @@ const HomePage: React.FC = () => {
     return uniqueEvents;
   }, [eventsData]);
 
-  useEffect(() => {
-    if (data && !isLoading && !isError) {
-      setEventsData(data);
-      const eventsToSchedule = Array.isArray(data) ? data : [data];
-      eventsToSchedule.forEach((event) => {
-        try {
-          console.log('Scheduling event notification for:', event.eventDate, event);
-          scheduleEventNotification(event.eventDate, event);
-        } catch (error) {
-          console.error('Error scheduling notification:', error);
-        }
-      });
-      setIsEverythingLoaded(true);
-    }
-  }, [data, isLoading, isError]);
-
-  useEffect(() => {
-    if (eventsData) {
-      if (Array.isArray(eventsData)) {
-        eventsData.forEach((event) => scheduleEventNotification(event.eventDate, event));
-      } else {
-        scheduleEventNotification(eventsData.eventDate, eventsData);
-      }
-    }
-  }, [eventsData]);
-
-  const handleDateClick = (dateDetails: Event) => {
-    navigation.navigate('DateDetails', { details: dateDetails });
-  };
-
   const upcomingEvents = React.useMemo(() => {
-    const uniqueUpcoming = transformedDates.filter(
-      (event) => {
-        const dateParts = event.date.split('-').map(Number);
-        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-        return date > new Date();
-      }
-    );
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    const uniqueUpcoming = transformedDates.filter((event) => {
+      const [year, month, day] = event.date.split('-').map(Number);
+      const eventDate = new Date(year, month - 1, day);
+      return eventDate >= currentDate;
+    });
+
     return [...new Map(uniqueUpcoming.map((event) => [event.date, event])).values()];
   }, [transformedDates]);
 
@@ -152,54 +135,52 @@ const HomePage: React.FC = () => {
     if (!eventsData) return [];
     const eventsArray = Array.isArray(eventsData) ? eventsData : [eventsData];
     const nepaliMonths = [
-      'Baisakh',
-      'Jestha',
-      'Ashad',
-      'Shrawan',
-      'Bhadra',
-      'Ashwin',
-      'Kartik',
-      'Mangsir',
-      'Poush',
-      'Magh',
-      'Falgun',
-      'Chaitra',
+      'Baisakh', 'Jestha', 'Ashad', 'Shrawan', 'Bhadra', 'Ashwin',
+      'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra',
     ];
 
     const monthlyMap: { [key: string]: MonthlyData } = {};
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
 
     eventsArray.forEach((event) => {
       const eventDates = event.eventDate.split(',').map((d: string) => d.trim());
+      
+      const futureDates = eventDates.filter(dateStr => {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const eventDate = new Date(year, month - 1, day);
+        return eventDate >= currentDate;
+      });
+
+      if (futureDates.length === 0) return;
 
       const earnings = parseFloat(event.earnings) || 0;
       const expenses = parseFloat(event.expenses) || 0;
 
-      const [year, monthStr] = eventDates[0].split('-');
-      const monthNumber = parseInt(monthStr, 10);
-      if (isNaN(monthNumber)) return;
+      futureDates.forEach(dateStr => {
+        const [year, monthStr] = dateStr.split('-');
+        const monthNumber = parseInt(monthStr, 10);
+        if (isNaN(monthNumber)) return;
 
-      const monthName = nepaliMonths[monthNumber - 1] || 'Unknown';
-      const key = `${year}-${monthNumber}`;
+        const monthName = nepaliMonths[monthNumber - 1] || 'Unknown';
+        const key = `${year}-${monthNumber}`;
 
-      if (!monthlyMap[key]) {
-        monthlyMap[key] = {
-          month: monthName,
-          totalIncome: 0,
-          totalExpense: 0,
-          eventCount: 0,
-          eventId: event.id, // Use event ID properly here
-          eventDate: eventDates[0], // Use the first date as the event date
-        };
-      }
+        if (!monthlyMap[key]) {
+          monthlyMap[key] = {
+            month: monthName,
+            totalIncome: 0,
+            totalExpense: 0,
+            eventCount: 0,
+            eventId: event.id,
+            eventDate: dateStr,
+          };
+        }
 
-      monthlyMap[key].totalIncome += earnings; // Add earnings once per event
-      monthlyMap[key].totalExpense += expenses; // Add expenses
-      monthlyMap[key].eventCount += 1; // Increase event count
+        monthlyMap[key].totalIncome += earnings / futureDates.length;
+        monthlyMap[key].totalExpense += expenses / futureDates.length;
+        monthlyMap[key].eventCount += 1;
+      });
     });
-
-    console.log('Monthly Data by Event ID: ', monthlyMap);
-    console.log('Events Array: ', eventsArray);
-    console.log('Upcoming Events: ', upcomingEvents);
 
     const sortedKeys = Object.keys(monthlyMap).sort((a, b) => {
       const [aYear, aMonth] = a.split('-').map(Number);
@@ -210,14 +191,43 @@ const HomePage: React.FC = () => {
     return sortedKeys.map((key) => monthlyMap[key]);
   }, [eventsData]);
 
+  useEffect(() => {
+    if (data && !isLoading && !isError) {
+      setEventsData(data);
+      const eventsToSchedule = Array.isArray(data) ? data : [data];
+      eventsToSchedule.forEach((event) => {
+        try {
+          const eventDates = event.eventDate.split(',').map((d: string) => d.trim());
+          const futureDates = eventDates.filter(dateStr => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const eventDate = new Date(year, month - 1, day);
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0);
+            return eventDate >= currentDate;
+          });
+
+          futureDates.forEach(dateStr => {
+            console.log('Scheduling event notification for:', dateStr, event);
+            scheduleEventNotification(dateStr, event);
+          });
+        } catch (error) {
+          console.error('Error scheduling notification:', error);
+        }
+      });
+      setIsEverythingLoaded(true);
+    }
+  }, [data, isLoading, isError]);
+
+  const handleDateClick = (dateDetails: Event) => {
+    navigation.navigate('DateDetails', { details: dateDetails });
+  };
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     refetch().then(() => {
       setRefreshing(false);
     });
   }, [refetch]);
-
-  console.log('Monthly Data: ', monthlyData);
 
   if (!isEverythingLoaded) {
     return (
