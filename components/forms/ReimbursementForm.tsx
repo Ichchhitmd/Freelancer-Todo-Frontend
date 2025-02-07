@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Image, Platform } from 'react-native';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,12 +20,11 @@ const ReimbursementForm = () => {
   const navigation = useNavigation();
   const { mutate: postReimbursement } = usePostReimbursement();
   const { detailsId } = route.params as { detailsId: number };
-  console.log('Details ID:', detailsId);
   const [expense, setExpense] = useState({
     type: '',
-    amount: 0,
+    amount: '',
     description: '',
-    image: '',
+    image: null as string | null,
   });
 
   const pickImage = async () => {
@@ -33,41 +32,50 @@ const ReimbursementForm = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setExpense({ ...expense, image: result.assets[0].uri || null });
+      setExpense({ ...expense, image: result.assets[0].uri });
     }
   };
 
   const handleSubmit = () => {
-    console.log(expense);
-    if (!expense.type || !expense.amount || !expense.description ) {
+    if (!expense.type || !expense.amount || !expense.description || !detailsId) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    postReimbursement(
-      {
-        type: expense.type,
-        amount: expense.amount,
-        description: expense.description,
-        image: expense.image || "",
-        eventId: detailsId,
+    const formData = new FormData();
+    formData.append('type', expense.type);
+    formData.append('description', expense.description);
+    formData.append('amount', expense.amount);
+    formData.append('eventId', detailsId.toString());
+
+    if (expense.image) {
+      const imageUri = expense.image;
+      const fileType = imageUri.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+
+      formData.append('image', {
+        uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
+        name: `photo.${fileType}`,
+        type: `image/${fileType}`
+      } as any);
+    }
+
+    postReimbursement(formData, {
+      onSuccess: () => {
+        Alert.alert('Success', 'Reimbursement request submitted!');
+        navigation.goBack();
       },
-      {
-        onSuccess: (data) => {
-          console.log(data);
-          Alert.alert('Success', 'Reimbursement request submitted!');
-          navigation.goBack();
-        },
-        onError: (error) => {
-          Alert.alert('Error', 'Failed to submit reimbursement. Please try again.');
-          console.error(error);
-        }
+      onError: (error: any) => {
+        const errorData = error?.response?.data;
+        const errorMessage = errorData?.message 
+          || error?.message 
+          || 'Failed to submit reimbursement. Please try again.';
+        Alert.alert('Error', errorMessage);
       }
-    );
+    });
   };
 
   return (
@@ -102,13 +110,13 @@ const ReimbursementForm = () => {
             onChange={(type) => setExpense({ ...expense, type })}
           />
 
-         <InputField
-         placeholder="Enter amount"
-         value={expense.amount ? String(expense.amount) : ''}
-         onChangeText={(text) => setExpense({ ...expense, amount: Number(text) || 0 })}
-         keyboardType="numeric"
-         icon="currency-inr"
-         />
+          <InputField
+            placeholder="Enter amount"
+            value={expense.amount}
+            onChangeText={(text) => setExpense({ ...expense, amount: text })}
+            keyboardType="numeric"
+            icon="currency-inr"
+          />
 
           <InputField
             placeholder="Enter description"

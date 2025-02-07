@@ -54,7 +54,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DateDetail'>;
 const DateDetails: React.FC = () => {
   const route = useRoute<Props['route']>();
   const { details } = route.params;
-  console.log(details);
   const navigation = useNavigation();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
@@ -102,13 +101,11 @@ const DateDetails: React.FC = () => {
 
       return `${nepaliMonth} - ${nepaliDay}`;
     } catch (error) {
-      console.error('Error converting date:', error);
       return 'Invalid Date';
     }
   };
 
   const detailsId = details.id;
-  console.log( 'Details ID: ', detailsId)
 
   const ActionDrawer = () => (
     <Modal
@@ -128,9 +125,7 @@ const DateDetails: React.FC = () => {
               className="bg-gray-50 mb-3 flex-row items-center rounded-xl p-4"
               onPress={() => {
                 navigation.navigate('Add Work', { isEditMode: true, details });
-                {
-                  console.log('Details : ', details);
-                }
+              
                 setIsDrawerVisible(false);
               }}>
               <MaterialCommunityIcons name="pencil" size={24} color="#ef4444" />

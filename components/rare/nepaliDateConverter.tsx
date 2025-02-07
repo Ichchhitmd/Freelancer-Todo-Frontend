@@ -75,7 +75,6 @@ const NepaliDateConverter: React.FC<NepaliDateConverterProps> = ({
         hasMultipleDates: dates.length > 1,
       };
     } catch (error) {
-      console.error('Error converting date:', error);
       return null;
     }
   };

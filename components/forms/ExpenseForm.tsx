@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Image, Platform } from 'react-native';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import * as ImagePicker from 'expo-image-picker';
@@ -8,6 +8,8 @@ import SelectDropdown from 'components/rare/SelectDropdown';
 import { useGetCompanies } from 'hooks/companies';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { usePostExpense } from 'hooks/expenses';
+import { useSelector } from 'react-redux';
+import { RootState } from 'redux/store';
 
 const EXPENSE_TYPES = [
   { id: 'TRAVEL', label: 'Travel', icon: 'car' },
@@ -19,6 +21,7 @@ const EXPENSE_TYPES = [
 
 const ExpenseForm = () => {
   const navigation = useNavigation();
+  const { user } = useSelector((state: RootState) => state.auth);
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
   const [companyId, setCompanyId] = useState(0);
   const { mutate: postExpense } = usePostExpense();
@@ -26,8 +29,8 @@ const ExpenseForm = () => {
     type: '',
     amount: '',
     description: '',
-    screenshotUrl: null,
-    company: null,
+    image: null as string | null,
+    userId: user?.id,
   });
 
   const pickImage = async () => {
@@ -35,43 +38,57 @@ const ExpenseForm = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setExpense({ ...expense, image: result.assets[0].uri || null,
-        screenshotUrl: result.assets[0].uri || null,
-       });
+      setExpense({ ...expense, image: result.assets[0].uri });
     }
   };
 
   const handleSubmit = () => {
-    if (!expense.type || !expense.amount || !expense.description || !expense.company) {
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
+    if (
+        !expense.type || 
+        !expense.amount || 
+        !expense.description || 
+        !companyId ||
+        !user?.id
+    ) {
+        Alert.alert('Error', 'Please fill in all fields.');
+        return;
     }
 
-    postExpense(
-        {
-            title: expense.type,
-            amount: expense.amount,
-            description: expense.description,
-            screenshotUrl: expense.screenshotUrl,
-            companyId: companyId
-        },
-        {
-            onSuccess: (data) => {
-                console.log(data);
-                Alert.alert('Success', 'Expense request submitted!');
-                navigation.goBack();
-            },
-            onError: (error) => {
-                Alert.alert('Error', 'Failed to submit expense. Please try again.');
-                console.error(error);
-            }
-        }
+    const formData = new FormData();
+    formData.append('title', expense.type);
+    formData.append('description', expense.description);
+    formData.append('companyId', companyId.toString());
+    formData.append('amount', expense.amount);
+    formData.append('userId', user.id.toString());
 
-    )
+    if (expense.image) {
+      const imageUri = expense.image;
+      const fileType = imageUri.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+
+      formData.append('screenshot', {
+        uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
+        name: `photo.${fileType}`,
+        type: `image/${fileType}`
+      } as any);
+    }
+
+    postExpense(formData, {
+      onSuccess: () => {
+        Alert.alert('Success', 'Expense request submitted!');
+        navigation.goBack();
+      },
+      onError: (error: any) => {
+        const errorData = error?.response?.data;
+        const errorMessage = errorData?.message 
+          || error?.message 
+          || 'Failed to submit expense. Please try again.';
+        Alert.alert('Error', errorMessage);
+      }
+    });
   };
 
   if (companiesLoading) {

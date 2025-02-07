@@ -1,6 +1,9 @@
 import { post } from './api';
-import { CreateExpense } from 'types/expensesTypes';
 
-export const postExpense = async (expenseData: CreateExpense): Promise<any> => {
-    return post<any>('/company-expenses', expenseData);
+export const postExpense = async (expenseData: FormData): Promise<any> => {
+    return post<any>('/company-expenses', expenseData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
 }

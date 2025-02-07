@@ -1,7 +1,6 @@
 import NepaliDate from 'nepali-datetime';
 
 export const NepaliDateToEnglish = (nepaliDateStr: string): string | null => {
-  console.log('[Conversion] Starting conversion for:', nepaliDateStr);
 
   try {
     const nepaliDate = new NepaliDate(nepaliDateStr, 'YYYY-MM-DD');

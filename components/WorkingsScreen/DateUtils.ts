@@ -24,7 +24,6 @@ export const convertToNepaliDate = (dateString: string): ParsedDate => {
       timestamp: new Date(dateString).getTime(),
     };
   } catch (error) {
-    console.error('Date conversion error:', error);
     return {
       day: 1,
       month: 'Unknown',

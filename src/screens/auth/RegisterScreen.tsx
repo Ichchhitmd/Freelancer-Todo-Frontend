@@ -40,7 +40,6 @@ export default function RegisterScreen() {
       { name, phone, password, email, location, role: 'freelancer' },
       {
         onSuccess: (data) => {
-          console.log(data);
           navigation.navigate('LoginScreen');
         },
       }

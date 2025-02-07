@@ -40,12 +40,6 @@ export const updateGadget = async (id: number, data: Partial<CreateGadgetData>) 
         throw new Error('Authentication required. Please log in again.');
     }
 
-    console.log('Update Gadget Request:', {
-        id,
-        data,
-        token: token ? 'Present' : 'Missing',
-        url: `/gadgets/${id}`
-    });
 
     try {
         // Ensure all required fields are present
@@ -69,18 +63,10 @@ export const updateGadget = async (id: number, data: Partial<CreateGadgetData>) 
             }
         });
 
-        console.log('Update Gadget Response:', {
-            status: 'success',
-            data: response
-        });
+       
         return response;
     } catch (error: any) {
-        console.error('Update Gadget Error:', {
-            status: error?.response?.status,
-            data: error?.response?.data,
-            message: error?.message,
-            stack: error?.stack
-        });
+     
 
         // Enhance error message based on the error type
         if (error.response?.status === 401) {

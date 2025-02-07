@@ -95,7 +95,7 @@ const WorkingScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-red-50">
-      <View className="border-b border-red-200 bg-red-50 shadow-sm">
+      <View className="border-b border-red-200 bg-red-50 shadow-sm relative">
         <View className="flex items-center justify-center px-6 py-6">
           <Text className="text-3xl font-extrabold text-primary/70">My Works</Text>
           <Text className="mt-2 text-sm font-medium text-primary/90">
@@ -103,16 +103,16 @@ const WorkingScreen = () => {
             {activeFilter === 'upcoming' && visibleEvents.length === 10 && ' (showing first 10)'}
           </Text>
         </View>
+        <FilterBar
+          activeFilter={activeFilter}
+          setActiveFilter={setActiveFilter}
+          activeSort={activeSort}
+          setActiveSort={setActiveSort}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          className="absolute top-0 right-0 z-10"
+        />
       </View>
-
-      <FilterBar
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
-        activeSort={activeSort}
-        setActiveSort={setActiveSort}
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-      />
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">

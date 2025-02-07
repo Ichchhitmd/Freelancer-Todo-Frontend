@@ -25,7 +25,6 @@ const FloatingActionButton: React.FC<FABProps> = ({ onAddWork, onAddExpense }) =
   const handleAddExpense = () => {
     onAddExpense();
     setIsVisible(false);
-    console.log('Adding Expense...');
   };
 
   return (
