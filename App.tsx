@@ -1,4 +1,3 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
@@ -18,7 +17,7 @@ import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
 import { Modal, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { NavigationProp, ParamListBase, NavigationContainer } from '@react-navigation/native';
 
 import { useEffect, useState } from 'react';
 import { requestNotificationPermission } from 'utils/notification';
