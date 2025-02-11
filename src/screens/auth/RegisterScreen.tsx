@@ -4,7 +4,6 @@ import * as Location from 'expo-location';
 import { useSignup } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Alert } from 'react-native';
-import { useDispatch } from 'react-redux';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -36,36 +35,50 @@ export default function RegisterScreen() {
       return;
     }
 
-    signup(
-      { name, phone, password, email, location, role: 'freelancer' },
-      {
-        onSuccess: (data) => {
-          navigation.navigate('LoginScreen');
-        },
-      }
-    );
+    const payload = {
+      name,
+      phone,
+      password,
+      email,
+      location,
+      role: 'freelancer',
+    };
+
+    console.log('Sending data to backend:', payload);
+
+    signup(payload, {
+      onSuccess: (data) => {
+        console.log('Signup success:', data);
+        Alert.alert('Success', 'Account created successfully!');
+        navigation.navigate('LoginScreen');
+      },
+      onError: (error) => {
+        console.error('Signup error:', error);
+        Alert.alert('Signup Failed', error.message || 'An error occurred');
+      },
+    });
   };
 
   return (
-    <View className="flex-1 justify-center bg-gray-50 p-6">
+    <View className="bg-gray-50 flex-1 justify-center p-6">
       <View className="rounded-2xl bg-white p-8 shadow-lg">
-        <Text className="mb-2 text-center text-3xl font-bold text-gray-900">Create Account</Text>
-        <Text className="mb-8 text-center text-base text-gray-600">Join our community today</Text>
+        <Text className="text-gray-900 mb-2 text-center text-3xl font-bold">Create Account</Text>
+        <Text className="text-gray-600 mb-8 text-center text-base">Join our community today</Text>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="person" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="person" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Full Name"
             value={name}
             onChangeText={setName}
           />
         </View>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="phone" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="phone" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Phone Number"
             value={phone}
             onChangeText={setPhone}
@@ -73,10 +86,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="email" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="email" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
@@ -85,10 +98,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="lock" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="lock" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
@@ -96,10 +109,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="mb-6 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="location-on" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-6 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="location-on" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Fetching location..."
             value={location}
             editable={false} // Make it read-only
@@ -113,7 +126,7 @@ export default function RegisterScreen() {
         </Pressable>
 
         <Pressable className="mt-6" onPress={() => navigation.navigate('LoginScreen')}>
-          <Text className="text-center text-sm text-gray-600">
+          <Text className="text-gray-600 text-center text-sm">
             Already have an account? <Text className="font-semibold text-blue-500">Login</Text>
           </Text>
         </Pressable>
