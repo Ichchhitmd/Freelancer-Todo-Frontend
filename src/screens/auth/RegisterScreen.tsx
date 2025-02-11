@@ -47,25 +47,25 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View className="flex-1 justify-center bg-gray-50 p-6">
+    <View className="bg-gray-50 flex-1 justify-center p-6">
       <View className="rounded-2xl bg-white p-8 shadow-lg">
-        <Text className="mb-2 text-center text-3xl font-bold text-gray-900">Create Account</Text>
-        <Text className="mb-8 text-center text-base text-gray-600">Join our community today</Text>
+        <Text className="text-gray-900 mb-2 text-center text-3xl font-bold">Create Account</Text>
+        <Text className="text-gray-600 mb-8 text-center text-base">Join our community today</Text>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="person" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="person" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Full Name"
             value={name}
             onChangeText={setName}
           />
         </View>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="phone" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="phone" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Phone Number"
             value={phone}
             onChangeText={setPhone}
@@ -73,10 +73,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="email" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="email" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
@@ -85,10 +85,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="lock" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-4 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="lock" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
@@ -96,10 +96,10 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <View className="mb-6 flex-row items-center rounded-lg border border-gray-200 bg-gray-100 p-3">
-          <MaterialIcons name="location-on" size={20} className="mr-3 text-gray-500" />
+        <View className="border-gray-200 bg-gray-100 mb-6 flex-row items-center rounded-lg border p-3">
+          <MaterialIcons name="location-on" size={20} className="text-gray-500 mr-3" />
           <TextInput
-            className="flex-1 text-base text-gray-900"
+            className="text-gray-900 flex-1 text-base"
             placeholder="Fetching location..."
             value={location}
             editable={false} // Make it read-only
@@ -113,7 +113,7 @@ export default function RegisterScreen() {
         </Pressable>
 
         <Pressable className="mt-6" onPress={() => navigation.navigate('LoginScreen')}>
-          <Text className="text-center text-sm text-gray-600">
+          <Text className="text-gray-600 text-center text-sm">
             Already have an account? <Text className="font-semibold text-blue-500">Login</Text>
           </Text>
         </Pressable>

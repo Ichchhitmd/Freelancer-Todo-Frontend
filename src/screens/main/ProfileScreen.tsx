@@ -89,7 +89,6 @@ export default function ProfileScreen() {
 
   const convertCoordinatesToLocation = useCallback(async (coordinates: string) => {
     try {
-      // Split coordinates into latitude and longitude
       const [latitude, longitude] = coordinates.split(',').map((coord) => parseFloat(coord.trim()));
 
       if (isNaN(latitude) || isNaN(longitude)) {
@@ -299,7 +298,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="bg-gray-50 flex-1">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -461,7 +460,7 @@ export default function ProfileScreen() {
 
             <TouchableOpacity
               onPress={HandleLogout}
-              className="mt-4 mb-12 flex-row items-center justify-center rounded-xl bg-black p-4">
+              className="mb-12 mt-4 flex-row items-center justify-center rounded-xl bg-black p-4">
               <MaterialCommunityIcons name="logout" size={24} color="white" className="mr-2" />
               <Text className="text-lg font-bold text-white">Logout</Text>
             </TouchableOpacity>

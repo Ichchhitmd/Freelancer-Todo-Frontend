@@ -1,8 +1,8 @@
 export interface UserProfilePictureResponse {
-    messages: string;
-    photo: string;
+  messages: string;
+  photo: string;
 }
 
 export interface UpdateUserprofileData {
-    photo?: string;
+  photo?: string;
 }

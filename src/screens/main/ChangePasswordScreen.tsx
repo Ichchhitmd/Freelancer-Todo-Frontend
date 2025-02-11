@@ -15,7 +15,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { changePassword } from '../../../helper/authRequest';
 
-// Local InputField component
 export interface InputFieldRef {
   focus: () => void;
   blur: () => void;

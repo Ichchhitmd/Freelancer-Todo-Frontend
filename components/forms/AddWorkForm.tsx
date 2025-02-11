@@ -130,7 +130,6 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
-    // Convert eventType to uppercase
     const formattedEventType = eventType.toUpperCase();
 
     const formattedData = {
@@ -142,7 +141,7 @@ const AddWorkForm: React.FC = () => {
       contactInfo: contactInfo,
       workType: workType,
       side: side,
-      eventType: formattedEventType, // Use the formatted eventType
+      eventType: formattedEventType,
       eventDate: selectedDates[0],
       ...(isEditMode && details ? { id: details.id } : {}),
     };

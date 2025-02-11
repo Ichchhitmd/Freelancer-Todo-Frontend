@@ -38,7 +38,7 @@ const BrideGroomDropdown: React.FC<{ value: string; onChange: (value: string) =>
               className={`flex-row items-center p-4 ${value === option ? 'bg-red-50' : ''}`}
               onPress={() => {
                 onChange(option);
-                setOpen(false); // Close the dropdown when an option is selected
+                setOpen(false);
               }}>
               <Text
                 className={`ml-3 flex-1 ${value === option ? 'font-medium text-red-500' : 'text-gray-700'}`}>

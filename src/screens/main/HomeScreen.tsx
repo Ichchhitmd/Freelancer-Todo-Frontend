@@ -65,7 +65,10 @@ const HomePage: React.FC = () => {
 
   const totalEarnings = earningsData.reduce((sum, data) => sum + (Number(data.earnings) || 0), 0);
 
-  const totalActualEarnings = earningsData.reduce((sum, data) => sum + (Number(data.actualEarnings) || 0), 0);
+  const totalActualEarnings = earningsData.reduce(
+    (sum, data) => sum + (Number(data.actualEarnings) || 0),
+    0
+  );
 
   const remainingAmount = totalEarnings - totalActualEarnings;
 

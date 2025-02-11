@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Image, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  Alert,
+  Image,
+  Platform,
+} from 'react-native';
 import InputField from 'components/common/InputField';
-import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
-import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from '@react-navigation/native';
-import SelectDropdown from 'components/rare/SelectDropdown';
-import { useGetCompanies } from 'hooks/companies';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
+import SelectDropdown from 'components/rare/SelectDropdown';
+import * as ImagePicker from 'expo-image-picker';
+import { useGetCompanies } from 'hooks/companies';
 import { usePostExpense } from 'hooks/expenses';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
@@ -47,15 +56,9 @@ const ExpenseForm = () => {
   };
 
   const handleSubmit = () => {
-    if (
-        !expense.type || 
-        !expense.amount || 
-        !expense.description || 
-        !companyId ||
-        !user?.id
-    ) {
-        Alert.alert('Error', 'Please fill in all fields.');
-        return;
+    if (!expense.type || !expense.amount || !expense.description || !companyId || !user?.id) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
     }
 
     const formData = new FormData();
@@ -72,7 +75,7 @@ const ExpenseForm = () => {
       formData.append('screenshot', {
         uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
         name: `photo.${fileType}`,
-        type: `image/${fileType}`
+        type: `image/${fileType}`,
       } as any);
     }
 
@@ -83,11 +86,10 @@ const ExpenseForm = () => {
       },
       onError: (error: any) => {
         const errorData = error?.response?.data;
-        const errorMessage = errorData?.message 
-          || error?.message 
-          || 'Failed to submit expense. Please try again.';
+        const errorMessage =
+          errorData?.message || error?.message || 'Failed to submit expense. Please try again.';
         Alert.alert('Error', errorMessage);
-      }
+      },
     });
   };
 
@@ -103,16 +105,11 @@ const ExpenseForm = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9f9f9' }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         <View style={{ backgroundColor: '#FF5A5F', paddingVertical: 55, paddingHorizontal: 24 }}>
-        <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="absolute left-6 top-16 z-10"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <MaterialCommunityIcons 
-              name="arrow-left" 
-              size={24} 
-              color="white" 
-            />
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
           </TouchableOpacity>
           <Text style={{ fontSize: 28, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
             Expense Form
@@ -134,14 +131,14 @@ const ExpenseForm = () => {
             shadowOpacity: 0.1,
             shadowRadius: 8,
           }}>
-            <SelectDropdown
+          <SelectDropdown
             data={companies?.map((company) => company.name) || []}
             onSelect={(value) => {
               const selectedCompany = companies?.find((company) => company.name === value);
               setCompanyId(selectedCompany?.id ?? 0);
               setExpense((prev) => ({ ...prev, company: selectedCompany ?? null }));
             }}
-            defaultButtonText= 'Select Company'
+            defaultButtonText="Select Company"
           />
           <HorizontalSelector
             label="Expense Type"

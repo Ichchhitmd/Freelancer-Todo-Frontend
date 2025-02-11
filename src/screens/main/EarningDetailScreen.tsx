@@ -10,13 +10,13 @@ const EarningsDetailScreen = () => {
   const { earnings } = route.params as { earnings: any };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="bg-gray-50 flex-1">
       <View className="bg-white p-4 shadow-sm">
         <View className="flex-row items-center space-x-4">
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <ChevronLeft stroke="#4f46e5" width={24} height={24} />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-900">Company Earnings</Text>
+          <Text className="text-gray-900 text-xl font-bold">Company Earnings</Text>
         </View>
       </View>
 
@@ -30,7 +30,7 @@ const EarningsDetailScreen = () => {
 
       <View className="shadow-t-md bg-white p-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-lg font-semibold text-gray-900">Total Earnings</Text>
+          <Text className="text-gray-900 text-lg font-semibold">Total Earnings</Text>
           <View>
             <Text className="text-right text-lg font-bold text-green-500">
               +रु

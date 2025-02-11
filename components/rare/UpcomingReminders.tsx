@@ -12,7 +12,7 @@ interface EventDetails {
   company: {
     name: string;
   };
-  eventDate: string; // Add eventDate to the EventDetails interface
+  eventDate: string;
 }
 
 interface UpcomingEventReminderProps {

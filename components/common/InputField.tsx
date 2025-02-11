@@ -1,4 +1,3 @@
-// InputField.tsx
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState, useCallback, memo } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';

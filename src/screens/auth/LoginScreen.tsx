@@ -47,8 +47,7 @@ export default function LoginScreen() {
           ]
         );
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const checkBiometricSupport = async () => {

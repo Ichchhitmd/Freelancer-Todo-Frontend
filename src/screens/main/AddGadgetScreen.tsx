@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
-  Platform
+  Platform,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { addGadget } from 'redux/slices/gadgetSlices';
@@ -25,7 +25,7 @@ export default function AddGadgetScreen() {
     name: '',
     model: '',
     cost: '',
-    purchaseDate: new Date()
+    purchaseDate: new Date(),
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -33,7 +33,7 @@ export default function AddGadgetScreen() {
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
-      setFormData(prev => ({ ...prev, purchaseDate: selectedDate }));
+      setFormData((prev) => ({ ...prev, purchaseDate: selectedDate }));
     }
   };
 
@@ -56,30 +56,27 @@ export default function AddGadgetScreen() {
         name: formData.name.trim(),
         model: formData.model.trim(),
         cost: cost,
-        purchaseDate: formData.purchaseDate.toISOString()
+        purchaseDate: formData.purchaseDate.toISOString(),
       };
 
       await dispatch(addGadget(newGadget)).unwrap();
       Alert.alert('Success', 'Gadget added successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
+        { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      Alert.alert(
-        'Error',
-        error instanceof Error ? error.message : 'Failed to add gadget'
-      );
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to add gadget');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const renderInputField = ({ 
-    label, 
-    value, 
-    onChangeText, 
+  const renderInputField = ({
+    label,
+    value,
+    onChangeText,
     icon,
     keyboardType = 'default',
-    placeholder
+    placeholder,
   }: {
     label: string;
     value: string;
@@ -88,17 +85,13 @@ export default function AddGadgetScreen() {
     keyboardType?: 'default' | 'numeric';
     placeholder?: string;
   }) => (
-    <View className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+    <View className="border-gray-200 mb-4 rounded-xl border bg-white p-4">
       <View className="flex-row items-center">
-        <View className="bg-red-50 p-2 rounded-lg mr-3">
-          <MaterialCommunityIcons 
-            name={icon as any} 
-            size={24} 
-            color="#E50914" 
-          />
+        <View className="mr-3 rounded-lg bg-red-50 p-2">
+          <MaterialCommunityIcons name={icon as any} size={24} color="#E50914" />
         </View>
         <View className="flex-1">
-          <Text className="text-gray-600 text-sm mb-1">{label}</Text>
+          <Text className="text-gray-600 mb-1 text-sm">{label}</Text>
           <TextInput
             className="text-gray-900 text-lg"
             value={value}
@@ -113,82 +106,63 @@ export default function AddGadgetScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="absolute top-0 left-0 right-0 z-50 bg-red-500 shadow-sm">
+    <SafeAreaView className="bg-gray-50 flex-1">
+      <View className="absolute left-0 right-0 top-0 z-50 bg-red-500 shadow-sm">
         <View className="p-6 pt-16">
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="absolute left-6 top-16 z-10"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <MaterialCommunityIcons 
-              name="arrow-left" 
-              size={24} 
-              color="white" 
-            />
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-center text-2xl font-bold text-white">
-            Add New Gadget
-          </Text>
+          <Text className="text-center text-2xl font-bold text-white">Add New Gadget</Text>
         </View>
       </View>
 
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ paddingTop: 100 }}
-      >
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingTop: 100 }}>
         <View className="p-6">
-          <View className="bg-red-100 p-6 rounded-full self-center mb-8 shadow-lg">
-            <MaterialCommunityIcons 
-              name="devices" 
-              size={64} 
-              color="#E50914" 
-            />
+          <View className="mb-8 self-center rounded-full bg-red-100 p-6 shadow-lg">
+            <MaterialCommunityIcons name="devices" size={64} color="#E50914" />
           </View>
           {renderInputField({
             label: 'Name',
             value: formData.name,
-            onChangeText: (text) => setFormData(prev => ({ ...prev, name: text })),
+            onChangeText: (text) => setFormData((prev) => ({ ...prev, name: text })),
             icon: 'tag',
-            placeholder: 'Enter gadget name'
+            placeholder: 'Enter gadget name',
           })}
 
           {renderInputField({
             label: 'Model',
             value: formData.model,
-            onChangeText: (text) => setFormData(prev => ({ ...prev, model: text })),
+            onChangeText: (text) => setFormData((prev) => ({ ...prev, model: text })),
             icon: 'information',
-            placeholder: 'Enter model number'
+            placeholder: 'Enter model number',
           })}
 
           {renderInputField({
             label: 'Cost',
             value: formData.cost,
-            onChangeText: (text) => setFormData(prev => ({ ...prev, cost: text })),
+            onChangeText: (text) => setFormData((prev) => ({ ...prev, cost: text })),
             icon: 'cash',
             keyboardType: 'numeric',
-            placeholder: 'Enter cost'
+            placeholder: 'Enter cost',
           })}
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setShowDatePicker(true)}
-            className="bg-white border border-gray-200 rounded-xl p-4 mb-4"
-          >
+            className="border-gray-200 mb-4 rounded-xl border bg-white p-4">
             <View className="flex-row items-center">
-              <View className="bg-red-50 p-2 rounded-lg mr-3">
-                <MaterialCommunityIcons 
-                  name="calendar" 
-                  size={24} 
-                  color="#E50914" 
-                />
+              <View className="mr-3 rounded-lg bg-red-50 p-2">
+                <MaterialCommunityIcons name="calendar" size={24} color="#E50914" />
               </View>
               <View className="flex-1">
-                <Text className="text-gray-600 text-sm mb-1">Purchase Date</Text>
+                <Text className="text-gray-600 mb-1 text-sm">Purchase Date</Text>
                 <Text className="text-gray-900 text-lg">
                   {formData.purchaseDate.toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                   })}
                 </Text>
               </View>
@@ -205,22 +179,21 @@ export default function AddGadgetScreen() {
           )}
 
           <View className="mt-8">
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleSubmit}
               disabled={isSubmitting}
-              className="bg-red-500 p-4 rounded-xl flex-row items-center justify-center shadow-sm"
-            >
+              className="flex-row items-center justify-center rounded-xl bg-red-500 p-4 shadow-sm">
               {isSubmitting ? (
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <MaterialCommunityIcons 
-                    name="plus-circle" 
-                    size={24} 
-                    color="white" 
+                  <MaterialCommunityIcons
+                    name="plus-circle"
+                    size={24}
+                    color="white"
                     style={{ marginRight: 8 }}
                   />
-                  <Text className="text-white font-bold text-lg">Add Gadget</Text>
+                  <Text className="text-lg font-bold text-white">Add Gadget</Text>
                 </>
               )}
             </TouchableOpacity>

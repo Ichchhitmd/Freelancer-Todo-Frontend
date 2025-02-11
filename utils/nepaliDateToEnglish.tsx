@@ -1,7 +1,6 @@
 import NepaliDate from 'nepali-datetime';
 
 export const NepaliDateToEnglish = (nepaliDateStr: string): string | null => {
-
   try {
     const nepaliDate = new NepaliDate(nepaliDateStr, 'YYYY-MM-DD');
 
@@ -9,12 +8,11 @@ export const NepaliDateToEnglish = (nepaliDateStr: string): string | null => {
       throw new Error('Invalid Nepali date object');
     }
 
-    const englishDate = nepaliDate.getDateObject(); // This gives you the equivalent JavaScript Date object
+    const englishDate = nepaliDate.getDateObject();
 
-    const monthIndex = englishDate.getMonth(); // JavaScript months are 0-indexed
+    const monthIndex = englishDate.getMonth();
     const day = englishDate.getDate();
 
-    // Array of month names (English)
     const monthNames = [
       'Jan',
       'Feb',
@@ -31,7 +29,6 @@ export const NepaliDateToEnglish = (nepaliDateStr: string): string | null => {
     ];
 
     const month = monthNames[monthIndex]; // Get the name of the month
-
 
     return `${day}-${month}`;
   } catch (error) {

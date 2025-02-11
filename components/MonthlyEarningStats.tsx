@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import dayjs from 'dayjs'; // To handle date manipulation
+import dayjs from 'dayjs';
 
 interface EventExpense {
   eventId: number;
-  eventDate: string; // ISO 8601 format string
+  eventDate: string;
   company: string;
   expenses: Expense[];
 }
@@ -67,7 +67,6 @@ const MonthlyEarningsStats: React.FC<MonthlyEarningsStatsProps> = ({ earnings })
       {months.map((month) => {
         const monthData = groupedEarnings[month];
 
-        // Calculate total earnings, total expenses, etc. for each month
         const totalEarnings = monthData.reduce(
           (total, entry) => total + parseFloat(entry.estimatedEarning || '0'),
           0
