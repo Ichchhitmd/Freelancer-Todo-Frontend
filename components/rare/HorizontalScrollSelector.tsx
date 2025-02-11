@@ -16,20 +16,9 @@ interface HorizontalSelectorProps {
   onChange: (value: string) => void;
 }
 
-const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({
-  label,
-  icon,
-  options,
-  value,
-  onChange,
-}) => {
+const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({ options, value, onChange }) => {
   return (
     <View className="mb-6">
-      <View className="mb-3 flex-row items-center px-2">
-        <MaterialCommunityIcons name={icon} size={24} color="primary" />
-        <Text className="text-gray-900 ml-2 text-lg font-semibold">{label}</Text>
-      </View>
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

@@ -2,8 +2,8 @@ import { post } from './api';
 import { SignupData, LoginData, AuthResponse, ChangePasswordData, ChangePasswordResponse } from '../types/authTypes';
 import { store } from '../redux/store';
 
-export const signupUser = async (userData: SignupData): Promise<AuthResponse> => {
-  return post<AuthResponse>('/auth/signup', userData);
+export const signupUser = async (userData: SignupData): Promise<SignupData> => {
+  return post<SignupData>('/auth/signup', userData);
 };
 
 export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => {

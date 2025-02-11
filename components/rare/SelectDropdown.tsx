@@ -79,18 +79,13 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
           setNewCompany({ name: '', contactPerson: '', contactInfo: '' });
         },
         onError: (error) => {
-          alert('Failed to add company. Please try again.');
+          console.error('Error adding company:', error);
         },
       });
     } catch (error) {
-      alert('Failed to add company. Please try again.');
+      console.error('Failed to add company. Please try again.', error);
     }
   };
-
-  const maxHeight = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 250], // Reduced from 600 to 250
-  });
 
   useEffect(() => {
     if (defaultButtonText && defaultButtonText !== 'Select a company') {
@@ -114,7 +109,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
             onChangeText={handleSearch}
           />
           <TouchableOpacity onPress={toggleDropdown}>
-            <Text className="text-lg text-slate-500">×</Text>
+            <Text className="z-30 text-4xl text-slate-500">×</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -125,40 +120,38 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
           <Text className={`text-base ${selectedItem ? 'text-slate-900' : 'text-slate-500'}`}>
             {selectedItem || defaultButtonText}
           </Text>
-          <Text className="text-slate-500">{isOpen ? '▲' : '▼'}</Text>
+          <Text className="h-4 w-4 text-slate-500">{isOpen ? '▲' : '▼'}</Text>
         </TouchableOpacity>
       )}
 
       {isRenderDropdown && (
-        <>
-          <Animated.View
-            className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
-            style={{ maxHeight, height: maxHeight }} // Ensure maxHeight is controlling the height
-          >
-            <ScrollView
-              keyboardDismissMode="on-drag"
-              showsVerticalScrollIndicator={true}
-              bounces={false}
-              className="max-h-[250px]">
+        <View className="rounded-lg border border-secondary bg-white">
+          <ScrollView
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={true}
+            style={{ maxHeight: 120 }}
+            className="border-gray-200 border-t">
+            <TouchableOpacity
+              className="border-gray-200 border-b bg-white px-4 py-3"
+              onPress={() => handleSelect('Add Company')}
+              activeOpacity={0.7}>
+              <Text className="text-base text-red-500">+ Add Company</Text>
+            </TouchableOpacity>
+            {filteredData.map((item, index) => (
               <TouchableOpacity
-                className="flex-row items-center justify-center border-b border-slate-100 px-4 py-2 active:bg-slate-50"
-                onPress={() => handleSelect('Add Company')}
-                activeOpacity={0.7}>
-                <MaterialCommunityIcons name="plus" size={20} />
-                <Text className="ml-2 text-base">Add Company</Text>
+                key={index}
+                onPress={() => handleSelect(item)}
+                className={`border-b border-secondary/5 px-4 py-3 ${
+                  selectedItem === item ? 'bg-red-500' : 'bg-white'
+                }`}>
+                <Text
+                  className={`text-base ${selectedItem === item ? 'text-white' : 'text-gray-700'}`}>
+                  {item}
+                </Text>
               </TouchableOpacity>
-              {filteredData.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  className="border-b border-slate-100 px-4 py-2 active:bg-slate-50"
-                  onPress={() => handleSelect(item)}
-                  activeOpacity={0.7}>
-                  <Text className="text-base text-slate-900">{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Animated.View>
-        </>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       <Modal
