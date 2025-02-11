@@ -5,7 +5,6 @@ import { convertNepaliToEnglish } from './dateConversionToAd';
 const scheduledEventIds = new Set<string>();
 
 export async function scheduleEventNotification(nepaliDate: string, eventDetails: any) {
-
   try {
     // Split and process multiple dates
     const dateStrings = nepaliDate.split(',').map((d) => d.trim());
@@ -29,10 +28,10 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
       notificationDate.setHours(10, 0, 0, 0);
 
       // Skip if notification time has passed
-      if (notificationDate <= new Date()) {
+      const currentDate = new Date();
+      if (notificationDate <= currentDate) {
         continue;
       }
-
 
       // Schedule the notification with direct date trigger
       await Notifications.scheduleNotificationAsync({
@@ -44,7 +43,7 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
           data: { ...eventDetails, originalDate: dateStr },
         },
         trigger: {
-          date: notificationDate,  // Direct date trigger
+          date: notificationDate, // Direct date trigger
         },
       });
 
@@ -58,4 +57,3 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
     });
   }
 }
-
