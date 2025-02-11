@@ -1,0 +1,37 @@
+{
+  "cli": {
+    "version": ">= 15.0.9",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "BASE_URL_ANDROID_SIM": "https://backend.tantriktech.com.np",
+        "BASE_URL_ANDROID_DEV": "https://backend.tantriktech.com.np",
+        "BASE_URL_ANDROID_PROD": "https://backend.tantriktech.com.np",
+        "UPLOADS_BASE_URL": "https://backend.tantriktech.com.np/uploads"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "BASE_URL_IOS_DEV": "https://backend.tantriktech.com.np",
+        "BASE_URL_IOS_PROD": "https://backend.tantriktech.com.np"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "BASE_URL_ANDROID_SIM": "https://backend.tantriktech.com.np",
+        "BASE_URL_ANDROID_DEV": "https://backend.tantriktech.com.np",
+        "BASE_URL_ANDROID_PROD": "https://backend.tantriktech.com.np",
+        "UPLOADS_BASE_URL": "https://backend.tantriktech.com.np/uploads"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

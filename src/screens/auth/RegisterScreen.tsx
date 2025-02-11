@@ -4,7 +4,6 @@ import * as Location from 'expo-location';
 import { useSignup } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Alert } from 'react-native';
-import { useDispatch } from 'react-redux';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -36,14 +35,28 @@ export default function RegisterScreen() {
       return;
     }
 
-    signup(
-      { name, phone, password, email, location, role: 'freelancer' },
-      {
-        onSuccess: (data) => {
-          navigation.navigate('LoginScreen');
-        },
-      }
-    );
+    const payload = {
+      name,
+      phone,
+      password,
+      email,
+      location,
+      role: 'freelancer',
+    };
+
+    console.log('Sending data to backend:', payload);
+
+    signup(payload, {
+      onSuccess: (data) => {
+        console.log('Signup success:', data);
+        Alert.alert('Success', 'Account created successfully!');
+        navigation.navigate('LoginScreen');
+      },
+      onError: (error) => {
+        console.error('Signup error:', error);
+        Alert.alert('Signup Failed', error.message || 'An error occurred');
+      },
+    });
   };
 
   return (

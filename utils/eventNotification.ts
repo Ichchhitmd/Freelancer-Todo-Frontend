@@ -28,7 +28,8 @@ export async function scheduleEventNotification(nepaliDate: string, eventDetails
       notificationDate.setHours(10, 0, 0, 0);
 
       // Skip if notification time has passed
-      if (notificationDate <= new Date()) {
+      const currentDate = new Date();
+      if (notificationDate <= currentDate) {
         continue;
       }
 
