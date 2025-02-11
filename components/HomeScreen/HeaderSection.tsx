@@ -63,7 +63,10 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
             <Text className="text-xl font-extrabold text-red-800" numberOfLines={1}>
               {user || 'Guest'}
             </Text>
-            <Text>{remainingAmount || 0}</Text>
+            <View className="flex-row items-center">
+              <Text className="text-green-500 font-bold text-2xl">Due:</Text>
+            <Text className="text-green-500 font-bold text-xl">{remainingAmount || 0}</Text>
+            </View>
           </View>
 
           <Animated.View className="items-center" style={{ opacity: fadeAnim }}>
@@ -71,12 +74,12 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
               value={isActive}
               onValueChange={handleStatusChange}
               trackColor={{ false: '#fecaca', true: '#fee2e2' }}
-              thumbColor={isActive ? '#ef4444' : '#f87171'}
+              thumbColor={isActive ? 'green' : '#f87171'}
               ios_backgroundColor="#fecaca"
               className="mb-2"
             />
-            <View className={`rounded-full px-4 py-1.5 ${isActive ? 'bg-red-100' : 'bg-red-50'}`}>
-              <Text className={`text-xs font-bold ${isActive ? 'text-red-700' : 'text-red-400'}`}>
+            <View className={`rounded-full px-4 py-1.5 ${isActive ? 'bg-green-700' : 'bg-red-50'}`}>
+              <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-red-400'}`}>
                 {isActive ? 'AVAILABLE' : 'OFFLINE'}
               </Text>
             </View>

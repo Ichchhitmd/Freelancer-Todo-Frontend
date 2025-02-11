@@ -249,6 +249,7 @@ const HomePage: React.FC = () => {
   }, [data, isLoading, isError]);
 
   const handleDateClick = (dateDetails: Event) => {
+    console.log('Date Clicked:', dateDetails);
     navigation.navigate('DateDetails', { details: dateDetails });
   };
 
