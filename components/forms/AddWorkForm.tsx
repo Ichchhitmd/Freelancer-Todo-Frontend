@@ -1,12 +1,14 @@
+// AddWorkForm.tsx
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import SelectDropdown from 'components/rare/SelectDropdown';
-import WorkCalendar from 'components/rare/workCalendar';
+import { MonthView } from 'components/test/CalendarComponent';
 import { useGetCompanies } from 'hooks/companies';
 import { useEvents } from 'hooks/events';
+import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
@@ -21,21 +23,33 @@ const AddWorkForm: React.FC = () => {
   const { isEditMode = false, details = null } =
     (route.params as RootStackParamList['Add Work']) || {};
 
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectedDates, setSelectedDates] = useState<NepaliDateInfo[]>([]);
   const [estimatedEarning, setEstimatedEarning] = useState('');
   const [actualEarning, setActualEarning] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [contactInfo, setContactInfo] = useState('');
-  const [workType, setWorkType] = useState('');
+  const [workType, setWorkType] = useState<string[]>([]);
+
   const [side, setSide] = useState('');
   const [eventType, setEventType] = useState('');
   const [companyId, setCompanyId] = useState(0);
 
   useEffect(() => {
     if (isEditMode && details) {
-      setSelectedDates([details.eventDate]);
-      setEstimatedEarning(details.earnings);
-      setActualEarning(details.actualEarnings || '');
+      // Parse the event date string (assuming format: "YYYY-MM-DD")
+      const [year, month, day] = details.eventDate.split('-').map(Number);
+
+      // Create NepaliDateInfo object
+      const nepaliDateInfo: NepaliDateInfo = {
+        year,
+        month: month - 1, // Adjust month to 0-based index
+        day,
+        nepaliDate: day.toString(), // You might want to convert this to Nepali numerals
+      };
+
+      setSelectedDates([nepaliDateInfo]);
+      setEstimatedEarning(details.earnings.toString());
+      setActualEarning(details.actualEarnings?.toString() || '');
       setContactPerson(details.contactPerson);
       setContactInfo(details.contactInfo);
       setWorkType(details.workType);
@@ -76,13 +90,8 @@ const AddWorkForm: React.FC = () => {
   );
 
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
-
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
-
-  const handleDateChange = useCallback((dates: string[]) => {
-    setSelectedDates(dates);
-  }, []);
 
   const handleSubmit = useCallback(async () => {
     if (!selectedDates.length) {
@@ -130,40 +139,52 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
-    const formattedEventType = eventType.toUpperCase();
-
-    const formattedData = {
-      userId: userId,
-      earnings: parseFloat(estimatedEarning) || 0,
-      actualEarnings: actualEarning ? parseFloat(actualEarning) : null,
-      companyId: companyId,
-      contactPerson: contactPerson,
-      contactInfo: contactInfo,
-      workType: workType,
-      side: side,
-      eventType: formattedEventType,
-      eventDate: selectedDates[0],
-      ...(isEditMode && details ? { id: details.id } : {}),
-    };
+    const eventDates: string[] = [];
+    const nepaliEventDates: string[] = [];
+    const nepaliDetailDates: { nepaliDay: number; nepaliMonth: number; nepaliYear: number }[] = [];
 
     try {
-      if (isEditMode) {
-        await updateEvent(formattedData);
-        navigation.goBack();
-      } else {
-        await postEvent(formattedData);
-        navigation.goBack();
+      for (const date of selectedDates) {
+        const nepaliDateString = `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+        nepaliEventDates.push(nepaliDateString);
+
+        nepaliDetailDates.push({
+          nepaliYear: date.year,
+          nepaliMonth: date.month + 1,
+          nepaliDay: date.day,
+        });
+        if (date.englishDate) {
+          eventDates.push(date.englishDate);
+        }
+
+        const formattedData = {
+          userId: userId,
+          earnings: parseFloat(estimatedEarning) || 0,
+          actualEarnings: actualEarning ? parseFloat(actualEarning) : null,
+          companyId: companyId,
+          contactPerson: contactPerson,
+          contactInfo: contactInfo,
+          workType: workType,
+          side: side,
+          eventType: eventType.toUpperCase(),
+          eventDate: eventDates,
+          nepaliEventDate: nepaliEventDates, // Send nepaliEventDate as an array
+          detailNepaliDate: nepaliDetailDates,
+          ...(isEditMode && details ? { id: details.id } : {}),
+        };
+
+        console.log('Sending event data for date:', date.englishDate);
+        console.log('Formatted data:', formattedData);
+
+        if (isEditMode) {
+          await updateEvent(formattedData);
+        } else {
+          console.log('Gellloooooooooooooooo:', formattedData);
+          await postEvent(formattedData);
+        }
       }
 
-      setSelectedDates([]);
-      setCompanyId(0);
-      setEstimatedEarning('');
-      setActualEarning('');
-      setContactPerson('');
-      setContactInfo('');
-      setWorkType('');
-      setSide('');
-      setEventType('');
+      navigation.goBack();
     } catch (e) {
       alert('Failed to save work details. Please try again.');
     }
@@ -184,6 +205,8 @@ const AddWorkForm: React.FC = () => {
     updateEvent,
     navigation,
   ]);
+
+  console.log('Selected Dates:', selectedDates);
 
   if (companiesLoading) {
     return (
@@ -209,13 +232,9 @@ const AddWorkForm: React.FC = () => {
               </Text>
             </View>
 
-            <View className=" -mt-6 rounded-3xl bg-white p-4 shadow-xl">
+            <View className="-mt-6 rounded-3xl bg-white p-4 shadow-xl">
               <View className="mb-6">
-                <WorkCalendar
-                  selectedDates={selectedDates}
-                  onDateChange={handleDateChange}
-                  initialDate={isEditMode ? details?.eventDate : undefined}
-                />
+                <MonthView onSelectDates={setSelectedDates} selectedDates={selectedDates} />
               </View>
 
               <View className="mb-6">
@@ -269,14 +288,23 @@ const AddWorkForm: React.FC = () => {
                   icon="account-heart"
                   options={SIDE}
                   value={side}
-                  onChange={setSide}
+                  onChange={(value: string | string[]) => {
+                    if (typeof value === 'string') {
+                      setSide(value);
+                    }
+                  }}
                 />
+
                 <HorizontalSelector
                   label="Work Type"
                   icon="wrench"
                   options={WORK_TYPE}
                   value={workType}
-                  onChange={setWorkType}
+                  onChange={(value) => {
+                    // Check if value is a string or an array of strings
+                    setWorkType(Array.isArray(value) ? value : [value]);
+                  }}
+                  selectMultiple
                 />
               </View>
 

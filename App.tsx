@@ -30,6 +30,7 @@ import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
 import CompanyDetails from '~/screens/main/CompanyDetailsScreen';
 import PlusScreen from '~/screens/main/PlusScreen';
 import ExpenseForm from 'components/forms/ExpenseForm';
+import CalendarScreen from '~/screens/main/CalendarScreen';
 
 enableScreens();
 

@@ -1,8 +1,10 @@
 export interface EventRequest {
   companyId: number;
-  eventDate: string;
+  eventDate: string[]; // Array of event dates
+  nepaliEventDate: string[]; // Array of Nepali event dates
+  detailNepaliDate: { nepaliYear: number; nepaliMonth: number; nepaliDay: number }[];
   eventType: string;
-  workType: string;
+  workType: string[];
   side: string;
   contactPerson: string;
   contactInfo: string;
@@ -35,12 +37,18 @@ export interface User {
 export interface EventDetails {
   actualEarnings: string | null;
   company: Company;
+  detailNepaliDate: {
+    nepaliYear: number;
+    nepaliMonth: number;
+    nepaliDay: number;
+  };
+  nepaliEventDate: string[];
   companyId: number;
   contactInfo: string;
   contactPerson: string;
   createdAt: string;
   earnings: string;
-  eventDate: string;
+  eventDate: string[];
   eventTime: string | null;
   eventType: string;
   freelancerId: number | null;

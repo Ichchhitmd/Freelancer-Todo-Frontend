@@ -1,100 +1,90 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Animated, Easing } from 'react-native';
-import { CalendarPicker } from 'react-native-nepali-picker';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import type { NepaliDateInfo } from '../../lib/calendar';
+import { MonthView } from 'components/test/CalendarComponent';
 
-interface WorkCalendarProps {
-  selectedDates?: string[];
-  onDateChange: (dates: string[]) => void;
-  initialDate?: string;
+export function withCalendarInput(
+  WrappedComponent: React.FC<{
+    onSelectDate: (date: NepaliDateInfo) => void;
+    selectedDate?: NepaliDateInfo;
+  }>
+) {
+  return function CalendarInput({
+    onSelectDate,
+    selectedDate,
+  }: {
+    onSelectDate: (date: NepaliDateInfo) => void;
+    selectedDate?: NepaliDateInfo;
+  }) {
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selected, setSelected] = useState<NepaliDateInfo | undefined>(selectedDate);
+
+    const handleDateSelect = (date: NepaliDateInfo) => {
+      setSelected(date);
+    };
+
+    return (
+      <View>
+        <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.inputContainer}>
+          <Text style={styles.inputText}>
+            {selected ? `${selected.year}/${selected.month + 1}/${selected.day}` : 'Select Date'}
+          </Text>
+        </TouchableOpacity>
+
+        <Modal visible={modalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <MonthView onSelectDate={handleDateSelect} selectedDate={selected} />
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => {
+                  setModalVisible(false);
+                  if (selected) onSelectDate(selected);
+                }}>
+                <Text style={styles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  };
 }
 
-const WorkCalendar: React.FC<WorkCalendarProps> = ({
-  selectedDates = [],
-  onDateChange,
-  initialDate,
-}) => {
-  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
-  const [localDates, setLocalDates] = useState<string[]>(selectedDates);
-  const [animation] = useState(new Animated.Value(0));
-
-  const formatDate = (dateString: string) => {
-    try {
-      const [year, month, day] = dateString.split('-');
-      return `${month}/${day}/${year}`;
-    } catch {
-      return dateString;
-    }
-  };
-  useEffect(() => {
-    if (initialDate && !localDates.includes(initialDate)) {
-      setLocalDates([initialDate]);
-      onDateChange([initialDate]);
-    }
-  }, [initialDate]);
-
-  useEffect(() => {
-    setLocalDates(selectedDates);
-  }, [selectedDates]);
-
-  const handleSelect = (date: string) => {
-    const newDates = localDates.includes(date)
-      ? localDates.filter((d) => d !== date)
-      : [...localDates, date];
-
-    setLocalDates(newDates);
-    onDateChange(newDates);
-  };
-
-  const toggleCalendar = () => {
-    setIsCalendarVisible(!isCalendarVisible);
-    Animated.timing(animation, {
-      toValue: isCalendarVisible ? 0 : 1,
-      duration: 300,
-      easing: Easing.ease,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const formattedDates = localDates.map(formatDate).join(', ');
-
-  const calendarTranslateY = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [300, 0],
-  });
-
-  return (
-    <View className="my-2">
-      <TouchableOpacity
-        onPress={toggleCalendar}
-        className="flex-row items-center justify-between rounded-lg border border-gray/10 bg-white p-3">
-        <View className="flex-row items-center">
-          <Ionicons name="calendar-outline" size={24} color="#4B5563" />
-          <Text className="text-gray-700 ml-2">
-            {localDates.map(formatDate).join(', ') || 'Select Event Dates'}
-          </Text>
-        </View>
-        <Ionicons
-          name={isCalendarVisible ? 'chevron-up' : 'chevron-down'}
-          size={24}
-          color="#4B5563"
-        />
-      </TouchableOpacity>
-
-      <Animated.View
-        style={[{ transform: [{ translateY: calendarTranslateY }] }]}
-        className="mt-2 overflow-hidden rounded-xl bg-white shadow-sm">
-        <CalendarPicker
-          visible={isCalendarVisible}
-          onClose={() => setIsCalendarVisible(false)}
-          onDateSelect={handleSelect}
-          theme="light"
-          language="np"
-          brandColor="#6B46C1"
-        />
-      </Animated.View>
-    </View>
-  );
-};
-
-export default WorkCalendar;
+const styles = StyleSheet.create({
+  inputContainer: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+  },
+  inputText: {
+    fontSize: 16,
+    color: '#334155',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+  },
+  doneButton: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  doneText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+});
