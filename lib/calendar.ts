@@ -35,10 +35,9 @@ export function toNepaliNumeral(num: number): string {
     .join('');
 }
 
-// Days in each month of the Nepali calendar
 const daysInMonth = [
   [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], // 2080
-  [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2081
+  [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 29, 31], // 2081
   [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], // 2082
   [31, 32, 31, 32, 31, 30, 30, 30, 29, 29, 30, 31], // 2083
 ];
@@ -48,7 +47,6 @@ function getDaysInMonth(year: number, month: number): number {
   if (yearIndex >= 0 && yearIndex < daysInMonth.length) {
     return daysInMonth[yearIndex][month];
   }
-  // Fallback to 30 days if year is not in our data
   return 30;
 }
 
@@ -62,6 +60,12 @@ export function getNepaliEnglishDates(
 } {
   const nepaliDate = new NepaliDate(year, month, day);
   const englishDate = nepaliDate.toJsDate();
+
+  // Add Nepal's timezone offset (UTC+5:45)
+  const nepalOffsetHours = 5;
+  const nepalOffsetMinutes = 45;
+  englishDate.setHours(englishDate.getHours() + nepalOffsetHours);
+  englishDate.setMinutes(englishDate.getMinutes() + nepalOffsetMinutes);
 
   return {
     nepaliDate: `${year}-${month + 1}-${day}`,
@@ -77,15 +81,14 @@ export function getMonthMatrix(year: number, month: number): NepaliDateInfo[][] 
   const daysInCurrentMonth = getDaysInMonth(year, month);
 
   for (let day = 1; day <= daysInCurrentMonth; day++) {
-    const date = new NepaliDate(year, month, day);
-    const englishDate = date.toJsDate().toISOString().split('T')[0];
+    const { englishDate } = getNepaliEnglishDates(year, month, day);
 
     currentWeek.push({
       year,
       month,
       day,
       nepaliDate: toNepaliNumeral(day),
-      englishDate: englishDate,
+      englishDate,
     });
 
     if (currentWeek.length === 7) {
@@ -100,16 +103,21 @@ export function getMonthMatrix(year: number, month: number): NepaliDateInfo[][] 
 
   return matrix;
 }
-
 export function getCurrentNepaliDate(): NepaliDateInfo {
   const today = new NepaliDate();
-  const englishDate = today.toJsDate().toISOString().split('T')[0];
+  const jsDate = today.toJsDate();
+
+  // Add Nepal's timezone offset (UTC+5:45)
+  const nepalOffsetHours = 5;
+  const nepalOffsetMinutes = 45;
+  jsDate.setHours(jsDate.getHours() + nepalOffsetHours);
+  jsDate.setMinutes(jsDate.getMinutes() + nepalOffsetMinutes);
 
   return {
     year: today.getYear(),
     month: today.getMonth(),
     day: today.getDate(),
     nepaliDate: toNepaliNumeral(today.getDate()),
-    englishDate: englishDate,
+    englishDate: jsDate.toISOString().split('T')[0],
   };
 }

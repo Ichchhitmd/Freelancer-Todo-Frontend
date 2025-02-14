@@ -14,6 +14,7 @@ import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 import type { RootStackParamList } from 'types/navigation';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -23,42 +24,49 @@ const AddWorkForm: React.FC = () => {
   const { isEditMode = false, details = null } =
     (route.params as RootStackParamList['Add Work']) || {};
 
+  // Form states
   const [selectedDates, setSelectedDates] = useState<NepaliDateInfo[]>([]);
   const [estimatedEarning, setEstimatedEarning] = useState('');
   const [actualEarning, setActualEarning] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [workType, setWorkType] = useState<string[]>([]);
-
+  const [time, setTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [side, setSide] = useState('');
   const [eventType, setEventType] = useState('');
   const [companyId, setCompanyId] = useState(0);
+  const [location, setLocation] = useState(''); // <-- New location state
 
+  // Load existing details if editing
   useEffect(() => {
     if (isEditMode && details) {
-      // Parse the event date string (assuming format: "YYYY-MM-DD")
-      const [year, month, day] = details.eventDate.split('-').map(Number);
+      // Convert the detailNepaliDate array to NepaliDateInfo array
+      const nepaliDates: NepaliDateInfo[] = details.detailNepaliDate.map(date => ({
+        year: date.nepaliYear,
+        month: date.nepaliMonth - 1, // Adjust month to 0-based index
+        day: date.nepaliDay,
+        nepaliDate: date.nepaliDay.toString(),
+      }));
 
-      // Create NepaliDateInfo object
-      const nepaliDateInfo: NepaliDateInfo = {
-        year,
-        month: month - 1, // Adjust month to 0-based index
-        day,
-        nepaliDate: day.toString(), // You might want to convert this to Nepali numerals
-      };
-
-      setSelectedDates([nepaliDateInfo]);
+      setSelectedDates(nepaliDates);
       setEstimatedEarning(details.earnings.toString());
       setActualEarning(details.actualEarnings?.toString() || '');
-      setContactPerson(details.contactPerson);
-      setContactInfo(details.contactInfo);
+      setContactPerson(details.clientContactPerson1);
+      setContactInfo(details.clientContactNumber1);
       setWorkType(details.workType);
       setSide(details.side);
       setEventType(details.eventType);
       setCompanyId(details.companyId);
+
+      // If the details object has a location field, load it
+      if (details.location) {
+        setLocation(details.location);
+      }
     }
   }, [isEditMode, details]);
 
+  // Hardcoded arrays for event types, sides, work types
   const EVENT_TYPES = useMemo(
     () => [
       { id: 'UNKNOWN', label: 'Unknown', icon: 'help-circle' },
@@ -89,9 +97,12 @@ const AddWorkForm: React.FC = () => {
     []
   );
 
+  // Hooks for fetching companies and posting/updating events
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
   const userId = useSelector((state: RootState) => state.auth.user?.id);
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
+
+  // Form submission
 
   const handleSubmit = useCallback(async () => {
     if (!selectedDates.length) {
@@ -114,7 +125,7 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
-    if (!workType) {
+    if (!workType.length) {
       alert('Please select a work type.');
       return;
     }
@@ -139,53 +150,72 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
-    const eventDates: string[] = [];
-    const nepaliEventDates: string[] = [];
-    const nepaliDetailDates: { nepaliDay: number; nepaliMonth: number; nepaliYear: number }[] = [];
+    if (!time) {
+      alert('Please select event time.');
+      return;
+    }
+
+    if (!location) {
+      alert('Please enter location.');
+      return;
+    }
 
     try {
-      for (const date of selectedDates) {
-        const nepaliDateString = `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
-        nepaliEventDates.push(nepaliDateString);
+      // Make sure all dates have englishDate before proceeding
+      const validDates = selectedDates.filter(
+        (date): date is NepaliDateInfo & { englishDate: string } => Boolean(date.englishDate)
+      );
 
-        nepaliDetailDates.push({
-          nepaliYear: date.year,
-          nepaliMonth: date.month + 1,
-          nepaliDay: date.day,
-        });
-        if (date.englishDate) {
-          eventDates.push(date.englishDate);
-        }
+      if (validDates.length === 0) {
+        alert('No valid English dates found. Please select dates again.');
+        return;
+      }
 
-        const formattedData = {
-          userId: userId,
-          earnings: parseFloat(estimatedEarning) || 0,
-          actualEarnings: actualEarning ? parseFloat(actualEarning) : null,
-          companyId: companyId,
-          contactPerson: contactPerson,
-          contactInfo: contactInfo,
-          workType: workType,
-          side: side,
-          eventType: eventType.toUpperCase(),
-          eventDate: eventDates,
-          nepaliEventDate: nepaliEventDates, // Send nepaliEventDate as an array
-          detailNepaliDate: nepaliDetailDates,
-          ...(isEditMode && details ? { id: details.id } : {}),
-        };
+      // Now we can safely create our arrays knowing they won't have undefined values
+      const eventDates = validDates.map((date) => date.englishDate);
+      const nepaliEventDates = selectedDates.map(
+        (date) =>
+          `${date.year}-${String(date.month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`
+      );
+      const nepaliDetailDates = selectedDates.map((date) => ({
+        nepaliYear: date.year,
+        nepaliMonth: date.month + 1,
+        nepaliDay: date.day,
+      }));
 
-        console.log('Sending event data for date:', date.englishDate);
-        console.log('Formatted data:', formattedData);
+      const formattedData = {
+        userId: userId,
+        earnings: parseFloat(estimatedEarning) || 0,
+        actualEarnings: actualEarning ? parseFloat(actualEarning) : null,
+        companyId: companyId,
+        clientContactPerson1: contactPerson,
+        clientContactNumber1: contactInfo,
+        workType: workType,
+        side: side,
+        eventType: eventType.toUpperCase(),
+        eventDate: eventDates,
+        eventStartTime: time.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }),
+        nepaliEventDate: nepaliEventDates,
+        detailNepaliDate: nepaliDetailDates,
+        location: location,
+        ...(isEditMode && details ? { id: details.id } : {}),
+      };
 
-        if (isEditMode) {
-          await updateEvent(formattedData);
-        } else {
-          console.log('Gellloooooooooooooooo:', formattedData);
-          await postEvent(formattedData);
-        }
+      console.log('Formatted data:', formattedData);
+
+      if (isEditMode) {
+        await updateEvent(formattedData);
+      } else {
+        await postEvent(formattedData);
       }
 
       navigation.goBack();
     } catch (e) {
+      console.error(e);
       alert('Failed to save work details. Please try again.');
     }
   }, [
@@ -204,6 +234,8 @@ const AddWorkForm: React.FC = () => {
     postEvent,
     updateEvent,
     navigation,
+    time,
+    location,
   ]);
 
   console.log('Selected Dates:', selectedDates);
@@ -223,7 +255,14 @@ const AddWorkForm: React.FC = () => {
         data={[1]}
         renderItem={() => (
           <>
+            {/* Header */}
             <View className="bg-red-500 px-6 py-12 shadow-lg">
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                className="absolute left-6 top-16 z-10"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
+              </TouchableOpacity>
               <Text className="pt-4 text-center text-4xl font-bold text-white">
                 {isEditMode ? 'Edit Work' : 'Add New Work'}
               </Text>
@@ -232,22 +271,14 @@ const AddWorkForm: React.FC = () => {
               </Text>
             </View>
 
+            {/* Form */}
             <View className="-mt-6 rounded-3xl bg-white p-4 shadow-xl">
+              {/* Calendar */}
               <View className="mb-6">
                 <MonthView onSelectDates={setSelectedDates} selectedDates={selectedDates} />
               </View>
 
-              <View className="mb-6">
-                <SelectDropdown
-                  data={companies?.map((company) => company.name) || []}
-                  onSelect={(value) => {
-                    const selectedCompany = companies?.find((company) => company.name === value);
-                    setCompanyId(selectedCompany?.id ?? 0);
-                  }}
-                  defaultButtonText={isEditMode ? details?.company.name : 'Select Company'}
-                />
-              </View>
-
+              {/* Event Types */}
               <View
                 style={{ height: 120 }}
                 className="mb-6 overflow-hidden rounded-2xl border border-gray/10 bg-white shadow-sm">
@@ -281,7 +312,19 @@ const AddWorkForm: React.FC = () => {
                   })}
                 </ScrollView>
               </View>
+              {/* Company Dropdown */}
+              <View className="mb-6">
+                <SelectDropdown
+                  data={companies?.map((company) => company.name) || []}
+                  onSelect={(value) => {
+                    const selectedCompany = companies?.find((company) => company.name === value);
+                    setCompanyId(selectedCompany?.id ?? 0);
+                  }}
+                  defaultButtonText={isEditMode ? details?.company.name : 'Select Company'}
+                />
+              </View>
 
+              {/* Side, Work Type, Time */}
               <View className="space-y-6">
                 <HorizontalSelector
                   label="Pick Side"
@@ -301,14 +344,42 @@ const AddWorkForm: React.FC = () => {
                   options={WORK_TYPE}
                   value={workType}
                   onChange={(value) => {
-                    // Check if value is a string or an array of strings
                     setWorkType(Array.isArray(value) ? value : [value]);
                   }}
                   selectMultiple
                 />
-              </View>
 
-              <View className="mt-6 space-y-4">
+                <TouchableOpacity
+                  onPress={() => setShowTimePicker(true)}
+                  className="mb-4 flex-row items-center space-x-2 rounded-lg border border-slate-200 bg-white p-4">
+                  <MaterialCommunityIcons name="clock-outline" size={24} color="#374151" />
+                  <View>
+                    <Text className="text-gray-500 text-sm">Event Time</Text>
+                    <Text className="text-gray-700 ml-1 text-base">
+                      {time.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={time}
+                    mode="time"
+                    is24Hour={false}
+                    onChange={(event, selectedTime) => {
+                      setShowTimePicker(false);
+                      if (selectedTime && event.type === 'set') {
+                        setTime(selectedTime);
+                      }
+                    }}
+                  />
+                )}
+
+                {/* Earnings Fields */}
                 <InputField
                   placeholder="Enter amount in ₹"
                   value={estimatedEarning}
@@ -325,6 +396,8 @@ const AddWorkForm: React.FC = () => {
                     icon="currency-inr"
                   />
                 )}
+
+                {/* Contact Fields */}
                 <InputField
                   placeholder="Enter contact person"
                   value={contactPerson}
@@ -338,8 +411,17 @@ const AddWorkForm: React.FC = () => {
                   keyboardType="numeric"
                   icon="phone"
                 />
+
+                {/* New Location Field */}
+                <InputField
+                  placeholder="Enter location"
+                  value={location}
+                  onChangeText={setLocation}
+                  icon="map-marker"
+                />
               </View>
 
+              {/* Submit Button */}
               <TouchableOpacity
                 className="mt-8 rounded-2xl bg-red-600 p-4 shadow-lg shadow-red-600/30"
                 onPress={handleSubmit}>

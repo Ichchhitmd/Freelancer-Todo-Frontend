@@ -5,9 +5,7 @@ import { handleAxiosError } from './errorHandling/AxiosErrorHandle';
 const getBaseUrl = () => {
   if (__DEV__) {
     if (Platform.OS === 'android') {
-      return Platform.constants.Release === null
-        ? process.env.BASE_URL_ANDROID_SIM
-        : process.env.BASE_URL_ANDROID_DEV;
+      return Platform.Version ? process.env.BASE_URL_ANDROID_DEV : process.env.BASE_URL_ANDROID_SIM;
     }
     return process.env.BASE_URL_IOS_DEV;
   }
@@ -38,23 +36,20 @@ export const apiRequest = async <T = any>(
     const { data, params, headers = {} as Headers, ...rest } = config;
 
     const axiosConfig: AxiosRequestConfig = {
+      baseURL: API_URL,
       method,
-      url: `${API_URL}${url}`,
+      url,
       headers: {
+        'Content-Type': headers['Content-Type'] || 'application/json',
         ...headers,
       },
       ...rest,
     };
 
-    if (!headers['Content-Type']?.includes('multipart/form-data')) {
-      axiosConfig.headers = {
-        ...axiosConfig.headers,
-        'Content-Type': 'application/json',
-      };
-    }
-
     if (['POST', 'PUT', 'PATCH'].includes(method.toUpperCase()) && data) {
       axiosConfig.data = data;
+    } else if (method.toUpperCase() === 'GET' && data) {
+      console.warn(`GET request should not have a body. Ignoring 'data' in ${url}`);
     }
 
     if (params) {

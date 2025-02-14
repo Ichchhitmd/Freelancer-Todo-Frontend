@@ -10,6 +10,12 @@ module.exports = {
         secondary: '#000000',
         gray: '#374151',
       },
+      fontFamily: {
+        'Poppins-Regular': ['Poppins-Regular'],
+        'Poppins-Bold': ['Poppins-Bold'],
+        'Poppins-Light': ['Poppins-Light'],
+        'Poppins-SemiBold': ['Poppins-SemiBold'],
+      },
     },
   },
   plugins: [],

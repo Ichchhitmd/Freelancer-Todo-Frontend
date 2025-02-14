@@ -37,7 +37,7 @@ export default function LoginScreen() {
               text: 'Use Saved Credentials',
               onPress: () => {
                 const { phone, password } = JSON.parse(cachedCredentials);
-                setFormData({ ...formData, phone, password });
+                setFormData((prev) => ({ ...prev, phone, password }));
               },
             },
             {
@@ -47,36 +47,65 @@ export default function LoginScreen() {
           ]
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error retrieving cached credentials:', error);
+    }
   };
 
   const checkBiometricSupport = async () => {
-    const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
-    const isBiometricEnrolled = await LocalAuthentication.isEnrolledAsync();
+    try {
+      const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+      const isBiometricEnrolled = await LocalAuthentication.isEnrolledAsync();
 
-    if (isBiometricAvailable && isBiometricEnrolled) {
-      console.log('Biometric authentication is available and enrolled');
-    } else {
-      console.log('Biometric authentication is not available or not enrolled');
+      if (!isBiometricAvailable || !isBiometricEnrolled) {
+        console.log('Biometric authentication not available');
+      }
+    } catch (error) {
+      console.error('Biometric check error:', error);
     }
   };
 
   const handleLogin = () => {
     const { phone, password, role } = formData;
+    if (!phone || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
-    // Trigger the login mutation
     loginUser(
       { phone, password, role },
       {
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
           console.log('Login Success:', data);
           dispatch(loginSuccess(data));
           navigation.navigate('MainTabs');
+
+          // Check for existing credentials and prompt to update
+          try {
+            const existing = await AsyncStorage.getItem('cachedCredentials');
+            if (existing) {
+              Alert.alert('Update Credentials', 'Do you want to update your saved credentials?', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Update',
+                  onPress: async () => {
+                    await AsyncStorage.setItem(
+                      'cachedCredentials',
+                      JSON.stringify({ phone, password })
+                    );
+                  },
+                },
+              ]);
+            } else {
+              await AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
+            }
+          } catch (error) {
+            console.error('Error handling credentials:', error);
+          }
         },
         onError: (error) => {
           console.error('Login Failed:', error);
-          const errorMessage = handleAxiosError(error); // Display user-friendly message
-          Alert.alert('Login Error', errorMessage);
+          Alert.alert('Login Error', handleAxiosError(error));
         },
       }
     );
@@ -84,41 +113,37 @@ export default function LoginScreen() {
 
   const handleBiometricLogin = async () => {
     try {
-      // Start biometric authentication
       const { success } = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Authenticate to login',
       });
 
-      if (success) {
-        const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
-
-        if (cachedCredentials) {
-          const { phone, password } = JSON.parse(cachedCredentials);
-
-          loginUser(
-            { phone, password, role: 'freelancer' },
-            {
-              onSuccess: (data) => {
-                console.log('Login Success:', data);
-                dispatch(loginSuccess(data));
-                navigation.navigate('MainTabs');
-              },
-              onError: (error) => {
-                console.error('Login Failed:', error);
-                const errorMessage = handleAxiosError(error);
-                Alert.alert('Login Error', errorMessage);
-              },
-            }
-          );
-        } else {
-          Alert.alert('Error', 'No cached credentials found. Please login manually.');
-        }
-      } else {
-        Alert.alert('Error', 'Biometric authentication failed. Please try again.');
+      if (!success) {
+        Alert.alert('Error', 'Authentication failed');
+        return;
       }
+
+      const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
+      if (!cachedCredentials) {
+        Alert.alert('Error', 'No saved credentials found');
+        return;
+      }
+
+      const { phone, password } = JSON.parse(cachedCredentials);
+      loginUser(
+        { phone, password, role: 'freelancer' },
+        {
+          onSuccess: (data) => {
+            dispatch(loginSuccess(data));
+            navigation.navigate('MainTabs');
+          },
+          onError: (error) => {
+            Alert.alert('Login Error', handleAxiosError(error));
+          },
+        }
+      );
     } catch (error) {
-      console.error('Biometric authentication failed', error);
-      Alert.alert('Error', 'An error occurred during biometric authentication.');
+      console.error('Biometric error:', error);
+      Alert.alert('Error', 'Failed to authenticate');
     }
   };
 

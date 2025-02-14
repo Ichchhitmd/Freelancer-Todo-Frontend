@@ -3,7 +3,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Text, ScrollView, View, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NepaliDate from 'nepali-date-converter';
 
 interface Company {
   bio: string;
@@ -23,12 +22,12 @@ interface EventDetails {
   actualEarnings: string | null;
   company: Company;
   companyId: number;
-  contactInfo: string;
-  contactPerson: string;
+  contactInfo: string | null;
+  contactPerson: string | null;
   createdAt: string;
   earnings: string;
-  eventDate: string;
-  eventTime: string | null;
+  eventDate: string[];
+  eventStartTime: string;
   eventType: string;
   freelancerId: number | null;
   id: number;
@@ -36,7 +35,19 @@ interface EventDetails {
   updatedAt: string;
   user: User;
   userId: number;
-  workType: string;
+  workType: string[];
+  dueAmount: number;
+  nepaliEventDate: string[];
+  detailNepaliDate: {
+    nepaliDay: number;
+    nepaliYear: number;
+    nepaliMonth: number;
+  }[];
+  clientContactPerson1: string | null;
+  clientContactNumber1: string | null;
+  clientContactPerson2: string | null;
+  clientContactNumber2: string | null;
+  location: string;
 }
 
 type RootStackParamList = {
@@ -55,7 +66,6 @@ const DateDetails: React.FC = () => {
   const route = useRoute<Props['route']>();
   const { details } = route.params;
   const navigation = useNavigation();
-  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
   const DetailRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
     <View className="border-gray-100 flex-row items-center border-b px-4 py-4">
@@ -69,6 +79,21 @@ const DateDetails: React.FC = () => {
     </View>
   );
 
+  const nepaliMonths = [
+    'बैशाख',
+    'जेठ',
+    'असार',
+    'श्रावण',
+    'भदौ',
+    'असोज',
+    'कार्तिक',
+    'मंसिर',
+    'पुष',
+    'माघ',
+    'फाल्गुन',
+    'चैत',
+  ];
+
   const tableOfEngNepNums = new Map([
     [0, '०'],
     [1, '१'],
@@ -81,90 +106,32 @@ const DateDetails: React.FC = () => {
     [8, '८'],
     [9, '९'],
   ]);
-  function engToNepNum(strNum: string): string {
-    return String(strNum)
+
+  function engToNepNum(num: number): string {
+    return String(num)
       .split('')
       .map((ch) => tableOfEngNepNums.get(Number(ch)) ?? ch)
       .join('');
   }
 
-  const getNepaliDate = (date: string) => {
-    try {
-      const d = new Date(date);
-      if (isNaN(d.getTime())) throw new Error('Invalid date format');
-
-      const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-      const nepaliDate = new NepaliDate(dateStr);
-
-      const nepaliDay = engToNepNum(nepaliDate.format('DD'));
-      const nepaliMonth = nepaliDate.format('MMMM');
-
-      return `${nepaliMonth} - ${nepaliDay}`;
-    } catch (error) {
-      return 'Invalid Date';
-    }
-  };
-
   const detailsId = details.id;
-
-  const ActionDrawer = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isDrawerVisible}
-      onRequestClose={() => setIsDrawerVisible(false)}>
-      <TouchableOpacity
-        className="flex-1 bg-black/5"
-        activeOpacity={1}
-        onPress={() => setIsDrawerVisible(false)}>
-        <View className="mt-auto rounded-t-3xl bg-white">
-          <View className="p-4">
-            <View className="bg-gray-300 mx-auto mb-4 h-1 w-12 rounded-full" />
-            <Text className="text-gray-900 mb-4 text-center text-xl font-bold">Select Action</Text>
-            <TouchableOpacity
-              className="bg-gray-50 mb-3 flex-row items-center rounded-xl p-4"
-              onPress={() => {
-                navigation.navigate('Add Work', { isEditMode: true, details });
-              
-                setIsDrawerVisible(false);
-              }}>
-              <MaterialCommunityIcons name="pencil" size={24} color="#ef4444" />
-              <View className="ml-4">
-                <Text className="text-gray-900 text-lg font-semibold">Edit Work</Text>
-                <Text className="text-gray-500 text-sm">Modify work details</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="bg-gray-50 mb-3 flex-row items-center rounded-xl p-4"
-              onPress={() => {
-                navigation.navigate('ReimbursementForm', { detailsId });
-                setIsDrawerVisible(false);
-              }}>
-              <MaterialCommunityIcons name="cash-plus" size={24} color="#ef4444" />
-              <View className="ml-4">
-                <Text className="text-gray-900 text-lg font-semibold">Add Reimbursements</Text>
-                <Text className="text-gray-500 text-sm">Record expenses and claims</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            className="border-gray-200 border-t p-4"
-            onPress={() => setIsDrawerVisible(false)}>
-            <Text className="text-center text-lg font-semibold text-red-500">Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1">
+      <ScrollView className="mb-24 flex-1">
         <View className="bg-red-400 px-4 py-8">
-          <Text className="pt-7 text-center text-3xl font-bold text-white">
-            {getNepaliDate(details.eventDate)}
-          </Text>
+          <Text className="text-center text-xl font-semibold text-white">{details.eventType}</Text>
+
+          <View className="flex flex-row items-center justify-center">
+            {details.detailNepaliDate.map((date, index) => (
+              <Text
+                key={index}
+                className="items-center justify-center pt-2 text-center text-3xl font-bold text-white">
+                {nepaliMonths[date.nepaliMonth - 1]} {engToNepNum(date.nepaliDay)}
+                {index !== details.detailNepaliDate.length - 1 && ' , '}
+              </Text>
+            ))}
+          </View>
         </View>
 
         <View className="mx-4 -mt-4 rounded-xl bg-white p-4 shadow-lg">
@@ -173,39 +140,64 @@ const DateDetails: React.FC = () => {
               <MaterialCommunityIcons name="office-building" size={32} color="#ef4444" />
             </View>
             <Text className="text-gray-900 mt-2 text-xl font-bold">{details.company.name}</Text>
+            <Text className="text-gray-500 text-base">{details.location}</Text>
+            <View className="mt-4 flex-row items-center justify-center gap-12">
+              <TouchableOpacity
+                className="flex-row items-center rounded-xl bg-red-500 px-4 py-2"
+                onPress={() => {
+                  navigation.navigate('Add Work', { isEditMode: true, details });
+                }}>
+                <MaterialCommunityIcons name="pencil" size={20} color="#ffffff" />
+                <Text className="ml-2 font-semibold text-white">Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-row items-center rounded-xl bg-red-500 px-4 py-2"
+                onPress={() => {
+                  navigation.navigate('ReimbursementForm', { detailsId });
+                }}>
+                <MaterialCommunityIcons name="cash-plus" size={20} color="#ffffff" />
+                <Text className="ml-2 font-semibold text-white">Add Expense</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        <View className="mt-4">
-          <DetailRow icon="calendar-star" label="Event" value={details.eventType} />
+        <View className="mt-4 bg-white">
+          <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Event Details</Text>
           <DetailRow icon="account-heart" label="Side" value={details.side} />
-          <DetailRow
-            icon="currency-inr"
-            label="Estimated Earning"
-            value={`₹ ${details.earnings}`}
-          />
-
-          <DetailRow icon="phone" label="Contact Person" value={details.contactPerson || 'N/A'} />
-
-          <DetailRow icon="phone" label="Contact Info" value={details.contactInfo} />
+          <DetailRow icon="clock-outline" label="Start Time" value={details.eventStartTime} />
+          <DetailRow icon="camera-outline" label="Work Type" value={details.workType.join(', ')} />
         </View>
 
-        <View className="p-4">
-          <TouchableOpacity
-            className="mb-3 rounded-xl bg-red-500 p-4"
-            onPress={() => setIsDrawerVisible(true)}>
-            <Text className="text-center text-lg font-semibold text-white">Take Action</Text>
-          </TouchableOpacity>
+        <View className="mt-4 bg-white">
+          <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Financial Details</Text>
+          <DetailRow icon="currency-inr" label="Total Amount" value={`₹ ${details.earnings}`} />
+          <DetailRow icon="cash-clock" label="Due Amount" value={`₹ ${details.dueAmount}`} />
+        </View>
 
-          <TouchableOpacity
-            className="border-gray-300 rounded-xl border bg-white p-4"
-            onPress={() => {}}>
-            <Text className="text-gray-700 text-center text-lg font-semibold">Contact Company</Text>
-          </TouchableOpacity>
+        <View className="mt-4 bg-white">
+          <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Contact Information</Text>
+          {details.clientContactPerson1 && (
+            <DetailRow
+              icon="account-outline"
+              label="Primary Contact"
+              value={`${details.clientContactPerson1} - ${details.clientContactNumber1}`}
+            />
+          )}
+          {details.clientContactPerson2 && (
+            <DetailRow
+              icon="account-outline"
+              label="Secondary Contact"
+              value={`${details.clientContactPerson2} - ${details.clientContactNumber2}`}
+            />
+          )}
+          <DetailRow
+            icon="domain"
+            label="Company Contact"
+            value={`${details.company.contactPerson} - ${details.company.contactInfo}`}
+          />
         </View>
       </ScrollView>
-
-      <ActionDrawer />
     </SafeAreaView>
   );
 };

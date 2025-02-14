@@ -17,7 +17,7 @@ import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
-import { Modal, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Modal, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { NavigationProp, ParamListBase, NavigationContainer } from '@react-navigation/native';
 
 import { useEffect, useState } from 'react';
@@ -29,8 +29,8 @@ import ReimbursementForm from 'components/forms/ReimbursementForm';
 import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
 import CompanyDetails from '~/screens/main/CompanyDetailsScreen';
 import PlusScreen from '~/screens/main/PlusScreen';
+import { useFonts } from 'expo-font';
 import ExpenseForm from 'components/forms/ExpenseForm';
-import CalendarScreen from '~/screens/main/CalendarScreen';
 
 enableScreens();
 
@@ -194,6 +194,17 @@ export default function App() {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
+
+  const [fontsLoaded] = useFonts({
+    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Light': require('./assets/fonts/Poppins-Light.ttf'),
+    'Poppins-SemiBold': require('./assets/fonts/Poppins-SemiBold.ttf'),
+  });
+  if (!fontsLoaded) {
+    return null;
+  }
+
   const queryClient = new QueryClient();
 
   return (

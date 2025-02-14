@@ -1,12 +1,12 @@
 import React from 'react';
 import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
-import NepaliDate from 'nepali-date-converter';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { NepaliDateToEnglish } from 'utils/nepaliDateToEnglish';
+import NepaliDate from 'nepali-date-converter';
 
 interface DateDetail {
   date: string;
   details: any;
+  isToday?: boolean;
   nepaliDate?: {
     month: string;
     day: string;
@@ -16,6 +16,11 @@ interface DateDetail {
 interface BookedDatesProps {
   selectedDates: DateDetail[];
   handleDateClick: (dateDetails: any) => void;
+  monthlyTotals?: {
+    quotedEarnings: string;
+    receivedEarnings: number;
+    dueAmount: number;
+  };
 }
 
 interface GroupedDates {
@@ -47,19 +52,17 @@ function engToNepNum(strNum: string): string {
     .join('');
 }
 
-const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClick }) => {
+const BookedDates: React.FC<BookedDatesProps> = ({
+  selectedDates,
+  handleDateClick,
+  monthlyTotals,
+}) => {
   const getNepaliDate = (date: string) => {
     try {
-      const d = new Date(date);
-      const dateStr = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-      const nepaliDate = new NepaliDate(dateStr);
-
-      const dayInEnglish = nepaliDate.format('DD');
-      const dayInNepali = engToNepNum(dayInEnglish);
-
+      const [year, month, day] = date.split('-').map((num) => parseInt(num));
       return {
-        month: nepaliDate.format('MMMM'),
-        day: dayInNepali,
+        month: month.toString(),
+        day: engToNepNum(day.toString()),
       };
     } catch (error) {
       return null;
@@ -69,21 +72,58 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
   const groupedDates: GroupedDates = React.useMemo(() => {
     if (!selectedDates || selectedDates.length === 0) return {};
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     return selectedDates.reduce((acc: GroupedDates, item) => {
+      const eventDate = new Date(item.date);
+      eventDate.setHours(0, 0, 0, 0);
+
+      // Skip past dates
+      if (eventDate < today) return acc;
+
       const nepaliDate = getNepaliDate(item.date);
       if (!nepaliDate) return acc;
 
-      const month = nepaliDate.month;
-      if (!acc[month]) acc[month] = [];
+      const monthNames = [
+        'Baisakh',
+        'Jestha',
+        'Ashadh',
+        'Shrawan',
+        'Bhadra',
+        'Ashwin',
+        'Kartik',
+        'Mangsir',
+        'Poush',
+        'Magh',
+        'Falgun',
+        'Chaitra',
+      ];
+      const monthName = monthNames[parseInt(nepaliDate.month) - 1];
 
-      acc[month].push({
+      if (!acc[monthName]) acc[monthName] = [];
+
+      acc[monthName].push({
         ...item,
-        nepaliDate,
+        isToday: eventDate.getTime() === today.getTime(),
+        nepaliDate: {
+          ...nepaliDate,
+          month: monthName,
+        },
       });
 
       return acc;
     }, {});
   }, [selectedDates]);
+
+  const eventColors: Record<string, string> = {
+    WEDDING: '#FF2400',
+    MEHENDI: '#34D399',
+    RECEPTION: '#FBBF24',
+    ENGAGEMENT: '#F88379',
+    'PRE-WEDDING': '#FDE047',
+    UNKNOWN: '#6D28D9',
+  };
 
   return (
     <SafeAreaView className="w-full">
@@ -97,27 +137,48 @@ const BookedDates: React.FC<BookedDatesProps> = ({ selectedDates, handleDateClic
             </Text>
           </View>
         ) : (
-          Object.entries(groupedDates).map(([month, dates]: [string, DateDetail[]]) => (
-            <View
-              key={month}
-              className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
-              <View className="mb-2 flex-row items-center">
-                <MaterialCommunityIcons name="calendar-month" size={24} color="#ef4444" />
-                <Text className="text-gray-900 ml-2 text-xl font-bold">{month}</Text>
-              </View>
+          <>
+            {Object.entries(groupedDates).map(([month, dates]: [string, DateDetail[]]) => (
+              <View
+                key={month}
+                className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
+                <View className="mb-2 flex-row items-center">
+                  <MaterialCommunityIcons name="calendar-month" size={24} color="#ef4444" />
+                  <Text className="text-gray-900 ml-2 text-xl font-bold">{month}</Text>
+                </View>
 
-              <View className="flex-row flex-wrap gap-2">
-                {dates.map((item: DateDetail, index: number) => (
-                  <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
-                    <View className="h-14 w-14 flex-col items-center justify-center border border-gray/25 bg-gray/25">
-                      <Text className="text-lg font-bold text-black">{item.nepaliDate?.day}</Text>
-                      <Text className="text-sm text-black">{NepaliDateToEnglish(item.date)}</Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {dates.map((item: DateDetail, index: number) => (
+                    <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
+                      <View
+                        className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${item.isToday ? 'border-2 border-white' : 'border border-gray/5'}`}
+                        style={{
+                          backgroundColor: eventColors[item.details?.eventType],
+                          transform: [{ scale: item.isToday ? 1.1 : 1 }],
+                        }}>
+                        <Text className="text-lg font-bold text-white">{item.nepaliDate?.day}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View className="mx-3 my-3">
+                  {monthlyTotals && (
+                    <View className="flex-row items-center justify-between">
+                      <Text className="font-semibold text-blue-900">
+                        ₹{monthlyTotals.quotedEarnings}
+                      </Text>
+                      <View className="mx-2 h-8 w-[1px] bg-gray" />
+                      <Text className="font-semibold text-green-600">
+                        ₹{monthlyTotals.receivedEarnings}
+                      </Text>
+                      <View className="mx-2 h-8 w-[1px] bg-gray" />
+                      <Text className="font-semibold text-red-600">₹{monthlyTotals.dueAmount}</Text>
                     </View>
-                  </TouchableOpacity>
-                ))}
+                  )}
+                </View>
               </View>
-            </View>
-          ))
+            ))}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>

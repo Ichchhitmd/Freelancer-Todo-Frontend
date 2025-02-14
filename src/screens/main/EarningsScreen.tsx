@@ -14,14 +14,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector } from 'react-redux';
 import { useGetEvents } from 'hooks/events';
 import { RootState } from 'redux/store';
+import { useGetEarnings } from 'hooks/earnings';
 
 interface MonthlyData {
-  eventId: number;
   month: string;
-  totalIncome: number;
-  totalExpense: number;
+  quotedEarnings: number;
+  receivedEarnings: number;
+  dueAmount: number;
   eventCount: number;
-  eventDate: string;
+  year: number;
 }
 
 export default function EarningsScreen() {
@@ -30,18 +31,24 @@ export default function EarningsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
+
+  const {
+    data: earningsData,
+    isLoading: earningsIsLoading,
+    isError: earningsIsError,
+    refetch: earningsRefetch,
+  } = useGetEarnings(userId || 0);
+
   const { data: eventsData, isLoading, isError, refetch } = useGetEvents(userId || 0);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    refetch().finally(() => setRefreshing(false));
-  }, [refetch]);
+    Promise.all([refetch(), earningsRefetch()]).finally(() => setRefreshing(false));
+  }, [refetch, earningsRefetch]);
 
-  // Process monthly breakdown
   const monthlyBreakdown = useMemo(() => {
-    if (!eventsData) return [];
+    if (!earningsData?.monthly) return [];
 
-    const eventsArray = Array.isArray(eventsData) ? eventsData : [eventsData];
     const nepaliMonths = [
       'Baisakh',
       'Jestha',
@@ -57,84 +64,35 @@ export default function EarningsScreen() {
       'Chaitra',
     ];
 
-    const monthlyMap: { [key: string]: MonthlyData } = {};
+    return Object.entries(earningsData.monthly)
+      .map(([key, data]) => {
+        const [year, month] = key.split('-').map(Number);
+        return {
+          month: `${nepaliMonths[month - 1]} ${year}`,
+          year,
+          quotedEarnings: parseFloat(data.quotedEarnings),
+          receivedEarnings: data.receivedEarnings,
+          dueAmount: data.dueAmount,
+          eventCount: data.eventCount,
+        };
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        const aMonthIndex = nepaliMonths.indexOf(a.month.split(' ')[0]);
+        const bMonthIndex = nepaliMonths.indexOf(b.month.split(' ')[0]);
+        return bMonthIndex - aMonthIndex;
+      });
+  }, [earningsData?.monthly]);
 
-    eventsArray.forEach((event) => {
-      try {
-        const eventDates = event.eventDate?.split(',').map((d: string) => d.trim()) || [];
-        if (eventDates.length === 0) return;
-
-        const earnings = parseFloat(event.earnings) || 0;
-        const expenses = parseFloat(event.expenses) || 0;
-
-        let validDate = null;
-        for (const dateStr of eventDates) {
-          try {
-            const [year, month, day] = dateStr.split('-').map(Number);
-
-            if (!year || !month || !day) continue;
-            if (month < 1 || month > 12) continue;
-            if (day < 1 || day > 32) continue;
-
-            validDate = { year, month };
-            break;
-          } catch (err) {
-            continue;
-          }
-        }
-
-        if (!validDate) return;
-
-        const monthNumber = validDate.month;
-        const monthName = nepaliMonths[monthNumber - 1];
-        const monthKey = `${monthName} ${validDate.year}`;
-
-        if (!monthlyMap[monthKey]) {
-          monthlyMap[monthKey] = {
-            eventId: event.id,
-            month: monthKey,
-            totalIncome: 0,
-            totalExpense: 0,
-            eventCount: 0,
-            eventDate: event.eventDate,
-          };
-        }
-
-        monthlyMap[monthKey].totalIncome += earnings;
-        monthlyMap[monthKey].totalExpense += expenses;
-        monthlyMap[monthKey].eventCount += 1;
-      } catch (error) {}
-    });
-
-    return Object.values(monthlyMap).sort((a, b) => {
-      try {
-        const [aMonth, aYear] = a.month.split(' ');
-        const [bMonth, bYear] = b.month.split(' ');
-
-        const aYearNum = parseInt(aYear);
-        const bYearNum = parseInt(bYear);
-
-        if (aYearNum !== bYearNum) {
-          return bYearNum - aYearNum;
-        }
-
-        return nepaliMonths.indexOf(bMonth) - nepaliMonths.indexOf(aMonth);
-      } catch (error) {
-        return 0;
-      }
-    });
-  }, [eventsData]);
-
-  // Calculate total earnings and expenses
   const totals = useMemo(() => {
-    return monthlyBreakdown.reduce(
-      (acc, curr) => ({
-        earnings: acc.earnings + curr.totalIncome,
-        expenses: acc.expenses + curr.totalExpense,
-      }),
-      { earnings: 0, expenses: 0 }
-    );
-  }, [monthlyBreakdown]);
+    if (!earningsData?.total) return { quoted: 0, received: 0, due: 0 };
+
+    return {
+      quoted: parseFloat(earningsData.total.totalQuotedEarnings),
+      received: earningsData.total.totalReceivedEarnings,
+      due: earningsData.total.totalDueAmount,
+    };
+  }, [earningsData?.total]);
 
   const handleMonthSelect = (month: string) => {
     setSelectedMonth(selectedMonth === month ? null : month);
@@ -156,12 +114,12 @@ export default function EarningsScreen() {
             <Text className="text-lg font-bold text-white">{data.month}</Text>
             <View className="mt-2 flex-row">
               <View className="mr-4 flex-row items-center">
-                <MaterialCommunityIcons name="arrow-up-circle" size={20} color="white" />
-                <Text className="ml-2 text-white">रू{data.totalIncome.toFixed(2)}</Text>
+                <MaterialCommunityIcons name="cash-multiple" size={20} color="white" />
+                <Text className="ml-2 text-white">रू{data.quotedEarnings.toLocaleString()}</Text>
               </View>
               <View className="flex-row items-center">
-                <MaterialCommunityIcons name="arrow-down-circle" size={20} color="white" />
-                <Text className="ml-2 text-white">रू{data.totalExpense.toFixed(2)}</Text>
+                <MaterialCommunityIcons name="cash-check" size={20} color="white" />
+                <Text className="ml-2 text-white">रू{data.receivedEarnings.toLocaleString()}</Text>
               </View>
             </View>
             <Text className="mt-1 text-sm text-white">Events: {data.eventCount}</Text>
@@ -176,16 +134,14 @@ export default function EarningsScreen() {
 
       {selectedMonth === data.month && (
         <View className="bg-white px-4 py-2">
-          <Text className="text-gray-600">
-            Net Income: रू{(data.totalIncome - data.totalExpense).toFixed(2)}
-          </Text>
+          <Text className="text-gray-600">Due Amount: रू{data.dueAmount.toLocaleString()}</Text>
           <Text className="text-gray-600">Total Events: {data.eventCount}</Text>
         </View>
       )}
     </TouchableOpacity>
   );
 
-  if (isLoading) {
+  if (isLoading || earningsIsLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="relative bg-red-500 p-6 pt-16">
@@ -194,7 +150,7 @@ export default function EarningsScreen() {
             className="absolute left-6 top-16 z-10">
             <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-center text-2xl font-bold text-white">Earnings & Expenses</Text>
+          <Text className="text-center text-2xl font-bold text-white">My Earnings</Text>
         </View>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#E50914" />
@@ -204,7 +160,7 @@ export default function EarningsScreen() {
     );
   }
 
-  if (isError) {
+  if (isError || earningsIsError) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="relative bg-red-500 p-6 pt-16">
@@ -213,7 +169,7 @@ export default function EarningsScreen() {
             className="absolute left-6 top-16 z-10">
             <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-center text-2xl font-bold text-white">Earnings & Expenses</Text>
+          <Text className="text-center text-2xl font-bold text-white">My Earnings</Text>
         </View>
         <View className="flex-1 items-center justify-center px-4">
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#E50914" />
@@ -239,7 +195,7 @@ export default function EarningsScreen() {
           className="absolute left-6 top-16 z-10">
           <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
         </TouchableOpacity>
-        <Text className="text-center text-2xl font-bold text-white">Earnings & Expenses</Text>
+        <Text className="text-center text-2xl font-bold text-white">My Earnings</Text>
       </View>
 
       <ScrollView
@@ -254,17 +210,24 @@ export default function EarningsScreen() {
             end={{ x: 1, y: 0 }}>
             <View className="flex-row justify-between py-2">
               <View className="flex-1 items-center">
-                <MaterialCommunityIcons name="arrow-up-circle" size={24} color="white" />
+                <MaterialCommunityIcons name="cash-multiple" size={24} color="white" />
                 <Text className="mt-2 text-sm text-white">Total Earnings</Text>
-                <Text className="mt-1 text-lg font-bold text-green-300">
-                  +रू{totals.earnings.toFixed(2)}
+                <Text className="mt-1 text-lg font-bold text-white">
+                  रू{totals.quoted.toLocaleString()}
                 </Text>
               </View>
               <View className="flex-1 items-center">
-                <MaterialCommunityIcons name="arrow-down-circle" size={24} color="white" />
-                <Text className="mt-2 text-sm text-white">Total Expenses</Text>
+                <MaterialCommunityIcons name="cash-check" size={24} color="white" />
+                <Text className="mt-2 text-sm text-white">Received</Text>
+                <Text className="mt-1 text-lg font-bold text-green-300">
+                  रू{totals.received.toLocaleString()}
+                </Text>
+              </View>
+              <View className="flex-1 items-center">
+                <MaterialCommunityIcons name="cash-plus" size={24} color="white" />
+                <Text className="mt-2 text-sm text-white">Due</Text>
                 <Text className="mt-1 text-lg font-bold text-red-300">
-                  -रू{totals.expenses.toFixed(2)}
+                  रू{totals.due.toLocaleString()}
                 </Text>
               </View>
             </View>

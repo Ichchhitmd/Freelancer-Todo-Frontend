@@ -50,7 +50,7 @@ const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({ options, value,
               key={option.id}
               onPress={() => handleSelection(option.id)}
               activeOpacity={0.7}
-              className={`border-gray-200 shadow-gray-200 mr-3 flex-row items-center rounded-lg border bg-white px-4 py-2.5 shadow-sm`}>
+              className={`border-slate-200 shadow-gray-200 mr-3 flex-row items-center rounded-lg border bg-white px-4 py-2.5 shadow-sm`}>
               {option.icon && (
                 <MaterialCommunityIcons
                   name={option.icon}

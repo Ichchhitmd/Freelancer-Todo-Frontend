@@ -33,7 +33,7 @@ const InputField: React.FC<InputFieldProps> = memo(
     const handleClear = useCallback(() => onChangeText(''), [onChangeText]);
 
     const containerStyle = `${multiline ? 'h-20' : 'h-14'} bg-gray-50 rounded border flex-row items-center px-2
-    ${error ? 'border-red-500' : isFocused ? 'border-blue-500' : 'border-gray-100'}`;
+    ${error ? 'border-red-500' : isFocused ? 'border-blue-500' : 'border-slate-200'}`;
 
     const iconColor = error ? '#ef4444' : isFocused ? '#3b82f6' : '#6b7280';
 
