@@ -123,25 +123,23 @@ const BookedDates: React.FC<BookedDatesProps> = ({
                 </View>
 
                 <View className="flex-row flex-wrap gap-2">
-                  {dates
-                    .slice(0, showAll ? dates.length : 2)
-                    .map((item: DateDetail, index: number) => (
-                      <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
-                        <View
-                          className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
-                            item.isToday ? 'border-2 border-white' : 'border border-gray/5'
-                          }`}
-                          style={{
-                            backgroundColor:
-                              eventColors[item.details?.eventType] || eventColors.UNKNOWN,
-                            transform: [{ scale: item.isToday ? 1.1 : 1 }],
-                          }}>
-                          <Text className="text-center text-sm font-semibold text-white">
-                            {engToNepNum(item.nepaliDate?.nepaliDay)}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
+                  {dates.map((item: DateDetail, index: number) => (
+                    <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
+                      <View
+                        className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
+                          item.isToday ? 'border-2 border-white' : 'border border-gray/5'
+                        }`}
+                        style={{
+                          backgroundColor:
+                            eventColors[item.details?.eventType] || eventColors.UNKNOWN,
+                          transform: [{ scale: item.isToday ? 1.1 : 1 }],
+                        }}>
+                        <Text className="text-center text-sm font-semibold text-white">
+                          {engToNepNum(item.nepaliDate?.nepaliDay)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
 
                 {monthTotals && (

@@ -54,7 +54,6 @@ export default function RegisterScreen() {
 
     signup(formData, {
       onSuccess: (data) => {
-        console.log('Signup success:', data);
         Alert.alert('Success', 'Account created successfully!');
         navigation.navigate('LoginScreen');
       },
