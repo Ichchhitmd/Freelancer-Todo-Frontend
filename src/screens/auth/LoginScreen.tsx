@@ -31,36 +31,8 @@ export default function LoginScreen() {
   const { mutate: loginUser, status, isError, error } = useLogin();
 
   useEffect(() => {
-    checkCachedCredentials();
     checkBiometricSupport();
   }, []);
-
-  const checkCachedCredentials = async () => {
-    try {
-      const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
-      if (cachedCredentials) {
-        Alert.alert(
-          'Cached Credentials Found',
-          'Would you like to use your saved credentials or log in manually?',
-          [
-            {
-              text: 'Use Saved Credentials',
-              onPress: () => {
-                const { phone, password } = JSON.parse(cachedCredentials);
-                setFormData((prev) => ({ ...prev, phone, password }));
-              },
-            },
-            {
-              text: 'Log In Manually',
-              onPress: () => setFormData({ phone: '', password: '', role: 'freelancer' }),
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Error retrieving cached credentials:', error);
-    }
-  };
 
   const checkBiometricSupport = async () => {
     try {
@@ -86,31 +58,13 @@ export default function LoginScreen() {
       { phone, password, role },
       {
         onSuccess: async (data) => {
-          console.log('Login Success:', data);
           dispatch(loginSuccess(data));
           navigation.navigate('MainTabs');
 
-          // Check for existing credentials and prompt to update
           try {
-            const existing = await AsyncStorage.getItem('cachedCredentials');
-            if (existing) {
-              Alert.alert('Update Credentials', 'Do you want to update your saved credentials?', [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Update',
-                  onPress: async () => {
-                    await AsyncStorage.setItem(
-                      'cachedCredentials',
-                      JSON.stringify({ phone, password })
-                    );
-                  },
-                },
-              ]);
-            } else {
-              await AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
-            }
+            await AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
           } catch (error) {
-            console.error('Error handling credentials:', error);
+            console.error('Error caching credentials:', error);
           }
         },
         onError: (error) => {

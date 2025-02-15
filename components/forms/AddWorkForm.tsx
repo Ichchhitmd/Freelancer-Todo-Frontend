@@ -12,7 +12,7 @@ import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
-import { RootState } from 'redux/store';
+import { selectUserId } from 'redux/selectors/authSelectors';
 import type { RootStackParamList } from 'types/navigation';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -109,7 +109,7 @@ const AddWorkForm: React.FC = () => {
 
   // Hooks for fetching companies and posting/updating events
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
-  const userId = useSelector((state: RootState) => state.auth.user?.id);
+  const userId = useSelector(selectUserId);
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
 
   // Form submission
@@ -219,7 +219,6 @@ const AddWorkForm: React.FC = () => {
         formattedData.id = details.id;
       }
 
-      console.log('Formatted data:', formattedData);
 
       if (isEditMode) {
         await updateEvent(formattedData);
@@ -253,7 +252,6 @@ const AddWorkForm: React.FC = () => {
     location,
   ]);
 
-  console.log('Selected Date:', selectedDates);
 
   if (companiesLoading) {
     return (

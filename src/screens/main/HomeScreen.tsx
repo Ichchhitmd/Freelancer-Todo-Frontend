@@ -74,14 +74,13 @@ const HomeScreen = () => {
   if (isError || earningsIsError) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white p-4">
-        <Text className="text-center text-red-500">
+        <Text className="text-center text-red-500 font-Poppins-Regular">
           Something went wrong. Pull down to refresh.
         </Text>
       </SafeAreaView>
     );
   }
 
-  console.log('earningsData', earningsData);
 
   const remainingAmount = earningsData?.total?.totalDueAmount || 0;
 
@@ -114,7 +113,6 @@ const HomeScreen = () => {
     }))
   );
 
-  console.log('selectedDates', selectedDates);
 
   const handleDateClick = (dateDetails: Event) => {
     navigation.navigate('DateDetails', { details: dateDetails });
@@ -122,7 +120,6 @@ const HomeScreen = () => {
 
   const bookedDatesEarnings = earningsData?.monthly;
 
-  console.log('bookedDatesEarnings', bookedDatesEarnings);
 
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
@@ -144,7 +141,6 @@ const HomeScreen = () => {
         />
         {!earningsIsLoading && !earningsIsError && (
           <>
-            {console.log('Earnings data being passed:', earningsData?.monthly)}
             <SwipeableUnifiedCard
               monthlyData={earningsData?.monthly || {}}
               totalData={{

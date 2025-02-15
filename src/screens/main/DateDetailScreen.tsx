@@ -166,7 +166,6 @@ const DateDetails: React.FC = () => {
       },
       {
         onSuccess: () => {
-          console.log('Actual earnings updated successfully', actualEarnings);
           Alert.alert('Success', 'Actual earnings updated successfully');
           // Force a refresh of the route params
           navigation.setParams({

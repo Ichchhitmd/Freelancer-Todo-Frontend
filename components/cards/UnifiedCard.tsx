@@ -39,7 +39,6 @@ interface SwipeableUnifiedCardProps {
 }
 
 const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData, totalData }) => {
-  console.log('monthlyData in UnifiedCard:', monthlyData);
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(1);
@@ -88,9 +87,6 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
   };
 
   const getMonthName = (monthKey: string) => {
-    console.log('Getting month name for key:', monthKey);
-    console.log('Month data:', monthlyData[monthKey]);
-
     const monthData = monthlyData[monthKey];
     if (monthData?.nepaliDate?.nepaliMonth) {
       return getNepaliMonthName(monthData.nepaliDate.nepaliMonth);
@@ -109,59 +105,65 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     return parseInt(year);
   };
 
-  const MonthlyCard = ({ monthKey1, monthKey2 }: { monthKey1: string; monthKey2: string }) => (
-    <View style={{ width: screenWidth }} className="pt-3">
-      <Pressable className="mx-4 rounded-2xl bg-white p-5 shadow-lg" style={{ elevation: 4 }}>
-        <View className="flex-row justify-between">
-          {[{ key: monthKey1 }, { key: monthKey2 }].map((item, index) => (
-            <React.Fragment key={index}>
-              <View className={`flex-1 ${index === 0 ? 'pr-4' : 'pl-4'}`}>
-                <View className="items-center">
-                  <MaterialCommunityIcons name="calendar-month" size={32} color="#333" />
-                  <View className="items-center">
+  const MonthlyCard = ({ monthKey1, monthKey2 }: { monthKey1: string; monthKey2?: string }) => {
+    const isSingleMonth = !monthKey2;
+
+    return (
+      <View style={{ width: screenWidth }} className="pt-3">
+        <Pressable className="mx-4 rounded-2xl bg-white p-5 shadow-lg" style={{ elevation: 4 }}>
+          <View className="flex-row justify-between">
+            {[{ key: monthKey1 }, ...(isSingleMonth ? [] : [{ key: monthKey2! }])].map(
+              (item, index) => (
+                <React.Fragment key={index}>
+                  <View className={`flex-1 ${isSingleMonth ? '' : index === 0 ? 'pr-4' : 'pl-4'}`}>
                     <View className="items-center">
-                      <Text className="text-gray-800 text-xl font-bold">
-                        {getMonthName(item.key)}
-                      </Text>
-                      <Text className="text-gray-500 text-sm">{getYear(item.key)} BS</Text>
-                    </View>
-                    {monthlyData[item.key]?.eventCount > 0 ? (
-                      <Text className="text-gray-600 text-sm">
-                        {monthlyData[item.key].eventCount} Events
-                      </Text>
-                    ) : (
-                      <Text className="text-gray-500 text-sm">No events scheduled</Text>
-                    )}
-                  </View>
-                </View>
-                <View className="mt-4">
-                  {monthlyData[item.key]?.eventCount > 0 ? (
-                    <>
-                      <View className="mb-2 flex-row justify-between">
-                        <Text className="text-xl font-semibold text-green-600">
-                          रू{formatAmount(monthlyData[item.key].receivedEarnings)}
-                        </Text>
-                        <Text className="text-xl font-semibold text-red-600">
-                          रू{formatAmount(monthlyData[item.key].dueAmount)}
-                        </Text>
+                      <MaterialCommunityIcons name="calendar-month" size={32} color="#333" />
+                      <View className="items-center">
+                        <View className="items-center">
+                          <Text className="text-gray-800 text-xl font-bold">
+                            {getMonthName(item.key)}
+                          </Text>
+                          <Text className="text-gray-500 text-sm">{getYear(item.key)} BS</Text>
+                        </View>
+                        {monthlyData[item.key]?.eventCount > 0 ? (
+                          <Text className="text-gray-600 text-sm">
+                            {monthlyData[item.key].eventCount} Events
+                          </Text>
+                        ) : (
+                          <Text className="text-gray-500 text-sm">No events scheduled</Text>
+                        )}
                       </View>
-                    </>
-                  ) : (
-                    <View className="items-center justify-center py-4">
-                      <Text className="text-gray-500 text-center">
-                        No earnings for {getMonthName(item.key)}
-                      </Text>
                     </View>
-                  )}
-                </View>
-              </View>
-              {index === 0 && <View className="bg-gray-200 h-full w-[2px]" />}
-            </React.Fragment>
-          ))}
-        </View>
-      </Pressable>
-    </View>
-  );
+                    <View className="mt-4">
+                      {monthlyData[item.key]?.eventCount > 0 ? (
+                        <>
+                          <View className="mb-2 flex-row justify-between">
+                            <Text className="text-xl font-semibold text-green-600">
+                              रू{formatAmount(monthlyData[item.key].receivedEarnings)}
+                            </Text>
+                            <Text className="text-xl font-semibold text-red-600">
+                              रू{formatAmount(monthlyData[item.key].dueAmount)}
+                            </Text>
+                          </View>
+                        </>
+                      ) : (
+                        <View className="items-center justify-center py-4">
+                          <Text className="text-gray-500 text-center">
+                            No earnings for {getMonthName(item.key)}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  {!isSingleMonth && index === 0 && <View className="bg-gray-200 h-full w-[2px]" />}
+                </React.Fragment>
+              )
+            )}
+          </View>
+        </Pressable>
+      </View>
+    );
+  };
 
   const SummaryCard = () => (
     <View style={{ width: screenWidth }} className="pt-3">
@@ -197,33 +199,38 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     </View>
   );
 
-  // Pair up months for display
   const monthPairs = [];
-  for (let i = 0; i < availableMonths.length; i += 2) {
+  if (availableMonths.length === 1) {
     monthPairs.push({
-      monthKey1: availableMonths[i],
-      monthKey2: availableMonths[i + 1] || availableMonths[i], // Use same month if no next month
+      monthKey1: availableMonths[0],
     });
-  }
+  } else {
+    for (let i = 0; i < availableMonths.length; i += 2) {
+      monthPairs.push({
+        monthKey1: availableMonths[i],
+        monthKey2: availableMonths[i + 1] || availableMonths[i], // Use same month if no next month
+      });
+    }
 
-  return (
-    <ScrollView
-      ref={scrollViewRef}
-      horizontal
-      pagingEnabled
-      showsHorizontalScrollIndicator={false}
-      onScroll={handleScroll}
-      scrollEventThrottle={10}>
-      {monthPairs.map((pair, index) => (
-        <MonthlyCard
-          key={`${pair.monthKey1}-${pair.monthKey2}`}
-          monthKey1={pair.monthKey1}
-          monthKey2={pair.monthKey2}
-        />
-      ))}
-      <SummaryCard />
-    </ScrollView>
-  );
+    return (
+      <ScrollView
+        ref={scrollViewRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={10}>
+        {monthPairs.map((pair, index) => (
+          <MonthlyCard
+            key={`${pair.monthKey1}-${pair.monthKey2}`}
+            monthKey1={pair.monthKey1}
+            monthKey2={pair.monthKey2}
+          />
+        ))}
+        <SummaryCard />
+      </ScrollView>
+    );
+  }
 };
 
 export default SwipeableUnifiedCard;
