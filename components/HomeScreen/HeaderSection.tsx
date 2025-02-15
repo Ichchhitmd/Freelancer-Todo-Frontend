@@ -60,23 +60,23 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
 
           <View className="flex-1">
             <Text className="mb-1 text-sm font-semibold text-red-400">Welcome back,</Text>
-            <Text className="text-xl font-extrabold text-red-800" numberOfLines={1}>
+            <Text className="text-2xl font-extrabold text-red-900" numberOfLines={1}>
               {user || 'Guest'}
             </Text>
-            <Text>{remainingAmount || 0}</Text>
+            <Text className="text-lg font-semibold text-red-500">Due: ₹{remainingAmount || 0}</Text>
           </View>
 
           <Animated.View className="items-center" style={{ opacity: fadeAnim }}>
             <Switch
               value={isActive}
               onValueChange={handleStatusChange}
-              trackColor={{ false: '#fecaca', true: '#fee2e2' }}
-              thumbColor={isActive ? '#ef4444' : '#f87171'}
+              trackColor={{ false: '#fecaca', true: '#22c55e' }}
+              thumbColor={isActive ? '#22c55e' : '#f87171'}
               ios_backgroundColor="#fecaca"
               className="mb-2"
             />
-            <View className={`rounded-full px-4 py-1.5 ${isActive ? 'bg-red-100' : 'bg-red-50'}`}>
-              <Text className={`text-xs font-bold ${isActive ? 'text-red-700' : 'text-red-400'}`}>
+            <View className={`rounded-full px-4 py-1.5 ${isActive ? 'bg-green-500' : 'bg-red-50'}`}>
+              <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-red-400'}`}>
                 {isActive ? 'AVAILABLE' : 'OFFLINE'}
               </Text>
             </View>

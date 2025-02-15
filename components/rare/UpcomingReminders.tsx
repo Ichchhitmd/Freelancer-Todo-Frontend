@@ -1,7 +1,7 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Text, View, TouchableOpacity, Platform, Linking, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NepaliDate from 'nepali-datetime'; // Use nepali-datetime for Nepali date handling
+import { formatNepaliDates } from '../utils/NepaliDateFormatter';
 
 interface EventDetails {
   eventId: number;
@@ -9,10 +9,21 @@ interface EventDetails {
   side: string;
   earnings: string;
   contactPerson: string;
+  eventStartTime: string;
+  location: string;
+  clientContactPerson1: string;
+  clientContactNumber1: string;
+  clientContactNumber2: string;
   company: {
     name: string;
   };
-  eventDate: string;
+  eventDate: string[];
+  nepaliEventDate: string[];
+  detailNepaliDate: Array<{
+    nepaliDay: number;
+    nepaliYear: number;
+    nepaliMonth: number;
+  }>;
 }
 
 interface UpcomingEventReminderProps {
@@ -20,153 +31,166 @@ interface UpcomingEventReminderProps {
     date: string;
     details: EventDetails;
   }[];
-  handleClick: (dateDetails: any) => void;
 }
 
-const tableOfEngNepNums = new Map([
-  [0, '०'],
-  [1, '१'],
-  [2, '२'],
-  [3, '३'],
-  [4, '४'],
-  [5, '५'],
-  [6, '६'],
-  [7, '७'],
-  [8, '८'],
-  [9, '९'],
-]);
-
-function engToNepNum(strNum: string): string {
-  return String(strNum)
-    .split('')
-    .map((ch) => tableOfEngNepNums.get(Number(ch)) ?? ch)
-    .join('');
-}
-
-const formatMultipleDates = (dates: string[]) => {
-  if (dates.length === 0) return 'No Dates';
-
-  const nepaliDates = dates.map((date) => {
-    try {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        throw new Error('Invalid date format');
-      }
-
-      const nepaliDate = new NepaliDate(date, 'YYYY-MM-DD');
-      const day = engToNepNum(nepaliDate.format('DD'));
-      return day;
-    } catch (error) {
-      return 'Invalid Date';
-    }
+const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events }) => {
+  const sortedEvents = [...events].sort((a, b) => {
+    const dateA = new Date(a.details.eventDate[0]);
+    const dateB = new Date(b.details.eventDate[0]);
+    return dateA.getTime() - dateB.getTime();
   });
-
-  if (nepaliDates.includes('Invalid Date')) {
-    return 'Invalid Date';
-  }
-
-  const firstDate = dates[0];
-  const nepaliDate = new NepaliDate(firstDate, 'YYYY-MM-DD');
-  const nepaliMonth = nepaliDate.format('MMMM'); // Extract month in Nepali
-
-  return `${nepaliMonth} - ${nepaliDates.join(', ')}`;
-};
-
-const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events, handleClick }) => {
-  const sortedEvents = [...events].sort((a, b) => a.details.eventId - b.details.eventId);
 
   const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;
 
-  const getDisplayName = (details: EventDetails) => details.contactPerson || details.company.name;
+  const getCompanyName = (details: EventDetails) => details.company.name;
+
+  const handlePhonePress = (phoneNumber: string) => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL(`telprompt:${phoneNumber}`);
+    } else {
+      Linking.openURL(`tel:${phoneNumber}`);
+    }
+  };
 
   return (
-    <View>
-      {sortedEvents.map((event, index) => {
-        const dates = event.date.split(',').map((d: string) => d.trim());
+    <View className="bg-gray-50 p-4">
+      <Text className="text-gray-900 mb-6 text-2xl font-bold">Upcoming Events 📅</Text>
 
-        return (
-          <TouchableOpacity
-            key={index}
-            onPress={() => handleClick(event.details)}
-            activeOpacity={0.8}
-            style={styles.card}>
-            <View style={styles.cardContent}>
-              <Text style={styles.eventName} numberOfLines={1}>
-                {formatEventName(event.details)}
-              </Text>
+      {/* Horizontal Scroll View for Events */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingRight: 10 }}>
+        {sortedEvents.map((event, index) => {
+          const eventDate = new Date(event.details.eventDate[0]);
+          const today = new Date();
+          const isToday =
+            eventDate.getFullYear() === today.getFullYear() &&
+            eventDate.getMonth() === today.getMonth() &&
+            eventDate.getDate() === today.getDate();
+          const formattedDates = formatNepaliDates(event.details.detailNepaliDate);
 
-              <View style={styles.eventDetailRow}>
-                <MaterialCommunityIcons name="account-group" size={22} color="#4B5563" />
-                <Text style={styles.eventDetailText} numberOfLines={1}>
-                  Event with {getDisplayName(event.details)}
-                </Text>
+          return (
+            <TouchableOpacity
+              key={index}
+              activeOpacity={0.9}
+              className={`mb-5 overflow-hidden rounded-2xl border-l-4 
+              bg-white shadow-sm ${isToday ? 'border-blue-500' : 'border-orange-400'}`}
+              style={{
+                elevation: 3,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                width: 345, // Set fixed width for horizontal scroll
+                marginRight: 15, // Space between cards
+              }}>
+              <View className="p-5">
+                {/* Header Section */}
+                <View className="mb-3 flex-row items-start justify-between">
+                  <View className="flex-1 pr-2">
+                    <Text className="text-gray-900 text-lg font-bold" numberOfLines={2}>
+                      {formatEventName(event.details)}
+                    </Text>
+                    <Text className="text-gray-500 mt-1 text-sm">
+                      {getCompanyName(event.details)}
+                    </Text>
+                  </View>
+                  {isToday && (
+                    <View className="rounded-full bg-blue-100 px-3 py-1">
+                      <Text className="text-xs font-semibold text-blue-800">TODAY</Text>
+                    </View>
+                  )}
+                  <View className="mt-4 flex-row items-center justify-end">
+                    <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">
+                      <MaterialCommunityIcons name="calendar-blank" size={14} color="#F59E0B" />
+                      <Text className="ml-2 text-sm font-medium text-orange-800">
+                        {formattedDates}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View className="bg-gray-100 my-4 h-px" />
+
+                <View className="flex-row flex-wrap">
+                  <View className="mb-4 w-1/2 pr-2">
+                    <View className="flex-row items-center rounded-lg bg-blue-50 p-3">
+                      <MaterialCommunityIcons name="clock-outline" size={18} color="#3B82F6" />
+                      <View className="ml-2">
+                        <Text className="text-gray-500 text-xs">Starts at</Text>
+                        <Text className="text-gray-900 text-sm font-medium">
+                          {event.details.eventStartTime}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View className="mb-4 w-1/2 pl-2">
+                    <View className="flex-row items-center rounded-lg bg-green-50 p-3">
+                      <MaterialCommunityIcons name="cash" size={18} color="#10B981" />
+                      <View className="ml-2">
+                        <Text className="text-gray-500 text-xs">Earnings</Text>
+                        <Text className="text-lg font-semibold text-green-800">
+                          रू {parseFloat(event.details.earnings).toLocaleString()}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Location Card */}
+                  <View className="mb-4 w-full">
+                    <View className="flex-row items-center rounded-lg bg-purple-50 p-3">
+                      <MaterialCommunityIcons name="map-marker-outline" size={18} color="#8B5CF6" />
+                      <View className="ml-2 flex-1">
+                        <Text className="text-gray-500 text-xs">Location</Text>
+                        <Text className="text-gray-900 text-sm font-medium" numberOfLines={2}>
+                          {event.details.location}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Contact Section */}
+                <View className="mt-2">
+                  {event.details.clientContactNumber1 && (
+                    <TouchableOpacity
+                      className="bg-gray-50 mb-2 flex-row items-center rounded-lg p-3"
+                      onPress={() => handlePhonePress(event.details.clientContactNumber1)}>
+                      <MaterialCommunityIcons name="phone-outline" size={18} color="#6B7280" />
+                      <Text className="ml-3 font-medium text-blue-600">
+                        {event.details.clientContactNumber1}
+                      </Text>
+                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
+                        <Text className="text-xs text-blue-800">
+                          Tap to call {event.details.clientContactPerson1}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+
+                  {event.details.clientContactNumber2 && (
+                    <TouchableOpacity
+                      className="bg-gray-50 flex-row items-center rounded-lg p-3"
+                      onPress={() => handlePhonePress(event.details.clientContactNumber2)}>
+                      <MaterialCommunityIcons name="phone-outline" size={18} color="#6B7280" />
+                      <Text className="ml-3 font-medium text-blue-600">
+                        {event.details.clientContactNumber2}
+                      </Text>
+                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
+                        <Text className="text-xs text-blue-800">Tap to call</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-
-              <View style={styles.eventDetailRow}>
-                <MaterialCommunityIcons name="calendar" size={22} color="#4B5563" />
-                <Text style={styles.eventDateText}>{formatMultipleDates(dates)}</Text>
-              </View>
-
-              <View style={styles.eventDetailRow}>
-                <MaterialCommunityIcons name="currency-usd" size={22} color="#10B981" />
-                <Text style={styles.earningsText}>
-                  Estimated: Rs.{' '}
-                  {engToNepNum(parseFloat(event.details.earnings).toLocaleString())}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    marginBottom: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  cardContent: {
-    padding: 16,
-  },
-  eventName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 12,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'normal',
-    textTransform: 'capitalize',
-  },
-  eventDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  eventDetailText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#4B5563',
-    marginLeft: 8,
-  },
-  eventDateText: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginLeft: 8,
-  },
-  earningsText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#10B981',
-    marginLeft: 8,
-  },
-});
 
 export default UpcomingEventReminder;

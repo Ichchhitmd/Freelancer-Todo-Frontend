@@ -1,7 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  ScrollView,
+} from 'react-native';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from 'redux/slices/authSlices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -37,7 +47,7 @@ export default function LoginScreen() {
               text: 'Use Saved Credentials',
               onPress: () => {
                 const { phone, password } = JSON.parse(cachedCredentials);
-                setFormData({ ...formData, phone, password });
+                setFormData((prev) => ({ ...prev, phone, password }));
               },
             },
             {
@@ -47,36 +57,65 @@ export default function LoginScreen() {
           ]
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error retrieving cached credentials:', error);
+    }
   };
 
   const checkBiometricSupport = async () => {
-    const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
-    const isBiometricEnrolled = await LocalAuthentication.isEnrolledAsync();
+    try {
+      const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+      const isBiometricEnrolled = await LocalAuthentication.isEnrolledAsync();
 
-    if (isBiometricAvailable && isBiometricEnrolled) {
-      console.log('Biometric authentication is available and enrolled');
-    } else {
-      console.log('Biometric authentication is not available or not enrolled');
+      if (!isBiometricAvailable || !isBiometricEnrolled) {
+        console.log('Biometric authentication not available');
+      }
+    } catch (error) {
+      console.error('Biometric check error:', error);
     }
   };
 
   const handleLogin = () => {
     const { phone, password, role } = formData;
+    if (!phone || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
-    // Trigger the login mutation
     loginUser(
       { phone, password, role },
       {
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
           console.log('Login Success:', data);
           dispatch(loginSuccess(data));
           navigation.navigate('MainTabs');
+
+          // Check for existing credentials and prompt to update
+          try {
+            const existing = await AsyncStorage.getItem('cachedCredentials');
+            if (existing) {
+              Alert.alert('Update Credentials', 'Do you want to update your saved credentials?', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Update',
+                  onPress: async () => {
+                    await AsyncStorage.setItem(
+                      'cachedCredentials',
+                      JSON.stringify({ phone, password })
+                    );
+                  },
+                },
+              ]);
+            } else {
+              await AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
+            }
+          } catch (error) {
+            console.error('Error handling credentials:', error);
+          }
         },
         onError: (error) => {
           console.error('Login Failed:', error);
-          const errorMessage = handleAxiosError(error); // Display user-friendly message
-          Alert.alert('Login Error', errorMessage);
+          Alert.alert('Login Error', handleAxiosError(error));
         },
       }
     );
@@ -84,105 +123,130 @@ export default function LoginScreen() {
 
   const handleBiometricLogin = async () => {
     try {
-      // Start biometric authentication
       const { success } = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Authenticate to login',
       });
 
-      if (success) {
-        const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
-
-        if (cachedCredentials) {
-          const { phone, password } = JSON.parse(cachedCredentials);
-
-          loginUser(
-            { phone, password, role: 'freelancer' },
-            {
-              onSuccess: (data) => {
-                console.log('Login Success:', data);
-                dispatch(loginSuccess(data));
-                navigation.navigate('MainTabs');
-              },
-              onError: (error) => {
-                console.error('Login Failed:', error);
-                const errorMessage = handleAxiosError(error);
-                Alert.alert('Login Error', errorMessage);
-              },
-            }
-          );
-        } else {
-          Alert.alert('Error', 'No cached credentials found. Please login manually.');
-        }
-      } else {
-        Alert.alert('Error', 'Biometric authentication failed. Please try again.');
+      if (!success) {
+        Alert.alert('Error', 'Authentication failed');
+        return;
       }
+
+      const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
+      if (!cachedCredentials) {
+        Alert.alert('Error', 'No saved credentials found');
+        return;
+      }
+
+      const { phone, password } = JSON.parse(cachedCredentials);
+      loginUser(
+        { phone, password, role: 'freelancer' },
+        {
+          onSuccess: (data) => {
+            dispatch(loginSuccess(data));
+            navigation.navigate('MainTabs');
+          },
+          onError: (error) => {
+            Alert.alert('Login Error', handleAxiosError(error));
+          },
+        }
+      );
     } catch (error) {
-      console.error('Biometric authentication failed', error);
-      Alert.alert('Error', 'An error occurred during biometric authentication.');
+      console.error('Biometric error:', error);
+      Alert.alert('Error', 'Failed to authenticate');
     }
   };
 
   return (
-    <View className="bg-gray-900 flex-1 justify-center p-6">
-      <View className="rounded-2xl border-primary bg-white p-8 shadow-lg">
-        <Text className="text-gray-900 mb-2 text-center text-3xl font-bold">Welcome Back</Text>
-        <Text className="text-gray-900 mb-8 text-center text-base">Login to your account</Text>
+    <SafeAreaView className="bg-gray-50 flex-1">
+      <KeyboardAvoidingView className="flex-1">
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled">
+          <View className="flex-1 justify-center">
+            <View className="rounded-b-[40px] bg-primary/30 px-6 pb-16 pt-12">
+              <Text className="mb-2 text-4xl font-bold text-white">Welcome Back</Text>
+              <Text className="text-lg text-indigo-100">Sign in to continue</Text>
+            </View>
 
-        <View className="bg-gray-100 mb-4 flex-row items-center rounded-lg border-[0.5px] border-slate-200 p-3">
-          <MaterialIcons name="phone" size={20} className="text-gray-900 mr-3" />
-          <TextInput
-            className="text-gray-900 flex-1 text-base"
-            placeholder="Phone Number"
-            placeholderTextColor="#333333"
-            value={formData.phone}
-            onChangeText={(text) => setFormData({ ...formData, phone: text })}
-            keyboardType="phone-pad"
-          />
-        </View>
+            <View className="-mt-10 px-6">
+              <View className="rounded-3xl bg-white p-6 shadow-xl">
+                <View className="bg-gray-100 mb-4 flex-row items-center rounded-lg border-[0.5px] border-slate-200 p-3">
+                  <MaterialIcons name="phone" size={20} className="text-gray-900 mr-3" />
+                  <TextInput
+                    className="text-gray-900 flex-1 text-base"
+                    placeholder="Phone Number"
+                    placeholderTextColor="#333333"
+                    value={formData.phone}
+                    onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                    keyboardType="phone-pad"
+                  />
+                </View>
 
-        <View className="bg-gray-100 mb-4 flex-row items-center rounded-lg border-[0.5px] border-slate-200 p-3">
-          <MaterialIcons name="lock" size={20} className="text-gray-900 mr-3" />
-          <TextInput
-            className="flex-1 text-base text-gray"
-            placeholder="Password"
-            placeholderTextColor="#333333"
-            value={formData.password}
-            onChangeText={(text) => setFormData({ ...formData, password: text })}
-            secureTextEntry
-          />
-        </View>
+                {/* Password Input */}
+                <View className="bg-gray-100 mb-6 flex-row items-center rounded-lg border-[0.5px] border-slate-200 p-3">
+                  <MaterialIcons name="lock" size={20} className="text-gray-900 mr-3" />
+                  <TextInput
+                    className="flex-1 text-base text-gray"
+                    placeholder="Password"
+                    placeholderTextColor="#333333"
+                    value={formData.password}
+                    onChangeText={(text) => setFormData({ ...formData, password: text })}
+                    secureTextEntry
+                  />
+                </View>
 
-        {status === 'pending' ? (
-          <ActivityIndicator size="large" color="#0000ff" className="my-4" />
-        ) : (
-          <View>
-            <Pressable
-              className="rounded-lg bg-primary py-4 shadow-md shadow-primary/30 active:bg-primary"
-              onPress={handleLogin}>
-              <Text className="text-center text-lg font-semibold text-white">Login</Text>
-            </Pressable>
-            <Pressable
-              className="mt-4 rounded-lg bg-green-500 py-4 shadow-md shadow-green-500/30 active:bg-green-600"
-              onPress={handleBiometricLogin}>
-              <Text className="text-center text-lg font-semibold text-white">
-                Login with Fingerprint
-              </Text>
-            </Pressable>
+                {status === 'pending' ? (
+                  <ActivityIndicator size="large" color="#6366F1" className="my-4" />
+                ) : (
+                  <View className="space-y-4">
+                    <Pressable
+                      className="rounded-2xl bg-primary/75 py-4 shadow-lg shadow-primary/30"
+                      onPress={handleLogin}>
+                      <Text className="text-center text-lg font-semibold text-white">Sign In</Text>
+                    </Pressable>
+
+                    <View className="my-2 flex-row items-center">
+                      <View className="bg-gray-300 h-[1px] flex-1" />
+                      <Text className="text-gray-500 mx-4">or</Text>
+                      <View className="bg-gray-300 h-[1px] flex-1" />
+                    </View>
+
+                    <Pressable
+                      className="rounded-2xl border-2 border-emerald-500 bg-white py-4"
+                      onPress={handleBiometricLogin}>
+                      <View className="flex-row items-center justify-center space-x-2">
+                        <MaterialIcons name="fingerprint" size={28} color="#10B981" />
+                        <Text className="text-lg font-semibold text-emerald-500">
+                          Use Fingerprint
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </View>
+                )}
+
+                <Pressable className="mt-6" onPress={() => navigation.navigate('RegisterScreen')}>
+                  <Text className="text-gray-600 text-center text-sm">
+                    Don't have an account?{' '}
+                    <Text className="font-semibold text-indigo-600">Create Account</Text>
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {isError && (
+              <View className="mx-6 mt-4">
+                <View className="rounded-xl border border-red-200 bg-red-50 p-4">
+                  <Text className="text-center text-sm text-red-600">
+                    {handleAxiosError(error)}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
-        )}
-
-        <Pressable className="mt-6" onPress={() => navigation.navigate('RegisterScreen')}>
-          <Text className="text-gray-900 text-center text-sm">
-            Don't have an account? <Text className="font-semibold text-primary">Sign up</Text>
-          </Text>
-        </Pressable>
-
-        {isError && (
-          <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
-            {handleAxiosError(error)} {/* Displaying user-friendly error message */}
-          </Text>
-        )}
-      </View>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

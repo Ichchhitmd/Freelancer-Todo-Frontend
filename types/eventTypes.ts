@@ -1,29 +1,39 @@
 export interface EventRequest {
   companyId: number;
-  eventDate: string;
+  eventDate: string[];
+  nepaliEventDate: string[];
+  detailNepaliDate: { nepaliYear: number; nepaliMonth: number; nepaliDay: number }[];
   eventType: string;
-  workType: string;
   side: string;
-  contactPerson: string;
-  contactInfo: string;
+  dueAmount?: number;
   earnings: number;
-  actualEarnings?: number | null;
+  eventStartTime: string;
+  workType: string[];
+  clientContactPerson1: string;
+  clientContactNumber1: string;
+  clientContactPerson2?: string | null;
+  clientContactNumber2?: string | null;
+  location: string;
+  actualEarnings?: number | null; // Matches the example nullability
 }
 
 export interface EventResponse extends EventRequest {
   id: number;
-  eventTime?: string | null;
+  userId: number;
+  freelancerId?: number | null;
+  contactPerson?: string | null;
+  contactInfo?: string | null;
   createdAt: string;
   updatedAt: string;
-  freelancerId?: number | null;
+  dueAmount: number;
 }
 
 export interface Company {
-  bio: string | null;
-  contactInfo: string;
-  contactPerson: string | null;
   id: number;
   name: string;
+  contactInfo: string;
+  contactPerson: string | null;
+  bio: string | null;
 }
 
 export interface User {
@@ -33,21 +43,33 @@ export interface User {
 }
 
 export interface EventDetails {
-  actualEarnings: string | null;
-  company: Company;
-  companyId: number;
-  contactInfo: string;
-  contactPerson: string;
-  createdAt: string;
-  earnings: string;
-  eventDate: string;
-  eventTime: string | null;
-  eventType: string;
-  freelancerId: number | null;
   id: number;
-  side: 'BRIDE' | 'GROOM';
+  eventDate: string[];
+  nepaliEventDate: string[];
+  detailNepaliDate: {
+    nepaliYear: number;
+    nepaliMonth: number;
+    nepaliDay: number;
+  }[];
+  dueAmount: number;
+  earnings: string;
+  actualEarnings: string | null;
+  eventStartTime: string;
+  workType: string[];
+  clientContactPerson1: string;
+  clientContactNumber1: string;
+  clientContactPerson2?: string | null;
+  clientContactNumber2?: string | null;
+  location: string;
+  createdAt: string;
   updatedAt: string;
-  user: User;
   userId: number;
-  workType: string;
+  companyId: number;
+  contactPerson?: string | null;
+  contactInfo?: string | null;
+  side: 'BRIDE' | 'GROOM';
+  eventType: string;
+  freelancerId?: number | null;
+  company: Company;
+  user: User;
 }

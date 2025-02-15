@@ -17,7 +17,7 @@ import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
-import { Modal, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Modal, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { NavigationProp, ParamListBase, NavigationContainer } from '@react-navigation/native';
 
 import { useEffect, useState } from 'react';
@@ -29,7 +29,9 @@ import ReimbursementForm from 'components/forms/ReimbursementForm';
 import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
 import CompanyDetails from '~/screens/main/CompanyDetailsScreen';
 import PlusScreen from '~/screens/main/PlusScreen';
+import { useFonts } from 'expo-font';
 import ExpenseForm from 'components/forms/ExpenseForm';
+import AddWorkForm from 'components/forms/AddWorkForm';
 
 enableScreens();
 
@@ -114,12 +116,13 @@ function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase
           options={{ tabBarLabel: 'My Works' }}
         />
         <Tab.Screen
-          name="Plus"
-          component={PlusScreen}
+          name="Add Work"
+          component={WorkScreen}
           options={{
             tabBarLabel: '',
             tabBarButton: () => (
               <TouchableOpacity
+                onPress={() => navigation.navigate('Add Work')}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -134,8 +137,7 @@ function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase
                   shadowOpacity: 0.2,
                   shadowRadius: 8,
                   shadowOffset: { width: 0, height: 4 },
-                }}
-                onPress={() => setModalVisible(true)}>
+                }}>
                 <MaterialCommunityIcons name="plus" size={32} color="white" />
               </TouchableOpacity>
             ),
@@ -157,7 +159,7 @@ function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase
         />
       </Tab.Navigator>
 
-      <Modal
+      {/* <Modal
         transparent={true}
         visible={modalVisible}
         animationType="fade"
@@ -184,7 +186,7 @@ function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase
             </View>
           </View>
         </TouchableWithoutFeedback>
-      </Modal>
+      </Modal> */}
     </View>
   );
 }
@@ -193,6 +195,17 @@ export default function App() {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
+
+  const [fontsLoaded] = useFonts({
+    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+    'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-Light': require('./assets/fonts/Poppins-Light.ttf'),
+    'Poppins-SemiBold': require('./assets/fonts/Poppins-SemiBold.ttf'),
+  });
+  if (!fontsLoaded) {
+    return null;
+  }
+
   const queryClient = new QueryClient();
 
   return (

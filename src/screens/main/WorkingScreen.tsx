@@ -1,49 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { RootState } from 'redux/store';
 import { useGetEvents } from 'hooks/events';
-import { FilterType, SimplifiedWorkItem, SortType } from 'types/WorkingScreenTypes';
-import { convertToNepaliDate } from 'components/WorkingsScreen/DateUtils';
 import { FilterBar } from 'components/WorkingsScreen/FilterBar';
 import { WorkItem } from 'components/WorkingsScreen/WorkItem';
 import { EmptyState } from 'components/WorkingsScreen/EmptyState';
+import { FilterType, SimplifiedWorkItem, SortType, WorkEvent } from 'types/WorkingScreenTypes';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const WorkingScreen = () => {
-  const navigation = useNavigation();
-  const [showFilters, setShowFilters] = useState(false);
+type RootStackParamList = {
+  DateDetails: { details: WorkEvent };
+  CompanyDetails: { companyId: number };
+};
+
+const WorkingScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('upcoming');
   const [activeSort, setActiveSort] = useState<SortType>('date-desc');
   const [visibleEvents, setVisibleEvents] = useState<SimplifiedWorkItem[]>([]);
   const [allEvents, setAllEvents] = useState<SimplifiedWorkItem[]>([]);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
   const userId = useSelector((state: RootState) => state.auth.user?.id);
-  const { data, isLoading, isError } = useGetEvents(userId || 0);
+  const { data, isLoading, isError, refetch } = useGetEvents(userId || 0);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  const processEvents = (events: WorkEvent | WorkEvent[]): SimplifiedWorkItem[] => {
+    const eventsArray = Array.isArray(events) ? events : [events];
+    const currentTimestamp = new Date().getTime();
+
+    return eventsArray.map((event) => ({
+      id: event.id,
+      companyId: event.company?.id || 0,
+      companyName: event.company?.name || 'Unknown Company',
+      nepaliEventDate: event.nepaliEventDate,
+      detailNepaliDate: event.detailNepaliDate,
+      isUpcoming: new Date(event.eventDate[0]).getTime() > currentTimestamp,
+      eventType: event.eventType || 'Unspecified',
+      side: event.side || 'BRIDE',
+      workType: event.workType || ['Unspecified'],
+      earnings: event.earnings ? `${parseFloat(event.earnings).toLocaleString()}` : 'N/A',
+      status: 'pending',
+      location: event.location,
+      originalEvent: event,
+    }));
+  };
 
   useEffect(() => {
     if (data && !isLoading && !isError) {
-      const eventsArray = Array.isArray(data) ? data : [data];
-      const currentTimestamp = new Date().getTime();
-
-      const simplified: SimplifiedWorkItem[] = eventsArray.map((event) => ({
-        id: event.id || `${event.company?.id}-${event.eventDate}`,
-        companyId: event.company?.id || '',
-        companyName: event.company?.name || 'Unknown Company',
-        eventDate: convertToNepaliDate(event.eventDate || '2000-01-01'),
-        isUpcoming: new Date(event.eventDate).getTime() > currentTimestamp,
-        eventType: event.eventType || 'Unspecified',
-        side: event.side || 'Unspecified',
-        workType: event.workType || 'Unspecified',
-        earnings: event.earnings ? parseFloat(event.earnings).toFixed(2) : 'N/A',
-        status: event.status || 'pending',
-        location: event.location,
-      }));
-
+      const simplified = processEvents(data);
       setAllEvents(simplified);
     }
   }, [data, isLoading, isError]);
-
   useEffect(() => {
     let filteredEvents = [...allEvents];
 
@@ -56,19 +73,6 @@ const WorkingScreen = () => {
         break;
     }
 
-    filteredEvents.sort((a, b) => {
-      switch (activeSort) {
-        case 'date-asc':
-          return a.eventDate.timestamp - b.eventDate.timestamp;
-        case 'date-desc':
-          return b.eventDate.timestamp - a.eventDate.timestamp;
-        case 'company':
-          return a.companyName.localeCompare(b.companyName);
-        default:
-          return 0;
-      }
-    });
-
     if (activeFilter === 'upcoming') {
       filteredEvents = filteredEvents.slice(0, 10);
     }
@@ -76,8 +80,10 @@ const WorkingScreen = () => {
     setVisibleEvents(filteredEvents);
   }, [allEvents, activeFilter, activeSort]);
 
-  const handleCompanyClick = (companyId: number) => {
-    navigation.navigate('CompanyDetails', { companyId });
+  const handleWorkItemPress = (item: SimplifiedWorkItem) => {
+    if (item.originalEvent) {
+      navigation.navigate('DateDetails', { details: item.originalEvent });
+    }
   };
 
   if (isError) {
@@ -95,7 +101,7 @@ const WorkingScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-red-50">
-      <View className="relative border-b border-red-200 bg-red-50 shadow-sm">
+      <View className="border-b border-red-200 bg-red-50 shadow-sm">
         <View className="flex items-center justify-center px-6 py-6">
           <Text className="text-3xl font-extrabold text-primary/70">My Works</Text>
           <Text className="mt-2 text-sm font-medium text-primary/90">
@@ -110,7 +116,6 @@ const WorkingScreen = () => {
           setActiveSort={setActiveSort}
           showFilters={showFilters}
           setShowFilters={setShowFilters}
-          className="absolute right-0 top-0 z-10"
         />
       </View>
 
@@ -123,15 +128,23 @@ const WorkingScreen = () => {
         <ScrollView
           className="flex-1"
           contentContainerStyle={{
-            paddingBottom: 80, // Extra padding for bottom navigation
-          }}>
+            paddingBottom: 80,
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#EF4444']}
+              tintColor="#EF4444"
+            />
+          }>
           {visibleEvents.length > 0 ? (
             visibleEvents.map((item, index) => (
               <WorkItem
-                key={`${item.companyId}-${item.eventDate.originalDate}`}
+                key={`${item.id}-${item.nepaliEventDate}`}
                 item={item}
                 index={index}
-                onPress={() => handleCompanyClick(item.companyId)}
+                onPress={() => handleWorkItemPress(item)}
               />
             ))
           ) : (
