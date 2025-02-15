@@ -31,8 +31,8 @@ interface User {
 
 interface EventDetails {
   actualEarnings: string | null;
-  company: Company;
-  companyId: number;
+  company?: Company | null;
+  companyId?: number;
   contactInfo: string | null;
   contactPerson: string | null;
   createdAt: string;
@@ -322,7 +322,9 @@ const DateDetails: React.FC = () => {
             <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-100">
               <MaterialCommunityIcons name="office-building" size={32} color="#ef4444" />
             </View>
-            <Text className="text-gray-900 mt-2 text-xl font-bold">{details.company.name}</Text>
+            <Text className="text-gray-900 mt-2 text-xl font-bold">
+              {details.company?.name || `${details.clientContactPerson1}'s Work`}
+            </Text>
             <Text className="text-gray-500 text-base">{details.location}</Text>
             <View className="mt-4 flex-row items-center justify-center gap-12">
               <TouchableOpacity
@@ -380,11 +382,13 @@ const DateDetails: React.FC = () => {
               value={`${details.clientContactPerson2} - ${details.clientContactNumber2}`}
             />
           )}
-          <DetailRow
-            icon="domain"
-            label="Company Contact"
-            value={`${details.company.contactPerson} - ${details.company.contactInfo}`}
-          />
+          {details.company && (
+            <DetailRow
+              icon="domain"
+              label="Company Contact"
+              value={`${details.company.contactPerson || 'N/A'} - ${details.company.contactInfo || 'N/A'}`}
+            />
+          )}
           <View className="p-2">
             <TouchableOpacity
               onPress={handleDelete}

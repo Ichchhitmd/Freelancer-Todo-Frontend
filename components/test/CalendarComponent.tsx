@@ -10,11 +10,11 @@ import {
 import type { NepaliDateInfo } from '../../lib/calendar';
 
 interface MonthViewProps {
-  onSelectDates: (dates: NepaliDateInfo[]) => void;
-  selectedDates?: NepaliDateInfo[];
+  onSelectDate: (date: NepaliDateInfo | null) => void;
+  selectedDate?: NepaliDateInfo | null;
 }
 
-export function MonthView({ onSelectDates, selectedDates = [] }: MonthViewProps) {
+export function MonthView({ onSelectDate, selectedDate = null }: MonthViewProps) {
   const currentDate = getCurrentNepaliDate();
   const [viewDate, setViewDate] = useState({
     year: currentDate.year,
@@ -39,38 +39,15 @@ export function MonthView({ onSelectDates, selectedDates = [] }: MonthViewProps)
   };
 
   const isDateSelected = (date: NepaliDateInfo) => {
-    return selectedDates.some(
-      (selectedDate) =>
-        selectedDate.day === date.day &&
-        selectedDate.month === date.month &&
-        selectedDate.year === date.year
-    );
+    return selectedDate !== null &&
+      selectedDate.day === date.day &&
+      selectedDate.month === date.month &&
+      selectedDate.year === date.year;
   };
 
   const handleDateSelect = (date: NepaliDateInfo) => {
     const isAlreadySelected = isDateSelected(date);
-    let newSelectedDates: NepaliDateInfo[];
-
-    if (isAlreadySelected) {
-      newSelectedDates = selectedDates.filter(
-        (selectedDate) =>
-          !(
-            selectedDate.day === date.day &&
-            selectedDate.month === date.month &&
-            selectedDate.year === date.year
-          )
-      );
-    } else {
-      newSelectedDates = [...selectedDates, date];
-    }
-
-    newSelectedDates.sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      if (a.month !== b.month) return a.month - b.month;
-      return a.day - b.day;
-    });
-
-    onSelectDates(newSelectedDates);
+    onSelectDate(isAlreadySelected ? null : date);
   };
   return (
     <View style={styles.container}>
@@ -144,17 +121,15 @@ export function MonthView({ onSelectDates, selectedDates = [] }: MonthViewProps)
         </View>
       </View>
 
-      {selectedDates.length > 0 && (
+      {selectedDate && (
         <View style={styles.selectedDatesContainer}>
-          <Text style={styles.selectedDatesTitle}>Selected Dates:</Text>
+          <Text style={styles.selectedDatesTitle}>Selected Date:</Text>
           <View style={styles.selectedDatesList}>
-            {selectedDates.map((date, index) => (
-              <View key={index} style={styles.selectedDateChip}>
-                <Text style={styles.selectedDateChipText}>
-                  {`${date.nepaliDate} ${nepaliMonths[date.month]} ${date.year}`}
-                </Text>
-              </View>
-            ))}
+            <View style={styles.selectedDateChip}>
+              <Text style={styles.selectedDateChipText}>
+                {`${selectedDate.nepaliDate} ${nepaliMonths[selectedDate.month]} ${selectedDate.year}`}
+              </Text>
+            </View>
           </View>
         </View>
       )}

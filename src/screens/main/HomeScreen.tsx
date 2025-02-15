@@ -49,19 +49,19 @@ const HomeScreen = () => {
     refetch: earningsRefetch,
   } = useGetEarnings(userId || 0);
 
-  useFocusEffect(
-    useCallback(() => {
-      eventsRefetch();
-      earningsRefetch();
-    }, [eventsRefetch, earningsRefetch])
-  );
-
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     Promise.all([eventsRefetch(), earningsRefetch()]).then(() => {
       setRefreshing(false);
     });
   }, [eventsRefetch, earningsRefetch]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      eventsRefetch();
+      earningsRefetch();
+    }, [eventsRefetch, earningsRefetch])
+  );
 
   if (eventsIsLoading || earningsIsLoading) {
     return (
@@ -136,8 +136,7 @@ const HomeScreen = () => {
         className="mt-7"
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <BookedDates
           selectedDates={selectedDates}
           handleDateClick={handleDateClick}
@@ -152,12 +151,12 @@ const HomeScreen = () => {
                 totalEvents: earningsData?.total?.totalEvents || 0,
                 totalQuotedEarnings: earningsData?.total?.totalQuotedEarnings || '0',
                 totalReceivedEarnings: earningsData?.total?.totalReceivedEarnings || '0',
-                totalDueAmount: earningsData?.total?.totalDueAmount || 0
+                totalDueAmount: earningsData?.total?.totalDueAmount || 0,
               }}
             />
           </>
         )}
-        
+
         {events.length > 0 && (
           <UpcomingEventReminder
             events={events.map((event) => ({

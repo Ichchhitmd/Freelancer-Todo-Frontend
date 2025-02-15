@@ -96,17 +96,25 @@ export default function EarningsScreen() {
   }, [earningsData?.total]);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMonthEvents, setSelectedMonthEvents] = useState<any[]>([]);
+  const [selectedMonthEvents, setSelectedMonthEvents] = useState<Array<{
+    id: number;
+    eventDate: string[];
+    earnings: string;
+    eventType: string;
+    workType: string[];
+    company?: {
+      id: number;
+      name: string;
+    };
+    location?: string;
+  }>>([]);
   const [selectedMonthTotals, setSelectedMonthTotals] = useState({
     quoted: 0,
     received: 0,
     due: 0,
   });
 
-  const handleEventPress = (event: any) => {
-    // Handle event press - you can navigate to event details or show more info
-    console.log('Event pressed:', event);
-  };
+  
 
   const handleMonthSelect = (monthData: MonthlyData) => {
     // Extract year and month from monthData.month (e.g., "Falgun 2081")
@@ -131,20 +139,28 @@ export default function EarningsScreen() {
     const month = nepaliMonths.indexOf(monthName) + 1;
 
     // Get events for the selected month from earningsData
-    const monthEvents =
-      earningsData?.events?.filter((event) => {
-        const eventDate = event.detailNepaliDate[0];
-        return eventDate.nepaliYear === year && eventDate.nepaliMonth === month;
-      }) || [];
+    const monthEventIds = new Set(
+      earningsData?.events
+        ?.filter((event) => {
+          const eventDate = event.detailNepaliDate[0];
+          return eventDate.nepaliYear === year && eventDate.nepaliMonth === month;
+        })
+        .map((event) => event.id) || []
+    );
+
+    // Get full event details from eventsData
+    const monthEvents = eventsData?.filter((event) => monthEventIds.has(event.id)) || [];
 
     // Transform events to match the modal's expected format
     const transformedEvents = monthEvents.map((event) => ({
       id: event.id,
       eventDate: event.nepaliEventDate,
-      earnings: event.earnings,
+      earnings: event.earnings.toString(),
       eventType: event.eventType,
-      workType: [event.eventType], // Since we don't have workType in the API, using eventType
-      location: '', // Add location if available in your API
+      workType: Array.isArray(event.workType) ? event.workType : [event.eventType],
+      company: event.company,
+      location: event.location || '',
+      clientContactPerson1: event.clientContactPerson1 || 'Client',
     }));
 
     setSelectedMonth(monthData.month);
@@ -155,6 +171,10 @@ export default function EarningsScreen() {
       due: monthData.dueAmount,
     });
     setModalVisible(true);
+  };
+
+  const handleEventPress = (event: any) => {
+    navigation.navigate('DateDetail', { date: event.eventDate[0], eventId: event.id });
   };
 
   const renderMonthlyCard = (data: MonthlyData) => (
@@ -302,17 +322,18 @@ export default function EarningsScreen() {
         monthName={selectedMonth || ''}
         onEventPress={(event) => {
           setModalVisible(false);
-          // Navigate to DateDetails with the event ID
-          navigation.navigate('DateDetails', {
-            details: event,
-            // Add a refresh function to get fresh data when the screen loads
-            refresh: async () => {
-              const { data } = await queryClient.fetchQuery(['events', event.id], () =>
-                getEventById(event.id)
-              );
-              return data;
-            },
-          });
+          // Add a small delay before navigating to ensure modal is closed
+          setTimeout(() => {
+            navigation.navigate('DateDetails', {
+              details: event,
+              refresh: async () => {
+                const { data } = await queryClient.fetchQuery(['events', event.id], () =>
+                  getEventById(event.id)
+                );
+                return data;
+              },
+            });
+          }, 100);
         }}
         totalEarnings={selectedMonthTotals}
       />

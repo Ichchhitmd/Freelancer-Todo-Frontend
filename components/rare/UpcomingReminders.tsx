@@ -14,7 +14,7 @@ interface EventDetails {
   clientContactPerson1: string;
   clientContactNumber1: string;
   clientContactNumber2: string;
-  company: {
+  company?: {
     name: string;
   };
   eventDate: string[];
@@ -42,7 +42,12 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
 
   const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;
 
-  const getCompanyName = (details: EventDetails) => details.company.name;
+  const getDisplayName = (details: EventDetails) => {
+    if (details.company) {
+      return details.company.name;
+    }
+    return `${details.clientContactPerson1}'s Work`;
+  };
 
   const handlePhonePress = (phoneNumber: string) => {
     if (Platform.OS === 'ios') {
@@ -93,7 +98,7 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       {formatEventName(event.details)}
                     </Text>
                     <Text className="text-gray-500 mt-1 text-sm">
-                      {getCompanyName(event.details)}
+                      {getDisplayName(event.details)}
                     </Text>
                   </View>
                   {isToday && (

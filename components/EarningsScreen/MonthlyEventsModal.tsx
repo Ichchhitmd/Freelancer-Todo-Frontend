@@ -11,9 +11,10 @@ interface Event {
   company?: {
     id: number;
     name: string;
-  };
+  } | null;
   location?: string;
   workType: string[];
+  clientContactPerson1: string;
 }
 
 interface MonthlyEventsModalProps {
@@ -86,7 +87,7 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
           </LinearGradient>
 
           <ScrollView className="flex-1 px-4 pt-4">
-            {events.map((event) => (
+            {Array.isArray(events) && events.length > 0 ? events.map((event) => (
               <TouchableOpacity
                 key={event.id}
                 onPress={() => onEventPress(event)}
@@ -94,7 +95,7 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
                 <View className="flex-row items-center justify-between">
                   <View>
                     <Text className="text-lg font-bold text-gray-900">
-                      {event.company?.name || 'No Company'}
+                      {event.company?.name || `${event.clientContactPerson1}'s Work`}
                     </Text>
                     <Text className="text-gray-600 mt-1">{event.eventType}</Text>
                   </View>
@@ -118,7 +119,12 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
                   </View>
                 )}
               </TouchableOpacity>
-            ))}
+            )) : (
+              <View className="flex-1 items-center justify-center py-8">
+                <MaterialCommunityIcons name="calendar-blank" size={48} color="#E50914" />
+                <Text className="text-gray-600 mt-4 text-center text-lg">No events found for this month</Text>
+              </View>
+            )}
           </ScrollView>
         </View>
       </View>

@@ -1,5 +1,5 @@
 export interface EventRequest {
-  companyId: number;
+  companyId?: number;
   eventDate: string[];
   nepaliEventDate: string[];
   detailNepaliDate: { nepaliYear: number; nepaliMonth: number; nepaliDay: number }[];
