@@ -3,20 +3,33 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Dimensions } from 'react-native';
 
 interface MonthlyEarnings {
-  quotedEarnings: string;
+  quotedEarnings: string | number;
   receivedEarnings: number;
   dueAmount: number;
   eventCount: number;
+  nepaliDate: {
+    nepaliYear: number;
+    nepaliMonth: number;
+  };
 }
 
 interface MonthlyData {
-  [key: string]: MonthlyEarnings;
+  [key: string]: {
+    dueAmount: number;
+    eventCount: number;
+    nepaliDate: {
+      nepaliYear: number;
+      nepaliMonth: number;
+    };
+    quotedEarnings: number;
+    receivedEarnings: number;
+  };
 }
 
 interface TotalData {
   totalEvents: number;
   totalQuotedEarnings: string;
-  totalReceivedEarnings: number;
+  totalReceivedEarnings: string;
   totalDueAmount: number;
 }
 
@@ -26,13 +39,20 @@ interface SwipeableUnifiedCardProps {
 }
 
 const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData, totalData }) => {
+  console.log('monthlyData in UnifiedCard:', monthlyData);
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(1);
 
+  const availableMonths = Object.keys(monthlyData).sort((a, b) => {
+    const [yearA, monthA] = a.split('-').map(Number);
+    const [yearB, monthB] = b.split('-').map(Number);
+    return yearA === yearB ? monthA - monthB : yearA - yearB;
+  });
+
   useEffect(() => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ x: screenWidth, animated: false });
+    if (scrollViewRef.current && availableMonths.length > 0) {
+      scrollViewRef.current.scrollTo({ x: 0, animated: false });
     }
   }, []);
 
@@ -49,61 +69,80 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     return numAmount.toString();
   };
 
-  const getMonthName = (monthKey: string) => {
-    const [year, month] = monthKey.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleString('default', { month: 'long' });
+  const getNepaliMonthName = (month: number) => {
+    const nepaliMonths = [
+      'Baisakh',
+      'Jestha',
+      'Ashadh',
+      'Shrawan',
+      'Bhadra',
+      'Ashwin',
+      'Kartik',
+      'Mangsir',
+      'Poush',
+      'Magh',
+      'Falgun',
+      'Chaitra',
+    ];
+    return nepaliMonths[month - 1] || '';
   };
 
-  const getEmptyMonthData = (monthKey: string): MonthlyEarnings => ({
-    quotedEarnings: '0',
-    receivedEarnings: 0,
-    dueAmount: 0,
-    eventCount: 0,
-  });
+  const getMonthName = (monthKey: string) => {
+    console.log('Getting month name for key:', monthKey);
+    console.log('Month data:', monthlyData[monthKey]);
 
-  const MonthlyCard = ({
-    data1,
-    data2,
-    monthKey1,
-    monthKey2,
-  }: {
-    data1?: MonthlyEarnings;
-    data2?: MonthlyEarnings;
-    monthKey1: string;
-    monthKey2: string;
-  }) => (
+    const monthData = monthlyData[monthKey];
+    if (monthData?.nepaliDate?.nepaliMonth) {
+      return getNepaliMonthName(monthData.nepaliDate.nepaliMonth);
+    }
+
+    const [year, month] = monthKey.split('-');
+    return getNepaliMonthName(parseInt(month));
+  };
+
+  const getYear = (monthKey: string) => {
+    const monthData = monthlyData[monthKey];
+    if (monthData?.nepaliDate?.nepaliYear) {
+      return monthData.nepaliDate.nepaliYear;
+    }
+    const [year] = monthKey.split('-');
+    return parseInt(year);
+  };
+
+  const MonthlyCard = ({ monthKey1, monthKey2 }: { monthKey1: string; monthKey2: string }) => (
     <View style={{ width: screenWidth }} className="pt-3">
       <Pressable className="mx-4 rounded-2xl bg-white p-5 shadow-lg" style={{ elevation: 4 }}>
         <View className="flex-row justify-between">
-          {[
-            { data: data1 || getEmptyMonthData(monthKey1), key: monthKey1 },
-            { data: data2 || getEmptyMonthData(monthKey2), key: monthKey2 },
-          ].map((item, index) => (
+          {[{ key: monthKey1 }, { key: monthKey2 }].map((item, index) => (
             <React.Fragment key={index}>
               <View className={`flex-1 ${index === 0 ? 'pr-4' : 'pl-4'}`}>
                 <View className="items-center">
                   <MaterialCommunityIcons name="calendar-month" size={32} color="#333" />
                   <View className="items-center">
-                    <Text className="text-gray-800 text-xl font-bold">
-                      {getMonthName(item.key)}
-                    </Text>
-                    {item.data.eventCount > 0 ? (
-                      <Text className="text-gray-600 text-sm">{item.data.eventCount} Events</Text>
+                    <View className="items-center">
+                      <Text className="text-gray-800 text-xl font-bold">
+                        {getMonthName(item.key)}
+                      </Text>
+                      <Text className="text-gray-500 text-sm">{getYear(item.key)} BS</Text>
+                    </View>
+                    {monthlyData[item.key]?.eventCount > 0 ? (
+                      <Text className="text-gray-600 text-sm">
+                        {monthlyData[item.key].eventCount} Events
+                      </Text>
                     ) : (
                       <Text className="text-gray-500 text-sm">No events scheduled</Text>
                     )}
                   </View>
                 </View>
                 <View className="mt-4">
-                  {item.data.eventCount > 0 ? (
+                  {monthlyData[item.key]?.eventCount > 0 ? (
                     <>
                       <View className="mb-2 flex-row justify-between">
                         <Text className="text-xl font-semibold text-green-600">
-                          रू{formatAmount(item.data.receivedEarnings)}
+                          रू{formatAmount(monthlyData[item.key].receivedEarnings)}
                         </Text>
                         <Text className="text-xl font-semibold text-red-600">
-                          रू{formatAmount(item.data.dueAmount)}
+                          रू{formatAmount(monthlyData[item.key].dueAmount)}
                         </Text>
                       </View>
                     </>
@@ -135,19 +174,19 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
           </View>
           <View className="mt-6">
             <View className="mb-4 flex-row justify-between">
-              <Text className="text-lg font-semibold text-green-700">Total Earnings</Text>
+              <Text className="text-lg font-semibold text-blue-700">Total Earnings</Text>
               <Text className="text-xl font-bold text-emerald-500">
                 रू{formatAmount(totalData.totalQuotedEarnings)}
               </Text>
             </View>
             <View className="mb-4 flex-row justify-between">
-              <Text className="text-lg font-semibold text-blue-700">Total Received</Text>
+              <Text className="text-lg font-semibold text-green-700">Total Received</Text>
               <Text className="text-xl font-bold text-blue-500">
                 रू{formatAmount(totalData.totalReceivedEarnings)}
               </Text>
             </View>
             <View className="flex-row justify-between">
-              <Text className="text-lg font-semibold text-red-700">Total Due</Text>
+              <Text className="text-lg font-semibold text-red-500">Total Due</Text>
               <Text className="text-xl font-bold text-red-500">
                 रू{formatAmount(totalData.totalDueAmount)}
               </Text>
@@ -158,25 +197,14 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     </View>
   );
 
-  // Get current month and year
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-
-  // Create month keys for current and next month
-  const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-  const nextMonthKey =
-    currentMonth === 12
-      ? `${currentYear + 1}-01`
-      : `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-
-  // Create month keys for past months
-  const getPastMonthKey = (monthsAgo: number) => {
-    const date = new Date(currentYear, currentMonth - 1 - monthsAgo);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  };
-
-  const pastMonthKeys = [getPastMonthKey(1), getPastMonthKey(2)];
+  // Pair up months for display
+  const monthPairs = [];
+  for (let i = 0; i < availableMonths.length; i += 2) {
+    monthPairs.push({
+      monthKey1: availableMonths[i],
+      monthKey2: availableMonths[i + 1] || availableMonths[i], // Use same month if no next month
+    });
+  }
 
   return (
     <ScrollView
@@ -186,22 +214,13 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
       showsHorizontalScrollIndicator={false}
       onScroll={handleScroll}
       scrollEventThrottle={10}>
-      <MonthlyCard
-        monthKey1={pastMonthKeys[0]}
-        monthKey2={pastMonthKeys[1]}
-        data1={monthlyData[pastMonthKeys[0]]}
-        data2={monthlyData[pastMonthKeys[1]]}
-      />
-
-      {/* Current and Next Month */}
-      <MonthlyCard
-        monthKey1={currentMonthKey}
-        monthKey2={nextMonthKey}
-        data1={monthlyData[currentMonthKey]}
-        data2={monthlyData[nextMonthKey]}
-      />
-
-      {/* Summary Card */}
+      {monthPairs.map((pair, index) => (
+        <MonthlyCard
+          key={`${pair.monthKey1}-${pair.monthKey2}`}
+          monthKey1={pair.monthKey1}
+          monthKey2={pair.monthKey2}
+        />
+      ))}
       <SummaryCard />
     </ScrollView>
   );

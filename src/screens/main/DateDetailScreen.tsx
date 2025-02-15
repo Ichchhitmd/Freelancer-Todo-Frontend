@@ -1,8 +1,19 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { Text, ScrollView, View, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
+import {
+  Text,
+  ScrollView,
+  View,
+  SafeAreaView,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  Modal,
+  ActivityIndicator,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
 
 interface Company {
   bio: string;
@@ -63,21 +74,159 @@ type RootStackParamList = {
 type Props = NativeStackScreenProps<RootStackParamList, 'DateDetail'>;
 
 const DateDetails: React.FC = () => {
-  const route = useRoute<Props['route']>();
-  const { details } = route.params;
   const navigation = useNavigation();
+  const route = useRoute<Props['route']>();
+  const { details: initialDetails, refresh } = route.params;
+  
+  // Fetch complete event details
+  const { data: details, isLoading } = useGetEventById(initialDetails.id);
+  const [actualEarnings, setActualEarnings] = useState<string>('');
+  const [localDueAmount, setLocalDueAmount] = useState<number>(initialDetails.dueAmount);
+  const [showEarningsModal, setShowEarningsModal] = useState(false);
+  const { mutate: deleteEvent } = useDeleteEvent();
+  const { mutate: updateEvent } = usePatchEvent();
+  
+  // Use the refresh function when component mounts
+  React.useEffect(() => {
+    if (refresh) {
+      refresh().then((freshData) => {
+        if (freshData) {
+          // Update the route params with fresh data
+          navigation.setParams({
+            details: freshData,
+          });
+        }
+      });
+    }
+  }, [refresh, navigation]);
 
-  const DetailRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
-    <View className="border-gray-100 flex-row items-center border-b px-4 py-4">
-      <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-        <MaterialCommunityIcons name={icon} size={24} color="#ef4444" />
+  // Update local state when details change
+  React.useEffect(() => {
+    if (details) {
+      setActualEarnings(details.actualEarnings || '');
+      setLocalDueAmount(details.dueAmount);
+    }
+  }, [details]);
+
+  // Calculate due amount instantly when actual earnings change
+  const handleActualEarningsChange = (text: string) => {
+    setActualEarnings(text);
+    if (details) {
+      const earnings = parseFloat(details.earnings);
+      const actual = text ? parseFloat(text) : 0;
+      setLocalDueAmount(earnings - actual);
+    }
+  };
+
+  if (isLoading || !details) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#E50914" />
+          <Text className="mt-4 text-gray-600">Loading event details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const handleDelete = () => {
+    Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteEvent(details.id, {
+            onSuccess: () => {
+              navigation.goBack();
+            },
+          });
+        },
+      },
+    ]);
+  };
+
+  const handleActualEarningsUpdate = () => {
+    if (!actualEarnings && actualEarnings !== '') {
+      Alert.alert('Error', 'Please enter actual earnings');
+      return;
+    }
+
+    const parsedActualEarnings = actualEarnings ? parseFloat(actualEarnings) : null;
+    updateEvent(
+      {
+        eventId: details.id,
+        eventData: {
+          actualEarnings: parsedActualEarnings,
+          dueAmount: localDueAmount,
+        },
+      },
+      {
+        onSuccess: () => {
+          console.log('Actual earnings updated successfully', actualEarnings);
+          Alert.alert('Success', 'Actual earnings updated successfully');
+          // Force a refresh of the route params
+          navigation.setParams({
+            details: {
+              ...details,
+              actualEarnings: actualEarnings,
+              dueAmount: localDueAmount,
+            },
+          });
+        },
+      }
+    );
+  };
+
+  const DetailRow = ({
+    icon,
+    label,
+    value,
+    isActualEarnings = false,
+  }: {
+    icon: string;
+    label: string;
+    value: string;
+    isActualEarnings?: boolean;
+  }) => {
+    if (isActualEarnings) {
+      return (
+        <View className="border-gray-100 border-b px-4 py-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+                <MaterialCommunityIcons name={icon} size={24} color="#ef4444" />
+              </View>
+              <View className="ml-4">
+                <Text className="text-gray-500 text-sm font-medium">{label}</Text>
+                <Text className="text-gray-900 mt-1 text-lg font-semibold">{value}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowEarningsModal(true)}
+              className="rounded-xl bg-red-500 px-4 py-2">
+              <Text className="font-medium text-white">Update</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View className="border-gray-100 flex-row items-center border-b px-4 py-4">
+        <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+          <MaterialCommunityIcons name={icon} size={24} color="#ef4444" />
+        </View>
+        <View className="ml-4 flex-1">
+          <Text className="text-gray-500 text-sm font-medium">{label}</Text>
+          <Text className="text-gray-900 mt-1 text-lg font-semibold">{value}</Text>
+        </View>
       </View>
-      <View className="ml-4 flex-1">
-        <Text className="text-gray-500 text-sm font-medium">{label}</Text>
-        <Text className="text-gray-900 mt-1 text-lg font-semibold">{value}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const nepaliMonths = [
     'बैशाख',
@@ -118,6 +267,40 @@ const DateDetails: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showEarningsModal}
+        onRequestClose={() => setShowEarningsModal(false)}>
+        <View className="flex-1 justify-center bg-black/50">
+          <View className="mx-4 rounded-xl bg-white p-4">
+            <Text className="text-gray-900 mb-4 text-lg font-semibold">Update Actual Earnings</Text>
+            <TextInput
+              value={actualEarnings}
+              onChangeText={handleActualEarningsChange}
+              keyboardType="numeric"
+              placeholder="Enter actual earnings"
+              className="bg-gray-50 border-gray-200 mb-4 rounded-lg border px-4 py-3 text-base"
+              autoFocus
+            />
+            <View className="flex-row justify-end gap-4 space-x-3">
+              <TouchableOpacity
+                onPress={() => setShowEarningsModal(false)}
+                className="border-gray-200 rounded-lg border px-4 py-2">
+                <Text className="text-gray-600 font-medium">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  handleActualEarningsUpdate();
+                  setShowEarningsModal(false);
+                }}
+                className="rounded-lg bg-red-500 px-4 py-2">
+                <Text className="font-medium text-white">Update</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <ScrollView className="mb-24 flex-1">
         <View className="bg-red-400 px-4 py-8">
           <Text className="text-center text-xl font-semibold text-white">{details.eventType}</Text>
@@ -172,7 +355,13 @@ const DateDetails: React.FC = () => {
         <View className="mt-4 bg-white">
           <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Financial Details</Text>
           <DetailRow icon="currency-inr" label="Total Amount" value={`₹ ${details.earnings}`} />
-          <DetailRow icon="cash-clock" label="Due Amount" value={`₹ ${details.dueAmount}`} />
+          <DetailRow
+            icon="currency-inr"
+            label="Actual Earnings"
+            value={`₹ ${actualEarnings}`}
+            isActualEarnings={true}
+          />
+          <DetailRow icon="cash-clock" label="Due Amount" value={`₹ ${localDueAmount}`} />
         </View>
 
         <View className="mt-4 bg-white">
@@ -196,6 +385,14 @@ const DateDetails: React.FC = () => {
             label="Company Contact"
             value={`${details.company.contactPerson} - ${details.company.contactInfo}`}
           />
+          <View className="p-2">
+            <TouchableOpacity
+              onPress={handleDelete}
+              className="flex items-center justify-center rounded-full bg-red-500 p-3 shadow-md active:opacity-75">
+              <MaterialCommunityIcons name="trash-can" size={24} color="white" />
+              <Text className="text-center text-white">Delete Event</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

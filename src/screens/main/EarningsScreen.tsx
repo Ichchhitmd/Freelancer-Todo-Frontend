@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux';
 import { useGetEvents } from 'hooks/events';
 import { RootState } from 'redux/store';
 import { useGetEarnings } from 'hooks/earnings';
+import { MonthlyEventsModal } from 'components/EarningsScreen/MonthlyEventsModal';
 
 interface MonthlyData {
   month: string;
@@ -94,14 +95,72 @@ export default function EarningsScreen() {
     };
   }, [earningsData?.total]);
 
-  const handleMonthSelect = (month: string) => {
-    setSelectedMonth(selectedMonth === month ? null : month);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedMonthEvents, setSelectedMonthEvents] = useState<any[]>([]);
+  const [selectedMonthTotals, setSelectedMonthTotals] = useState({
+    quoted: 0,
+    received: 0,
+    due: 0,
+  });
+
+  const handleEventPress = (event: any) => {
+    // Handle event press - you can navigate to event details or show more info
+    console.log('Event pressed:', event);
+  };
+
+  const handleMonthSelect = (monthData: MonthlyData) => {
+    // Extract year and month from monthData.month (e.g., "Falgun 2081")
+    const [monthName, yearStr] = monthData.month.split(' ');
+    const year = parseInt(yearStr);
+
+    // Convert Nepali month name to number (1-12)
+    const nepaliMonths = [
+      'Baisakh',
+      'Jestha',
+      'Ashad',
+      'Shrawan',
+      'Bhadra',
+      'Ashwin',
+      'Kartik',
+      'Mangsir',
+      'Poush',
+      'Magh',
+      'Falgun',
+      'Chaitra',
+    ];
+    const month = nepaliMonths.indexOf(monthName) + 1;
+
+    // Get events for the selected month from earningsData
+    const monthEvents =
+      earningsData?.events?.filter((event) => {
+        const eventDate = event.detailNepaliDate[0];
+        return eventDate.nepaliYear === year && eventDate.nepaliMonth === month;
+      }) || [];
+
+    // Transform events to match the modal's expected format
+    const transformedEvents = monthEvents.map((event) => ({
+      id: event.id,
+      eventDate: event.nepaliEventDate,
+      earnings: event.earnings,
+      eventType: event.eventType,
+      workType: [event.eventType], // Since we don't have workType in the API, using eventType
+      location: '', // Add location if available in your API
+    }));
+
+    setSelectedMonth(monthData.month);
+    setSelectedMonthEvents(transformedEvents);
+    setSelectedMonthTotals({
+      quoted: monthData.quotedEarnings,
+      received: monthData.receivedEarnings,
+      due: monthData.dueAmount,
+    });
+    setModalVisible(true);
   };
 
   const renderMonthlyCard = (data: MonthlyData) => (
     <TouchableOpacity
       key={data.month}
-      onPress={() => handleMonthSelect(data.month)}
+      onPress={() => handleMonthSelect(data)}
       className="mb-4 overflow-hidden rounded-2xl">
       <LinearGradient
         colors={['#E50914', '#FF4B4B']}
@@ -124,20 +183,9 @@ export default function EarningsScreen() {
             </View>
             <Text className="mt-1 text-sm text-white">Events: {data.eventCount}</Text>
           </View>
-          <MaterialCommunityIcons
-            name={selectedMonth === data.month ? 'chevron-up' : 'chevron-down'}
-            size={24}
-            color="white"
-          />
+          <MaterialCommunityIcons name="chevron-right" size={24} color="white" />
         </View>
       </LinearGradient>
-
-      {selectedMonth === data.month && (
-        <View className="bg-white px-4 py-2">
-          <Text className="text-gray-600">Due Amount: रू{data.dueAmount.toLocaleString()}</Text>
-          <Text className="text-gray-600">Total Events: {data.eventCount}</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 
@@ -189,7 +237,7 @@ export default function EarningsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="relative bg-red-500 p-6 pt-16">
+      <View className="relative bg-primary/35 p-6 pt-16">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="absolute left-6 top-16 z-10">
@@ -246,6 +294,28 @@ export default function EarningsScreen() {
           )}
         </View>
       </ScrollView>
+
+      <MonthlyEventsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        events={selectedMonthEvents || []}
+        monthName={selectedMonth || ''}
+        onEventPress={(event) => {
+          setModalVisible(false);
+          // Navigate to DateDetails with the event ID
+          navigation.navigate('DateDetails', {
+            details: event,
+            // Add a refresh function to get fresh data when the screen loads
+            refresh: async () => {
+              const { data } = await queryClient.fetchQuery(['events', event.id], () =>
+                getEventById(event.id)
+              );
+              return data;
+            },
+          });
+        }}
+        totalEarnings={selectedMonthTotals}
+      />
     </SafeAreaView>
   );
 }

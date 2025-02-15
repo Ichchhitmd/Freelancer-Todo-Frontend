@@ -1,4 +1,11 @@
-import { SafeAreaView, ScrollView, ActivityIndicator, View, Text, RefreshControl } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
+  View,
+  Text,
+  RefreshControl,
+} from 'react-native';
 import React, { useCallback, useState } from 'react';
 import HeaderSection from 'components/HomeScreen/HeaderSection';
 import { useSelector } from 'react-redux';
@@ -20,7 +27,6 @@ const HomeScreen = () => {
   const [isActive, setIsActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-
   const { userName, userId } = useSelector((state: RootState) => ({
     userName: state.auth.user?.name,
     isActive: state.auth.user?.isActive,
@@ -29,9 +35,12 @@ const HomeScreen = () => {
 
   const navigation = useNavigation();
 
-  const { data, isLoading: eventsIsLoading, isError, refetch: eventsRefetch } = useGetEvents(userId || 0);
-
- 
+  const {
+    data,
+    isLoading: eventsIsLoading,
+    isError,
+    refetch: eventsRefetch,
+  } = useGetEvents(userId || 0);
 
   const {
     data: earningsData,
@@ -65,7 +74,9 @@ const HomeScreen = () => {
   if (isError || earningsIsError) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white p-4">
-        <Text className="text-center text-red-500">Something went wrong. Pull down to refresh.</Text>
+        <Text className="text-center text-red-500">
+          Something went wrong. Pull down to refresh.
+        </Text>
       </SafeAreaView>
     );
   }
@@ -109,12 +120,9 @@ const HomeScreen = () => {
     navigation.navigate('DateDetails', { details: dateDetails });
   };
 
-  const bookedDatesEarnings = earningsData?.monthly?.[Object.keys(earningsData.monthly)[0]];
+  const bookedDatesEarnings = earningsData?.monthly;
 
   console.log('bookedDatesEarnings', bookedDatesEarnings);
-
-  
-
 
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
@@ -124,29 +132,32 @@ const HomeScreen = () => {
         setIsActive={setIsActive}
         remainingAmount={remainingAmount}
       />
-     <ScrollView
+      <ScrollView
         className="mt-7"
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         <BookedDates
           selectedDates={selectedDates}
           handleDateClick={handleDateClick}
           monthlyTotals={bookedDatesEarnings}
         />
         {!earningsIsLoading && !earningsIsError && (
-          <SwipeableUnifiedCard
-            monthlyData={earningsData?.monthly || {}}
-            totalData={
-              earningsData?.total || {
-                totalEvents: 0,
-                totalQuotedEarnings: '0',
-                totalReceivedEarnings: 0,
-                totalDueAmount: 0,
-              }
-            }
-          />
+          <>
+            {console.log('Earnings data being passed:', earningsData?.monthly)}
+            <SwipeableUnifiedCard
+              monthlyData={earningsData?.monthly || {}}
+              totalData={{
+                totalEvents: earningsData?.total?.totalEvents || 0,
+                totalQuotedEarnings: earningsData?.total?.totalQuotedEarnings || '0',
+                totalReceivedEarnings: earningsData?.total?.totalReceivedEarnings || '0',
+                totalDueAmount: earningsData?.total?.totalDueAmount || 0
+              }}
+            />
+          </>
         )}
+        
         {events.length > 0 && (
           <UpcomingEventReminder
             events={events.map((event) => ({

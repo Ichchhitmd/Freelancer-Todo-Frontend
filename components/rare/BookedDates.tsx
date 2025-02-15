@@ -1,55 +1,38 @@
 import React from 'react';
 import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NepaliDate from 'nepali-date-converter';
+import { monthNames, engToNepNum } from 'components/utils/NepaliDateFormatter';
 
 interface DateDetail {
   date: string;
   details: any;
   isToday?: boolean;
   nepaliDate?: {
-    month: string;
-    day: string;
+    nepaliDay: number;
+    nepaliMonth: number;
+    nepaliYear: number;
   };
+}
+
+interface MonthlyEarnings {
+  dueAmount: number;
+  eventCount: number;
+  nepaliDate: {
+    month: number;
+    year: number;
+  };
+  quotedEarnings: number;
+  receivedEarnings: number;
 }
 
 interface BookedDatesProps {
   selectedDates: DateDetail[];
   handleDateClick: (dateDetails: any) => void;
-  monthlyTotals?: {
-    quotedEarnings: string;
-    receivedEarnings: number;
-    dueAmount: number;
-  };
+  monthlyTotals?: Record<string, MonthlyEarnings>;
 }
 
 interface GroupedDates {
   [month: string]: DateDetail[];
-}
-
-const tableOfEngNepNums = new Map([
-  [0, '०'],
-  [1, '१'],
-  [2, '२'],
-  [3, '३'],
-  [4, '४'],
-  [5, '५'],
-  [6, '६'],
-  [7, '७'],
-  [8, '८'],
-  [9, '९'],
-]);
-
-function engToNepNum(strNum: string): string {
-  return String(strNum)
-    .split('')
-    .map(function (ch) {
-      if (ch === '.' || ch === ',') {
-        return ch;
-      }
-      return tableOfEngNepNums.get(Number(ch)) ?? ch;
-    })
-    .join('');
 }
 
 const BookedDates: React.FC<BookedDatesProps> = ({
@@ -57,12 +40,15 @@ const BookedDates: React.FC<BookedDatesProps> = ({
   handleDateClick,
   monthlyTotals,
 }) => {
-  const getNepaliDate = (date: string) => {
+  const [showAll, setShowAll] = React.useState(false);
+
+  const getNepaliDate = (date: string): DateDetail['nepaliDate'] | null => {
     try {
       const [year, month, day] = date.split('-').map((num) => parseInt(num));
       return {
-        month: month.toString(),
-        day: engToNepNum(day.toString()),
+        nepaliDay: day,
+        nepaliMonth: month,
+        nepaliYear: year,
       };
     } catch (error) {
       return null;
@@ -85,31 +71,14 @@ const BookedDates: React.FC<BookedDatesProps> = ({
       const nepaliDate = getNepaliDate(item.date);
       if (!nepaliDate) return acc;
 
-      const monthNames = [
-        'Baisakh',
-        'Jestha',
-        'Ashadh',
-        'Shrawan',
-        'Bhadra',
-        'Ashwin',
-        'Kartik',
-        'Mangsir',
-        'Poush',
-        'Magh',
-        'Falgun',
-        'Chaitra',
-      ];
-      const monthName = monthNames[parseInt(nepaliDate.month) - 1];
+      const monthName = monthNames[nepaliDate.nepaliMonth - 1];
 
       if (!acc[monthName]) acc[monthName] = [];
 
       acc[monthName].push({
         ...item,
         isToday: eventDate.getTime() === today.getTime(),
-        nepaliDate: {
-          ...nepaliDate,
-          month: monthName,
-        },
+        nepaliDate,
       });
 
       return acc;
@@ -125,20 +94,26 @@ const BookedDates: React.FC<BookedDatesProps> = ({
     UNKNOWN: '#6D28D9',
   };
 
+  const getMonthlyTotals = (month: string) => {
+    if (!monthlyTotals) return null;
+
+    const monthIndex = monthNames.indexOf(month) + 1;
+    // Find the entry in monthlyTotals that matches the current month
+    const entry = Object.entries(monthlyTotals).find(
+      ([_, data]) => data.nepaliDate.month === monthIndex
+    );
+
+    return entry ? entry[1] : null;
+  };
+
   return (
     <SafeAreaView className="w-full">
-      <ScrollView className="w-full flex-1">
-        {Object.keys(groupedDates).length === 0 ? (
-          <View className="w-full items-center rounded-xl bg-white p-6 shadow-sm">
-            <MaterialCommunityIcons name="calendar-blank" size={48} color="#f87171" />
-            <Text className="text-gray-900 mt-2 text-xl font-semibold">No Dates Found</Text>
-            <Text className="text-gray-500 mt-1 text-center text-base">
-              You haven't booked any dates yet
-            </Text>
-          </View>
-        ) : (
-          <>
-            {Object.entries(groupedDates).map(([month, dates]: [string, DateDetail[]]) => (
+      <ScrollView style={{ maxHeight: 350 }} nestedScrollEnabled={true} className="w-full flex-1">
+        {groupedDates &&
+          Object.entries(groupedDates).map(([month, dates]) => {
+            const monthTotals = getMonthlyTotals(month);
+
+            return (
               <View
                 key={month}
                 className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
@@ -148,38 +123,58 @@ const BookedDates: React.FC<BookedDatesProps> = ({
                 </View>
 
                 <View className="flex-row flex-wrap gap-2">
-                  {dates.map((item: DateDetail, index: number) => (
-                    <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
-                      <View
-                        className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${item.isToday ? 'border-2 border-white' : 'border border-gray/5'}`}
-                        style={{
-                          backgroundColor: eventColors[item.details?.eventType],
-                          transform: [{ scale: item.isToday ? 1.1 : 1 }],
-                        }}>
-                        <Text className="text-lg font-bold text-white">{item.nepaliDate?.day}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
+                  {dates
+                    .slice(0, showAll ? dates.length : 2)
+                    .map((item: DateDetail, index: number) => (
+                      <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
+                        <View
+                          className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
+                            item.isToday ? 'border-2 border-white' : 'border border-gray/5'
+                          }`}
+                          style={{
+                            backgroundColor:
+                              eventColors[item.details?.eventType] || eventColors.UNKNOWN,
+                            transform: [{ scale: item.isToday ? 1.1 : 1 }],
+                          }}>
+                          <Text className="text-center text-sm font-semibold text-white">
+                            {engToNepNum(item.nepaliDate?.nepaliDay)}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
                 </View>
-                <View className="mx-3 my-3">
-                  {monthlyTotals && (
+
+                {monthTotals && (
+                  <View className="mx-3 my-3">
                     <View className="flex-row items-center justify-between">
-                      <Text className="font-semibold text-blue-900">
-                        ₹{monthlyTotals.quotedEarnings}
-                      </Text>
+                      <View className="flex flex-col">
+                        <Text className="ml-2 text-xl font-semibold text-blue-600">
+                          ₹{monthTotals.quotedEarnings}
+                        </Text>
+                        <Text className="text-sm font-semibold text-blue-600">Total Earnings</Text>
+                      </View>
+
                       <View className="mx-2 h-8 w-[1px] bg-gray" />
-                      <Text className="font-semibold text-green-600">
-                        ₹{monthlyTotals.receivedEarnings}
-                      </Text>
+                      <View className="flex flex-col">
+                        <Text className="text-2xl font-semibold text-red-600">
+                          ₹{monthTotals.dueAmount}
+                        </Text>
+                        <Text className="ml-2 text-sm font-semibold text-red-600">Total Due</Text>
+                      </View>
+
                       <View className="mx-2 h-8 w-[1px] bg-gray" />
-                      <Text className="font-semibold text-red-600">₹{monthlyTotals.dueAmount}</Text>
+                      <View className="flex flex-col">
+                        <Text className="ml-4 text-xl font-semibold text-green-600">
+                          ₹{monthTotals.receivedEarnings}
+                        </Text>
+                        <Text className="text-sm font-semibold text-green-600">Total Received</Text>
+                      </View>
                     </View>
-                  )}
-                </View>
+                  </View>
+                )}
               </View>
-            ))}
-          </>
-        )}
+            );
+          })}
       </ScrollView>
     </SafeAreaView>
   );

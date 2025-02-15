@@ -60,10 +60,10 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
 
           <View className="flex-1">
             <Text className="mb-1 text-sm font-semibold text-red-400">Welcome back,</Text>
-            <Text className="text-xl font-extrabold text-red-800" numberOfLines={1}>
+            <Text className="text-2xl font-extrabold text-red-900" numberOfLines={1}>
               {user || 'Guest'}
             </Text>
-            <Text className="text-blue-700">Due: ₹{remainingAmount || 0}</Text>
+            <Text className="text-lg font-semibold text-red-500">Due: ₹{remainingAmount || 0}</Text>
           </View>
 
           <Animated.View className="items-center" style={{ opacity: fadeAnim }}>

@@ -36,13 +36,14 @@ const AddWorkForm: React.FC = () => {
   const [side, setSide] = useState('');
   const [eventType, setEventType] = useState('');
   const [companyId, setCompanyId] = useState(0);
+  const [clientContactNumber, setClientContactNumber] = useState('');
   const [location, setLocation] = useState(''); // <-- New location state
 
   // Load existing details if editing
   useEffect(() => {
     if (isEditMode && details) {
       // Convert the detailNepaliDate array to NepaliDateInfo array
-      const nepaliDates: NepaliDateInfo[] = details.detailNepaliDate.map(date => ({
+      const nepaliDates: NepaliDateInfo[] = details.detailNepaliDate.map((date) => ({
         year: date.nepaliYear,
         month: date.nepaliMonth - 1, // Adjust month to 0-based index
         day: date.nepaliDay,
@@ -171,7 +172,6 @@ const AddWorkForm: React.FC = () => {
         return;
       }
 
-      // Now we can safely create our arrays knowing they won't have undefined values
       const eventDates = validDates.map((date) => date.englishDate);
       const nepaliEventDates = selectedDates.map(
         (date) =>
@@ -190,9 +190,10 @@ const AddWorkForm: React.FC = () => {
         companyId: companyId,
         clientContactPerson1: contactPerson,
         clientContactNumber1: contactInfo,
+        clientContactNumber2: clientContactNumber,
         workType: workType,
         side: side,
-        eventType: eventType.toUpperCase(),
+        eventType: eventType,
         eventDate: eventDates,
         eventStartTime: time.toLocaleTimeString('en-US', {
           hour: '2-digit',
@@ -231,6 +232,7 @@ const AddWorkForm: React.FC = () => {
     companyId,
     isEditMode,
     details,
+    clientContactNumber,
     postEvent,
     updateEvent,
     navigation,
@@ -284,7 +286,7 @@ const AddWorkForm: React.FC = () => {
                 className="mb-6 overflow-hidden rounded-2xl border border-gray/10 bg-white shadow-sm">
                 <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
                   {EVENT_TYPES.map((item) => {
-                    const isSelected = eventType === item.label;
+                    const isSelected = eventType === item.id;
                     return (
                       <View key={item.id} className="border-b border-gray/5 last:border-b-0">
                         <TouchableOpacity
@@ -292,7 +294,7 @@ const AddWorkForm: React.FC = () => {
                             backgroundColor: isSelected ? '#E50914' : 'white',
                           }}
                           className="w-full"
-                          onPress={() => setEventType(item.label)}>
+                          onPress={() => setEventType(item.id)}>
                           <View className="flex-row items-center justify-center space-x-3 p-3">
                             <MaterialCommunityIcons
                               name={item.icon}
@@ -312,7 +314,6 @@ const AddWorkForm: React.FC = () => {
                   })}
                 </ScrollView>
               </View>
-              {/* Company Dropdown */}
               <View className="mb-6">
                 <SelectDropdown
                   data={companies?.map((company) => company.name) || []}
@@ -381,7 +382,7 @@ const AddWorkForm: React.FC = () => {
 
                 {/* Earnings Fields */}
                 <InputField
-                  placeholder="Enter amount in ₹"
+                  placeholder="Estimated Earning (Income from this work)"
                   value={estimatedEarning}
                   onChangeText={setEstimatedEarning}
                   keyboardType="numeric"
@@ -397,24 +398,32 @@ const AddWorkForm: React.FC = () => {
                   />
                 )}
 
-                {/* Contact Fields */}
                 <InputField
-                  placeholder="Enter contact person"
+                  placeholder="Assigned By"
                   value={contactPerson}
                   onChangeText={setContactPerson}
                   icon="account"
                 />
                 <InputField
-                  placeholder="Enter contact info"
+                  placeholder={
+                    contactPerson ? `${contactPerson}'s Contact Number` : 'Contact Number'
+                  }
                   value={contactInfo}
                   onChangeText={setContactInfo}
+                  keyboardType="numeric"
+                  icon="phone"
+                />
+                <InputField
+                  placeholder="Enter Client's Number"
+                  value={clientContactNumber}
+                  onChangeText={setClientContactNumber}
                   keyboardType="numeric"
                   icon="phone"
                 />
 
                 {/* New Location Field */}
                 <InputField
-                  placeholder="Enter location"
+                  placeholder="Enter your work location"
                   value={location}
                   onChangeText={setLocation}
                   icon="map-marker"

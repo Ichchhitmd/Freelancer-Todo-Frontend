@@ -5,6 +5,7 @@ export interface EventRequest {
   detailNepaliDate: { nepaliYear: number; nepaliMonth: number; nepaliDay: number }[];
   eventType: string;
   side: string;
+  dueAmount?: number;
   earnings: number;
   eventStartTime: string;
   workType: string[];
