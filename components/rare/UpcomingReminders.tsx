@@ -34,11 +34,18 @@ interface UpcomingEventReminderProps {
 }
 
 const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events }) => {
-  const sortedEvents = [...events].sort((a, b) => {
+  const today = new Date();
+  const futureEvents = events.filter((event) => {
+    const eventDate = new Date(event.details.eventDate[0]);
+    return eventDate.setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0);
+  });
+  const sortedEvents = [...futureEvents].sort((a, b) => {
     const dateA = new Date(a.details.eventDate[0]);
     const dateB = new Date(b.details.eventDate[0]);
     return dateA.getTime() - dateB.getTime();
   });
+
+  console.log('Sorted events:', sortedEvents);
 
   const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;
 
@@ -61,14 +68,15 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
     <View className="bg-gray-50 p-4">
       <Text className="text-gray-900 mb-6 text-2xl font-bold">Upcoming Events 📅</Text>
 
-      {/* Horizontal Scroll View for Events */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingRight: 10 }}>
+        contentContainerStyle={{ paddingRight: 10 }}
+        snapToInterval={360}
+        decelerationRate="fast"
+        snapToAlignment="center">
         {sortedEvents.map((event, index) => {
           const eventDate = new Date(event.details.eventDate[0]);
-          const today = new Date();
           const isToday =
             eventDate.getFullYear() === today.getFullYear() &&
             eventDate.getMonth() === today.getMonth() &&
@@ -87,11 +95,10 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
-                width: 345, // Set fixed width for horizontal scroll
-                marginRight: 15, // Space between cards
+                width: 360,
+                marginRight: 0,
               }}>
               <View className="p-5">
-                {/* Header Section */}
                 <View className="mb-3 flex-row items-start justify-between">
                   <View className="flex-1 pr-2">
                     <Text className="text-gray-900 text-lg font-bold" numberOfLines={2}>
@@ -101,17 +108,24 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       {getDisplayName(event.details)}
                     </Text>
                   </View>
-                  {isToday && (
-                    <View className="rounded-full bg-blue-100 px-3 py-1">
-                      <Text className="text-xs font-semibold text-blue-800">TODAY</Text>
-                    </View>
-                  )}
-                  <View className="mt-4 flex-row items-center justify-end">
-                    <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">
-                      <MaterialCommunityIcons name="calendar-blank" size={14} color="#F59E0B" />
-                      <Text className="ml-2 text-sm font-medium text-orange-800">
-                        {formattedDates}
+                  <View className="mt-4 flex-row items-center justify-end gap-5">
+                    <View
+                      className={`rounded-full px-3 py-1 ${isToday ? 'bg-blue-100' : 'bg-orange-100'}`}>
+                      <Text
+                        className={`text-xs font-semibold ${isToday ? 'text-blue-800' : 'text-orange-800'}`}>
+                        {isToday
+                          ? 'TODAY'
+                          : `${Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days to go`}
                       </Text>
+                    </View>
+
+                    <View className="flex-row items-center justify-end">
+                      <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">
+                        <MaterialCommunityIcons name="calendar-blank" size={14} color="#F59E0B" />
+                        <Text className="ml-2 text-sm font-medium text-orange-800">
+                          {formattedDates}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>

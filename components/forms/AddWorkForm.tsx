@@ -1,5 +1,5 @@
-// AddWorkForm.tsx
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import InputField from 'components/common/InputField';
@@ -13,8 +13,8 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import { selectUserId } from 'redux/selectors/authSelectors';
+import { EventRequest } from 'types/eventTypes';
 import type { RootStackParamList } from 'types/navigation';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,19 +26,18 @@ const AddWorkForm: React.FC = () => {
 
   // Form states
   const [selectedDates, setSelectedDates] = useState<NepaliDateInfo[]>([]);
-  
-  // Wrapper functions to handle single date selection while maintaining array state
+
   const handleDateSelect = (date: NepaliDateInfo | null) => {
     setSelectedDates(date ? [date] : []);
   };
-  
+
   const getCurrentSelectedDate = () => selectedDates[0] || null;
   const [estimatedEarning, setEstimatedEarning] = useState('');
   const [actualEarning, setActualEarning] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [workType, setWorkType] = useState<string[]>([]);
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [side, setSide] = useState('');
   const [eventType, setEventType] = useState('');
@@ -47,18 +46,18 @@ const AddWorkForm: React.FC = () => {
   const [location, setLocation] = useState('');
   const [noCompany, setNoCompany] = useState(false); // <-- New no company state
 
-  // Load existing details if editing
   useEffect(() => {
     if (isEditMode && details) {
-      // Convert the detailNepaliDate to NepaliDateInfo
       if (details.detailNepaliDate.length > 0) {
         const date = details.detailNepaliDate[0];
-        setSelectedDates([{
-          year: date.nepaliYear,
-          month: date.nepaliMonth - 1, // Adjust month to 0-based index
-          day: date.nepaliDay,
-          nepaliDate: date.nepaliDay.toString(),
-        }]);
+        setSelectedDates([
+          {
+            year: date.nepaliYear,
+            month: date.nepaliMonth - 1, // Adjust month to 0-based index
+            day: date.nepaliDay,
+            nepaliDate: date.nepaliDay.toString(),
+          },
+        ]);
       }
       setEstimatedEarning(details.earnings.toString());
       setActualEarning(details.actualEarnings?.toString() || '');
@@ -69,14 +68,12 @@ const AddWorkForm: React.FC = () => {
       setEventType(details.eventType);
       setCompanyId(details.companyId);
 
-      // If the details object has a location field, load it
       if (details.location) {
         setLocation(details.location);
       }
     }
   }, [isEditMode, details]);
 
-  // Hardcoded arrays for event types, sides, work types
   const EVENT_TYPES = useMemo(
     () => [
       { id: 'UNKNOWN', label: 'Unknown', icon: 'help-circle' },
@@ -107,12 +104,9 @@ const AddWorkForm: React.FC = () => {
     []
   );
 
-  // Hooks for fetching companies and posting/updating events
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
   const userId = useSelector(selectUserId);
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
-
-  // Form submission
 
   const handleSubmit = useCallback(async () => {
     if (!selectedDates.length) {
@@ -155,8 +149,13 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
-    if (!contactInfo) {
-      alert('Please enter contact info.');
+    if (!contactInfo || contactInfo.length !== 10) {
+      alert('Contact Number should be exactly 10 digits.');
+      return;
+    }
+
+    if (!clientContactNumber || clientContactNumber.length !== 10) {
+      alert('Client contact number must be exactly 10 digits.');
       return;
     }
 
@@ -180,13 +179,15 @@ const AddWorkForm: React.FC = () => {
       const selectedDate = selectedDates[0];
       const eventDates = [selectedDate.englishDate];
       const nepaliEventDates = [
-        `${selectedDate.year}-${String(selectedDate.month + 1).padStart(2, '0')}-${String(selectedDate.day).padStart(2, '0')}`
+        `${selectedDate.year}-${String(selectedDate.month + 1).padStart(2, '0')}-${String(selectedDate.day).padStart(2, '0')}`,
       ];
-      const nepaliDetailDates = [{
-        nepaliYear: selectedDate.year,
-        nepaliMonth: selectedDate.month + 1,
-        nepaliDay: selectedDate.day,
-      }];
+      const nepaliDetailDates = [
+        {
+          nepaliYear: selectedDate.year,
+          nepaliMonth: selectedDate.month + 1,
+          nepaliDay: selectedDate.day,
+        },
+      ];
 
       const formattedData: EventRequest & { userId: number; id?: number } = {
         userId: userId,
@@ -219,7 +220,6 @@ const AddWorkForm: React.FC = () => {
         formattedData.id = details.id;
       }
 
-
       if (isEditMode) {
         await updateEvent(formattedData);
       } else {
@@ -251,7 +251,6 @@ const AddWorkForm: React.FC = () => {
     time,
     location,
   ]);
-
 
   if (companiesLoading) {
     return (
@@ -288,7 +287,10 @@ const AddWorkForm: React.FC = () => {
             <View className="-mt-6 rounded-3xl bg-white p-4 shadow-xl">
               {/* Calendar */}
               <View className="mb-6">
-                <MonthView onSelectDate={handleDateSelect} selectedDate={getCurrentSelectedDate()} />
+                <MonthView
+                  onSelectDate={handleDateSelect}
+                  selectedDate={getCurrentSelectedDate()}
+                />
               </View>
 
               {/* Event Types */}
@@ -379,16 +381,18 @@ const AddWorkForm: React.FC = () => {
 
                 <TouchableOpacity
                   onPress={() => setShowTimePicker(true)}
-                  className="mb-4 flex-row items-center space-x-2 rounded-lg border border-slate-200 bg-white p-4">
+                  className="mb-4 flex-row items-center gap-2 space-x-2 rounded-lg border border-slate-200 bg-white p-4">
                   <MaterialCommunityIcons name="clock-outline" size={24} color="#374151" />
                   <View>
                     <Text className="text-gray-500 text-sm">Event Time</Text>
-                    <Text className="text-gray-700 ml-1 text-base">
-                      {time.toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true,
-                      })}
+                    <Text className="text-gray-700 text-sm">
+                      {time
+                        ? time.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })
+                        : 'Select Event Time'}
                     </Text>
                   </View>
                 </TouchableOpacity>

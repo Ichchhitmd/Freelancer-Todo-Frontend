@@ -3,39 +3,28 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import LoginScreen from './src/screens/auth/LoginScreen';
-import RegisterScreen from './src/screens/auth/RegisterScreen';
 import HomeScreen from './src/screens/main/HomeScreen';
 import ProfileScreen from './src/screens/main/ProfileScreen';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import './global.css';
 import EarningsScreen from '~/screens/main/EarningsScreen';
 import WorkScreen from '~/screens/main/WorkScreen';
 import WorkingScreen from '~/screens/main/WorkingScreen';
-import EarningDetailScreen from '~/screens/main/EarningDetailScreen';
 import { Provider } from 'react-redux';
 import { store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
-import { Modal, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { NavigationProp, ParamListBase, NavigationContainer } from '@react-navigation/native';
 
 import { useEffect, useState } from 'react';
 import { requestNotificationPermission } from 'utils/notification';
-import GadgetDetailsScreen from '~/screens/main/GadgetDetailsScreen';
-import AddGadgetScreen from '~/screens/main/AddGadgetScreen';
-import EditGadgetScreen from '~/screens/main/EditGadgetScreen';
-import ReimbursementForm from 'components/forms/ReimbursementForm';
-import ChangePasswordScreen from '~/screens/main/ChangePasswordScreen';
-import CompanyDetails from '~/screens/main/CompanyDetailsScreen';
-import PlusScreen from '~/screens/main/PlusScreen';
+
 import { useFonts } from 'expo-font';
-import ExpenseForm from 'components/forms/ExpenseForm';
-import AddWorkForm from 'components/forms/AddWorkForm';
+
+import { AppNavigator } from '~/navigation/AppNavigator';
 
 enableScreens();
 
-const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase> }) {
@@ -213,20 +202,7 @@ export default function App() {
       <Provider store={store}>
         <NavigationContainer>
           <StatusBar style="auto" />
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="LoginScreen" component={LoginScreen} />
-            <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
-            <Stack.Screen name="MainTabs" component={TabNavigator} />
-            <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
-            <Stack.Screen name="GadgetDetails" component={GadgetDetailsScreen} />
-            <Stack.Screen name="AddGadget" component={AddGadgetScreen} />
-            <Stack.Screen name="EditGadget" component={EditGadgetScreen} />
-            <Stack.Screen name="ReimbursementForm" component={ReimbursementForm} />
-            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-            <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
-            <Stack.Screen name="Add Expenses" component={ExpenseForm} />
-            <Stack.Screen name="Add Work" component={WorkScreen} />
-          </Stack.Navigator>
+          <AppNavigator />
         </NavigationContainer>
       </Provider>
     </QueryClientProvider>

@@ -77,7 +77,7 @@ const DateDetails: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<Props['route']>();
   const { details: initialDetails, refresh } = route.params;
-  
+
   // Fetch complete event details
   const { data: details, isLoading } = useGetEventById(initialDetails.id);
   const [actualEarnings, setActualEarnings] = useState<string>('');
@@ -85,7 +85,7 @@ const DateDetails: React.FC = () => {
   const [showEarningsModal, setShowEarningsModal] = useState(false);
   const { mutate: deleteEvent } = useDeleteEvent();
   const { mutate: updateEvent } = usePatchEvent();
-  
+
   // Use the refresh function when component mounts
   React.useEffect(() => {
     if (refresh) {
@@ -123,7 +123,7 @@ const DateDetails: React.FC = () => {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#E50914" />
-          <Text className="mt-4 text-gray-600">Loading event details...</Text>
+          <Text className="text-gray-600 mt-4">Loading event details...</Text>
         </View>
       </SafeAreaView>
     );

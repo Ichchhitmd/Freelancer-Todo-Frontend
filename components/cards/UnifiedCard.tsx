@@ -2,17 +2,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Dimensions } from 'react-native';
 
-interface MonthlyEarnings {
-  quotedEarnings: string | number;
-  receivedEarnings: number;
-  dueAmount: number;
-  eventCount: number;
-  nepaliDate: {
-    nepaliYear: number;
-    nepaliMonth: number;
-  };
-}
-
 interface MonthlyData {
   [key: string]: {
     dueAmount: number;

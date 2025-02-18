@@ -11,7 +11,7 @@ export const store = configureStore({
     gadgets: gadgetReducer,
     company: companyReducer,
     expenses: expenseReducer,
-    reimbursement: reimbursementReducer
+    reimbursement: reimbursementReducer,
   },
 });
 

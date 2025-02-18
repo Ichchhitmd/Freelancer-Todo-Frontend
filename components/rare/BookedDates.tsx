@@ -15,14 +15,14 @@ interface DateDetail {
 }
 
 interface MonthlyEarnings {
+  quotedEarnings: number;
+  receivedEarnings: number;
   dueAmount: number;
   eventCount: number;
   nepaliDate: {
-    month: number;
-    year: number;
+    nepaliYear: number;
+    nepaliMonth: number;
   };
-  quotedEarnings: number;
-  receivedEarnings: number;
 }
 
 interface BookedDatesProps {
@@ -40,7 +40,6 @@ const BookedDates: React.FC<BookedDatesProps> = ({
   handleDateClick,
   monthlyTotals,
 }) => {
-  const [showAll, setShowAll] = React.useState(false);
 
   const getNepaliDate = (date: string): DateDetail['nepaliDate'] | null => {
     try {
@@ -61,7 +60,21 @@ const BookedDates: React.FC<BookedDatesProps> = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    return selectedDates.reduce((acc: GroupedDates, item) => {
+    // Sort selected dates by month and then by day
+    const sortedDates = selectedDates.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+
+      // Prioritize today's month
+      if (dateA.getFullYear() === today.getFullYear() && dateA.getMonth() === today.getMonth())
+        return -1;
+      if (dateB.getFullYear() === today.getFullYear() && dateB.getMonth() === today.getMonth())
+        return 1;
+
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    return sortedDates.reduce((acc: GroupedDates, item) => {
       const eventDate = new Date(item.date);
       eventDate.setHours(0, 0, 0, 0);
 
@@ -98,7 +111,6 @@ const BookedDates: React.FC<BookedDatesProps> = ({
     if (!monthlyTotals) return null;
 
     const monthIndex = monthNames.indexOf(month) + 1;
-    // Find the entry in monthlyTotals that matches the current month
     const entry = Object.entries(monthlyTotals).find(
       ([_, data]) => data.nepaliDate.month === monthIndex
     );
@@ -123,46 +135,48 @@ const BookedDates: React.FC<BookedDatesProps> = ({
                 </View>
 
                 <View className="flex-row flex-wrap gap-2">
-                  {dates.map((item: DateDetail, index: number) => (
-                    <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
-                      <View
-                        className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
-                          item.isToday ? 'border-2 border-white' : 'border border-gray/5'
-                        }`}
-                        style={{
-                          backgroundColor:
-                            eventColors[item.details?.eventType] || eventColors.UNKNOWN,
-                          transform: [{ scale: item.isToday ? 1.1 : 1 }],
-                        }}>
-                        <Text className="text-center text-sm font-semibold text-white">
-                          {engToNepNum(item.nepaliDate?.nepaliDay)}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
+                  {dates
+                    .sort((a, b) => (a.nepaliDate?.nepaliDay || 0) - (b.nepaliDate?.nepaliDay || 0))
+                    .map((item: DateDetail, index: number) => (
+                      <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
+                        <View
+                          className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
+                            item.isToday ? 'border-2 border-white' : 'border border-gray/5'
+                          }`}
+                          style={{
+                            backgroundColor:
+                              eventColors[item.details?.eventType] || eventColors.UNKNOWN,
+                            transform: [{ scale: item.isToday ? 1.1 : 1 }],
+                          }}>
+                          <Text className="text-center text-sm font-semibold text-white">
+                            {engToNepNum(item.nepaliDate?.nepaliDay)}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
                 </View>
 
                 {monthTotals && (
                   <View className="mx-3 my-3">
                     <View className="flex-row items-center justify-between">
-                      <View className="flex flex-col">
-                        <Text className="ml-2 text-xl font-semibold text-blue-600">
+                      <View className="flex flex-col items-center justify-center">
+                        <Text className="text-xl font-semibold text-blue-600">
                           ₹{monthTotals.quotedEarnings}
                         </Text>
                         <Text className="text-sm font-semibold text-blue-600">Total Earnings</Text>
                       </View>
 
                       <View className="mx-2 h-8 w-[1px] bg-gray" />
-                      <View className="flex flex-col">
+                      <View className="flex flex-col items-center justify-center">
                         <Text className="text-2xl font-semibold text-red-600">
                           ₹{monthTotals.dueAmount}
                         </Text>
-                        <Text className="ml-2 text-sm font-semibold text-red-600">Total Due</Text>
+                        <Text className="text-sm font-semibold text-red-600">Total Due</Text>
                       </View>
 
                       <View className="mx-2 h-8 w-[1px] bg-gray" />
-                      <View className="flex flex-col">
-                        <Text className="ml-4 text-xl font-semibold text-green-600">
+                      <View className="flex flex-col items-center justify-center">
+                        <Text className="text-xl font-semibold text-green-600">
                           ₹{monthTotals.receivedEarnings}
                         </Text>
                         <Text className="text-sm font-semibold text-green-600">Total Received</Text>

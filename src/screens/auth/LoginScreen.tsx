@@ -25,13 +25,24 @@ export default function LoginScreen() {
     password: '',
     role: 'freelancer',
   });
+  const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
   const { mutate: loginUser, status, isError, error } = useLogin();
 
   useEffect(() => {
-    checkBiometricSupport();
+    const initialize = async () => {
+      await checkBiometricSupport();
+      const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
+      if (cachedCredentials) {
+        const { phone, password } = JSON.parse(cachedCredentials);
+        setFormData(prev => ({ ...prev, phone, password }));
+      }
+      setIsLoading(false);
+    };
+    
+    initialize();
   }, []);
 
   const checkBiometricSupport = async () => {
@@ -58,13 +69,14 @@ export default function LoginScreen() {
       { phone, password, role },
       {
         onSuccess: async (data) => {
-          dispatch(loginSuccess(data));
-          navigation.navigate('MainTabs');
-
           try {
             await AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
+            dispatch(loginSuccess(data));
+            navigation.navigate('MainTabs');
           } catch (error) {
             console.error('Error caching credentials:', error);
+            dispatch(loginSuccess(data));
+            navigation.navigate('MainTabs');
           }
         },
         onError: (error) => {
@@ -98,10 +110,11 @@ export default function LoginScreen() {
         {
           onSuccess: (data) => {
             dispatch(loginSuccess(data));
-            navigation.navigate('MainTabs');
+            navigation.navigate('TabNavigator');
           },
           onError: (error) => {
             Alert.alert('Login Error', handleAxiosError(error));
+            AsyncStorage.removeItem('cachedCredentials');
           },
         }
       );

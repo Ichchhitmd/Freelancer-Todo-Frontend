@@ -96,25 +96,25 @@ export default function EarningsScreen() {
   }, [earningsData?.total]);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMonthEvents, setSelectedMonthEvents] = useState<Array<{
-    id: number;
-    eventDate: string[];
-    earnings: string;
-    eventType: string;
-    workType: string[];
-    company?: {
+  const [selectedMonthEvents, setSelectedMonthEvents] = useState<
+    Array<{
       id: number;
-      name: string;
-    };
-    location?: string;
-  }>>([]);
+      eventDate: string[];
+      earnings: string;
+      eventType: string;
+      workType: string[];
+      company?: {
+        id: number;
+        name: string;
+      };
+      location?: string;
+    }>
+  >([]);
   const [selectedMonthTotals, setSelectedMonthTotals] = useState({
     quoted: 0,
     received: 0,
     due: 0,
   });
-
-  
 
   const handleMonthSelect = (monthData: MonthlyData) => {
     // Extract year and month from monthData.month (e.g., "Falgun 2081")
@@ -171,10 +171,6 @@ export default function EarningsScreen() {
       due: monthData.dueAmount,
     });
     setModalVisible(true);
-  };
-
-  const handleEventPress = (event: any) => {
-    navigation.navigate('DateDetail', { date: event.eventDate[0], eventId: event.id });
   };
 
   const renderMonthlyCard = (data: MonthlyData) => (
@@ -256,7 +252,7 @@ export default function EarningsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="mb-14 flex-1 bg-white">
       <View className="relative bg-primary/35 p-6 pt-16">
         <TouchableOpacity
           onPress={() => navigation.goBack()}

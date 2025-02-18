@@ -9,7 +9,9 @@ interface DateDisplayProps {
 export const DateDisplay = ({ date, isUpcoming }: DateDisplayProps) => {
   return (
     <View
-      className={`${isUpcoming ? 'bg-green-500' : 'bg-red-500'} flex w-16 items-center justify-center rounded-lg p-3`}>
+      className={`w-20 items-center justify-center rounded-md px-3 py-4 ${
+        isUpcoming ? 'bg-green-500' : 'bg-red-500'
+      }`}>
       <Text className="text-center text-sm font-semibold text-white">{date}</Text>
     </View>
   );

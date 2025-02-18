@@ -5,11 +5,15 @@ export interface EarningsSummary {
   totalDueAmount: number;
 }
 
-export interface MonthlyYearlyEarnings {
-  quotedEarnings: string;
+interface MonthlyYearlyEarnings {
+  quotedEarnings: number;
   receivedEarnings: number;
   dueAmount: number;
   eventCount: number;
+  nepaliDate: {
+    nepaliYear: number;
+    nepaliMonth: number;
+  };
 }
 
 export interface DetailNepaliDate {

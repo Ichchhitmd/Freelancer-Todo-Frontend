@@ -55,7 +55,7 @@ const HomeScreen = () => {
       setRefreshing(false);
     });
   }, [eventsRefetch, earningsRefetch]);
-  
+
   useFocusEffect(
     useCallback(() => {
       eventsRefetch();
@@ -74,13 +74,12 @@ const HomeScreen = () => {
   if (isError || earningsIsError) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white p-4">
-        <Text className="text-center text-red-500 font-Poppins-Regular">
+        <Text className="text-center font-Poppins-Regular text-red-500">
           Something went wrong. Pull down to refresh.
         </Text>
       </SafeAreaView>
     );
   }
-
 
   const remainingAmount = earningsData?.total?.totalDueAmount || 0;
 
@@ -102,17 +101,48 @@ const HomeScreen = () => {
     );
   }
 
-  const selectedDates = events.flatMap((event) =>
-    event.detailNepaliDate.map((date: NepaliDate) => ({
-      date: `${date.nepaliYear}-${date.nepaliMonth}-${date.nepaliDay}`,
-      details: event,
-      nepaliDate: {
-        month: date.nepaliMonth.toString(),
-        day: date.nepaliDay.toString(),
-      },
-    }))
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1; // getMonth() returns 0-11
+
+  const groupedEvents: Record<string, any[]> = {};
+
+  events.flatMap((event) =>
+    event.detailNepaliDate.map((date: NepaliDate) => {
+      const formattedMonth = date.nepaliMonth.toString().padStart(2, '0'); // Ensure MM format
+      const yearMonth = `${date.nepaliYear}-${formattedMonth}`; // Format YYYY-MM
+
+      const eventData = {
+        date: `${date.nepaliYear}-${formattedMonth}-${date.nepaliDay}`,
+        details: event,
+        nepaliDate: {
+          month: formattedMonth,
+          day: date.nepaliDay.toString(),
+        },
+      };
+
+      if (!groupedEvents[yearMonth]) {
+        groupedEvents[yearMonth] = [];
+      }
+      groupedEvents[yearMonth].push(eventData);
+
+      return eventData;
+    })
   );
 
+  const sortedGroupedEvents = Object.entries(groupedEvents).sort(([keyA], [keyB]) => {
+    const [yearA, monthA] = keyA.split('-').map(Number);
+    const [yearB, monthB] = keyB.split('-').map(Number);
+
+    // Sort by year first
+    if (yearA !== yearB) return yearA - yearB;
+
+    if (monthA === currentMonth) return -1;
+    if (monthB === currentMonth) return 1;
+
+    return monthA - monthB;
+  });
+
+  const finalSelectedDates = sortedGroupedEvents.flatMap(([_, events]) => events);
 
   const handleDateClick = (dateDetails: Event) => {
     navigation.navigate('DateDetails', { details: dateDetails });
@@ -120,6 +150,13 @@ const HomeScreen = () => {
 
   const bookedDatesEarnings = earningsData?.monthly;
 
+  const totalEvents = earningsData?.total?.totalEvents || 0;
+
+  const totalQuotedEarnings = earningsData?.total?.totalQuotedEarnings || '0';
+
+  const totalReceivedEarnings = earningsData?.total?.totalReceivedEarnings || 0;
+
+  const totalDueAmount = earningsData?.total?.totalDueAmount || 0;
 
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
@@ -130,12 +167,12 @@ const HomeScreen = () => {
         remainingAmount={remainingAmount}
       />
       <ScrollView
-        className="mt-7"
+        className="mt-2"
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <BookedDates
-          selectedDates={selectedDates}
+          selectedDates={finalSelectedDates}
           handleDateClick={handleDateClick}
           monthlyTotals={bookedDatesEarnings}
         />
@@ -144,10 +181,10 @@ const HomeScreen = () => {
             <SwipeableUnifiedCard
               monthlyData={earningsData?.monthly || {}}
               totalData={{
-                totalEvents: earningsData?.total?.totalEvents || 0,
-                totalQuotedEarnings: earningsData?.total?.totalQuotedEarnings || '0',
-                totalReceivedEarnings: earningsData?.total?.totalReceivedEarnings || '0',
-                totalDueAmount: earningsData?.total?.totalDueAmount || 0,
+                totalEvents,
+                totalQuotedEarnings,
+                totalReceivedEarnings: totalReceivedEarnings.toString(),
+                totalDueAmount,
               }}
             />
           </>
