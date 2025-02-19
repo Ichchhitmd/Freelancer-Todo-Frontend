@@ -11,12 +11,9 @@ import { loginSuccess } from 'redux/slices/authSlices';
 import TabNavigator from './TabNavigator';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
-import AddGadgetScreen from '../screens/main/AddGadgetScreen';
 import ChangePasswordScreen from '../screens/main/ChangePasswordScreen';
 import CompanyDetails from '../screens/main/CompanyDetailsScreen';
 import EarningDetailScreen from '../screens/main/EarningDetailScreen';
-import EditGadgetScreen from '../screens/main/EditGadgetScreen';
-import GadgetDetailsScreen from '../screens/main/GadgetDetailsScreen';
 import WorkScreen from '../screens/main/WorkScreen';
 
 import HomeScreen from '~/screens/main/HomeScreen';
@@ -80,9 +77,6 @@ export const AppNavigator = () => {
           <Stack.Screen name="MainTabs" component={TabNavigator} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
-          <Stack.Screen name="GadgetDetails" component={GadgetDetailsScreen} />
-          <Stack.Screen name="AddGadget" component={AddGadgetScreen} />
-          <Stack.Screen name="EditGadget" component={EditGadgetScreen} />
           <Stack.Screen name="ReimbursementForm" component={ReimbursementForm} />
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />

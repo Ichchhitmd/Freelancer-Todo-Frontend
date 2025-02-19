@@ -1,13 +1,13 @@
+import { useRoute, useNavigation } from '@react-navigation/native';
+import CompanyRow from 'components/rare/CompanyRow';
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'react-native-feather';
-import CompanyRow from 'components/rare/CompanyRow';
 
 const EarningsDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { earnings } = route.params as { earnings: any };
+  const { earnings } = route.params as { earnings: any | null | undefined };
 
   return (
     <View className="bg-gray-50 flex-1">
