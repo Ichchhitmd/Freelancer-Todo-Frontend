@@ -1,3 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { updateUserProfilePicture } from 'helper/userRequest';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -7,83 +11,16 @@ import {
   ScrollView,
   Alert,
   SafeAreaView,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from 'redux/store';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
 import { logout, updatePhoto, setError } from 'redux/slices/authSlices';
-import { fetchGadgets, removeGadget } from 'redux/slices/gadgetSlices';
-import { GadgetResponse } from 'types/gadgetTypes';
-import * as ImagePicker from 'expo-image-picker';
-import { updateUserProfilePicture } from 'helper/userRequest';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const GadgetCard: React.FC<{
-  gadget: GadgetResponse;
-  onPress: () => void;
-  onDelete: () => void;
-}> = ({ gadget, onPress, onDelete }) => {
-  const getIconName = (name: string) => {
-    const modelLower = name.toLowerCase();
-    if (modelLower.includes('laptop')) return 'laptop';
-    if (modelLower.includes('camera')) return 'camera';
-    if (modelLower.includes('lens')) return 'camera-iris';
-    if (modelLower.includes('drone')) return 'drone';
-    return 'devices';
-  };
-
-  return (
-    <TouchableOpacity onPress={onPress} className="mb-4">
-      <LinearGradient colors={['#F5F5F5', '#FFFFFF']} className="rounded-2xl p-4 shadow-sm">
-        <View className="flex-row items-center">
-          <View className="rounded-xl bg-red-100 p-3">
-            <MaterialCommunityIcons name={getIconName(gadget.model)} size={24} color="#E50914" />
-          </View>
-
-          <View className="ml-4 flex-1">
-            <Text className="text-gray-800 text-lg font-bold">{gadget.name}</Text>
-            <Text className="text-gray-500 text-sm">{gadget.model}</Text>
-            <View className="mt-1 flex-row items-center">
-              <Text className="text-gray-400 mr-4 text-xs">
-                Cost: ${gadget.cost.toLocaleString()}
-              </Text>
-              <Text className="text-gray-400 text-xs">
-                Purchased: {new Date(gadget.purchaseDate).toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row items-center">
-            <TouchableOpacity
-              onPress={onDelete}
-              className="p-2"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <MaterialCommunityIcons name="delete-outline" size={24} color="#E50914" />
-            </TouchableOpacity>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#888" />
-          </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
+import { RootState } from 'redux/store';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { user } = useSelector((state: RootState) => state.auth);
-  const {
-    gadgets = [],
-    loading = false,
-    error = null,
-  } = useSelector((state: RootState) => state.gadgets) || {
-    gadgets: [],
-    loading: false,
-    error: null,
-  };
   const [locationName, setLocationName] = useState<string>('Loading location...');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -135,74 +72,13 @@ export default function ProfileScreen() {
     }
   }, [user?.location, convertCoordinatesToLocation]);
 
-  const fetchGadgetsData = useCallback(async () => {
-    try {
-      await dispatch(fetchGadgets()).unwrap();
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert('Error', `Failed to fetch gadgets: ${error.message}`);
-      } else {
-        Alert.alert('Error', 'Failed to fetch gadgets. Please try again later.');
-      }
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    fetchGadgetsData();
-  }, [fetchGadgetsData]);
-
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await fetchGadgetsData();
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchGadgetsData]);
-
-  const handleAddGadget = () => {
-    navigation.navigate('AddGadget');
-  };
-
-  const handleDeleteGadget = async (id: number) => {
-    Alert.alert(
-      'Delete Gadget',
-      'Are you sure you want to delete this gadget? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await dispatch(removeGadget(id)).unwrap();
-              Alert.alert('Success', 'Gadget deleted successfully');
-            } catch (error) {
-              if (error instanceof Error) {
-                Alert.alert('Error', `Failed to delete gadget: ${error.message}`);
-              } else {
-                Alert.alert('Error', 'Failed to delete gadget. Please try again later.');
-              }
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleGadgetPress = useCallback(
-    (gadget: GadgetResponse) => {
-      try {
-        navigation.navigate('GadgetDetails', { gadget });
-      } catch (error) {
-        Alert.alert('Error', 'Failed to open gadget details. Please try again.');
-      }
-    },
-    [navigation]
-  );
+  }, []);
 
   const pickImage = useCallback(async () => {
     try {
@@ -386,69 +262,6 @@ export default function ProfileScreen() {
                   </View>
                 </View>
               </View>
-            </View>
-
-            <View className="mt-6">
-              <View className="mb-4 flex-row items-center justify-between">
-                <View>
-                  <Text className="text-gray-800 text-2xl font-bold">My Gadgets</Text>
-                  <Text className="text-gray-500 text-sm">
-                    {(gadgets || []).length} {(gadgets || []).length === 1 ? 'gadget' : 'gadgets'}{' '}
-                    registered
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={handleAddGadget}
-                  className="flex-row items-center rounded-full bg-red-500 px-4 py-2">
-                  <MaterialCommunityIcons name="plus" size={20} color="white" />
-                  <Text className="ml-1 font-semibold text-white">Add New</Text>
-                </TouchableOpacity>
-              </View>
-
-              {loading ? (
-                <View className="py-8">
-                  <ActivityIndicator size="large" color="#E50914" />
-                </View>
-              ) : error ? (
-                <View className="rounded-xl bg-red-50 px-4 py-8">
-                  <MaterialCommunityIcons
-                    name="alert-circle-outline"
-                    size={48}
-                    color="#EF4444"
-                    style={{ alignSelf: 'center' }}
-                  />
-                  <Text className="mt-4 text-center text-red-500">{error}</Text>
-                  <TouchableOpacity
-                    onPress={handleRefresh}
-                    className="mt-4 self-center rounded-full bg-red-500 px-6 py-3">
-                    <Text className="font-semibold text-white">Try Again</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : !gadgets || gadgets.length === 0 ? (
-                <View className="bg-gray-50 rounded-xl px-4 py-8">
-                  <MaterialCommunityIcons
-                    name="devices"
-                    size={48}
-                    color="#9CA3AF"
-                    style={{ alignSelf: 'center' }}
-                  />
-                  <Text className="text-gray-500 mt-4 text-center">
-                    No gadgets added yet. Add your first gadget to get started!
-                  </Text>
-                </View>
-              ) : (
-                <View>
-                  {(gadgets || []).map((gadget) => (
-                    <View key={gadget.id}>
-                      <GadgetCard
-                        gadget={gadget}
-                        onPress={() => handleGadgetPress(gadget)}
-                        onDelete={() => handleDeleteGadget(gadget.id)}
-                      />
-                    </View>
-                  ))}
-                </View>
-              )}
             </View>
 
             <TouchableOpacity

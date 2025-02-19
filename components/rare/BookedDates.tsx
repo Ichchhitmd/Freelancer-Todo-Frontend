@@ -1,7 +1,7 @@
-import React from 'react';
-import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { monthNames, engToNepNum } from 'components/utils/NepaliDateFormatter';
+import React from 'react';
+import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
 
 interface DateDetail {
   date: string;
@@ -26,9 +26,9 @@ interface MonthlyEarnings {
 }
 
 interface BookedDatesProps {
-  selectedDates: DateDetail[];
+  selectedDates: DateDetail[] | null | undefined;
   handleDateClick: (dateDetails: any) => void;
-  monthlyTotals?: Record<string, MonthlyEarnings>;
+  monthlyTotals?: Record<string, MonthlyEarnings> | null;
 }
 
 interface GroupedDates {
@@ -40,7 +40,6 @@ const BookedDates: React.FC<BookedDatesProps> = ({
   handleDateClick,
   monthlyTotals,
 }) => {
-
   const getNepaliDate = (date: string): DateDetail['nepaliDate'] | null => {
     try {
       const [year, month, day] = date.split('-').map((num) => parseInt(num));
@@ -120,7 +119,7 @@ const BookedDates: React.FC<BookedDatesProps> = ({
 
   return (
     <SafeAreaView className="w-full">
-      <ScrollView style={{ maxHeight: 350 }} nestedScrollEnabled={true} className="w-full flex-1">
+      <ScrollView style={{ maxHeight: 350 }} nestedScrollEnabled className="w-full flex-1">
         {groupedDates &&
           Object.entries(groupedDates).map(([month, dates]) => {
             const monthTotals = getMonthlyTotals(month);
@@ -187,6 +186,12 @@ const BookedDates: React.FC<BookedDatesProps> = ({
               </View>
             );
           })}
+
+        {Object.keys(groupedDates).length === 0 && (
+          <View className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
+            <Text className="text-gray-500 text-center">No upcoming dates available</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

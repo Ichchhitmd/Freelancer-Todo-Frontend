@@ -1,3 +1,9 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { MonthlyEventsModal } from 'components/EarningsScreen/MonthlyEventsModal';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useGetEarnings } from 'hooks/earnings';
+import { useGetEvents } from 'hooks/events';
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -8,14 +14,8 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector } from 'react-redux';
-import { useGetEvents } from 'hooks/events';
 import { RootState } from 'redux/store';
-import { useGetEarnings } from 'hooks/earnings';
-import { MonthlyEventsModal } from 'components/EarningsScreen/MonthlyEventsModal';
 
 interface MonthlyData {
   month: string;
@@ -97,7 +97,7 @@ export default function EarningsScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMonthEvents, setSelectedMonthEvents] = useState<
-    Array<{
+    {
       id: number;
       eventDate: string[];
       earnings: string;
@@ -108,7 +108,7 @@ export default function EarningsScreen() {
         name: string;
       };
       location?: string;
-    }>
+    }[]
   >([]);
   const [selectedMonthTotals, setSelectedMonthTotals] = useState({
     quoted: 0,

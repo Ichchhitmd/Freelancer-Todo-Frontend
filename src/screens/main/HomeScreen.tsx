@@ -1,21 +1,14 @@
-import {
-  SafeAreaView,
-  ScrollView,
-  ActivityIndicator,
-  View,
-  Text,
-  RefreshControl,
-} from 'react-native';
-import React, { useCallback, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import HeaderSection from 'components/HomeScreen/HeaderSection';
+import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
+import BookedDates from 'components/rare/BookedDates';
+import UpcomingEventReminder from 'components/rare/UpcomingReminders';
+import { useGetEarnings } from 'hooks/earnings';
+import { useGetEvents } from 'hooks/events';
+import React, { useCallback, useState } from 'react';
+import { SafeAreaView, ScrollView, ActivityIndicator, View, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
-import BookedDates from 'components/rare/BookedDates';
-import { useGetEvents } from 'hooks/events';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
-import { useGetEarnings } from 'hooks/earnings';
-import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 
 interface NepaliDate {
   nepaliYear: number;
@@ -35,12 +28,7 @@ const HomeScreen = () => {
 
   const navigation = useNavigation();
 
-  const {
-    data,
-    isLoading: eventsIsLoading,
-    isError,
-    refetch: eventsRefetch,
-  } = useGetEvents(userId || 0);
+  const { data, isLoading: eventsIsLoading, refetch: eventsRefetch } = useGetEvents(userId || 0);
 
   const {
     data: earningsData,
@@ -67,16 +55,6 @@ const HomeScreen = () => {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#EF4444" />
-      </SafeAreaView>
-    );
-  }
-
-  if (isError || earningsIsError) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white p-4">
-        <Text className="text-center font-Poppins-Regular text-red-500">
-          Something went wrong. Pull down to refresh.
-        </Text>
       </SafeAreaView>
     );
   }
@@ -149,6 +127,7 @@ const HomeScreen = () => {
   };
 
   const bookedDatesEarnings = earningsData?.monthly;
+  console.log('bookedDatesEarnings', bookedDatesEarnings);
 
   const totalEvents = earningsData?.total?.totalEvents || 0;
 
