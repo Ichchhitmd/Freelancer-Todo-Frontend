@@ -151,6 +151,7 @@ export default function TabNavigator({
           listeners={{
             tabPress: (e) => {
               e.preventDefault(); // Prevents navigation
+              setModalVisible(true);
             },
           }}
         />

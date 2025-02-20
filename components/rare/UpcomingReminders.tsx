@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View, TouchableOpacity, Platform, Linking, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatNepaliDates } from '../utils/NepaliDateFormatter';
+import { getDaysStatus } from 'utils/utils';
 
 interface EventDetails {
   eventId: number;
@@ -45,7 +46,6 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
     return dateA.getTime() - dateB.getTime();
   });
 
-  console.log('Sorted events:', sortedEvents);
 
   const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;
 
@@ -77,10 +77,8 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
         snapToAlignment="center">
         {sortedEvents.map((event, index) => {
           const eventDate = new Date(event.details.eventDate[0]);
-          const isToday =
-            eventDate.getFullYear() === today.getFullYear() &&
-            eventDate.getMonth() === today.getMonth() &&
-            eventDate.getDate() === today.getDate();
+          const { statusText, statusStyle, isToday } = getDaysStatus(eventDate);
+
           const formattedDates = formatNepaliDates(event.details.detailNepaliDate);
 
           return (
@@ -109,15 +107,9 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                     </Text>
                   </View>
                   <View className="mt-4 flex-row items-center justify-end gap-5">
-                    <View
-                      className={`rounded-full px-3 py-1 ${isToday ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                      <Text
-                        className={`text-xs font-semibold ${isToday ? 'text-blue-800' : 'text-orange-800'}`}>
-                        {isToday
-                          ? 'TODAY'
-                          : `${Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days to go`}
-                      </Text>
-                    </View>
+                    <View className={`rounded-full px-3 py-1 ${statusStyle}`}>
+                      <Text className="text-xs font-semibold">{statusText}</Text>
+                    </View> 
 
                     <View className="flex-row items-center justify-end">
                       <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">

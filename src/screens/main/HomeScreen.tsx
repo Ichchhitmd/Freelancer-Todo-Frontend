@@ -6,9 +6,18 @@ import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
 import React, { useCallback, useState } from 'react';
-import { SafeAreaView, ScrollView, ActivityIndicator, View, RefreshControl } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
+  View,
+  RefreshControl,
+  Text,
+} from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
+
+import { getCurrentNepaliDate } from 'lib/calendar';
 
 interface NepaliDate {
   nepaliYear: number;
@@ -37,6 +46,32 @@ const HomeScreen = () => {
     refetch: earningsRefetch,
   } = useGetEarnings(userId || 0);
 
+  const currentNepaliDate = getCurrentNepaliDate();
+  const currentYear = currentNepaliDate.year;
+  const currentMonth1Based = currentNepaliDate.month + 1; // Convert 0-based to 1-based
+
+  const filterMonthlyData = (monthlyData: { [key: string]: any }) => {
+    const totalMonths = currentYear * 12 + (currentMonth1Based - 1);
+
+    const offsets = [-2, -1, 0, 1];
+    const targetMonths = offsets.map((offset) => {
+      const targetTotalMonths = totalMonths + offset;
+      const targetYear = Math.floor(targetTotalMonths / 12);
+      const targetMonth = (targetTotalMonths % 12) + 1; // 1-based
+      return { year: targetYear, month: targetMonth };
+    });
+
+    const filteredEntries = Object.entries(monthlyData).filter(([key, value]) => {
+      const entryYear = Number(value.nepaliDate.year);
+      const entryMonth = Number(value.nepaliDate.month);
+      const isMatch = targetMonths.some((t) => t.year === entryYear && t.month === entryMonth);
+
+      return isMatch;
+    });
+
+    return Object.fromEntries(filteredEntries);
+  };
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     Promise.all([eventsRefetch(), earningsRefetch()]).then(() => {
@@ -50,14 +85,6 @@ const HomeScreen = () => {
       earningsRefetch();
     }, [eventsRefetch, earningsRefetch])
   );
-
-  if (eventsIsLoading || earningsIsLoading) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#EF4444" />
-      </SafeAreaView>
-    );
-  }
 
   const remainingAmount = earningsData?.total?.totalDueAmount || 0;
 
@@ -73,21 +100,19 @@ const HomeScreen = () => {
           remainingAmount={remainingAmount}
         />
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#E50914" />
+          <Text className="text-gray-600 mt-4">Loading your events...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const today = new Date();
-  const currentMonth = today.getMonth() + 1; // getMonth() returns 0-11
-
   const groupedEvents: Record<string, any[]> = {};
 
   events.flatMap((event) =>
     event.detailNepaliDate.map((date: NepaliDate) => {
-      const formattedMonth = date.nepaliMonth.toString().padStart(2, '0'); // Ensure MM format
-      const yearMonth = `${date.nepaliYear}-${formattedMonth}`; // Format YYYY-MM
+      const formattedMonth = date.nepaliMonth.toString().padStart(2, '0');
+      const yearMonth = `${date.nepaliYear}-${formattedMonth}`;
 
       const eventData = {
         date: `${date.nepaliYear}-${formattedMonth}-${date.nepaliDay}`,
@@ -111,12 +136,9 @@ const HomeScreen = () => {
     const [yearA, monthA] = keyA.split('-').map(Number);
     const [yearB, monthB] = keyB.split('-').map(Number);
 
-    // Sort by year first
     if (yearA !== yearB) return yearA - yearB;
-
-    if (monthA === currentMonth) return -1;
-    if (monthB === currentMonth) return 1;
-
+    if (monthA === currentMonth1Based) return -1; // Prioritize current month
+    if (monthB === currentMonth1Based) return 1;
     return monthA - monthB;
   });
 
@@ -127,16 +149,15 @@ const HomeScreen = () => {
   };
 
   const bookedDatesEarnings = earningsData?.monthly;
-  console.log('bookedDatesEarnings', bookedDatesEarnings);
-
   const totalEvents = earningsData?.total?.totalEvents || 0;
-
   const totalQuotedEarnings = earningsData?.total?.totalQuotedEarnings || '0';
-
   const totalReceivedEarnings = earningsData?.total?.totalReceivedEarnings || 0;
-
   const totalDueAmount = earningsData?.total?.totalDueAmount || 0;
 
+  // 4. Apply filter to monthlyData
+  const monthlyData = earningsData?.monthly || {};
+
+  const filteredMonthlyData = filterMonthlyData(monthlyData);
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
       <HeaderSection
@@ -158,7 +179,7 @@ const HomeScreen = () => {
         {!earningsIsLoading && !earningsIsError && (
           <>
             <SwipeableUnifiedCard
-              monthlyData={earningsData?.monthly || {}}
+              monthlyData={filteredMonthlyData} // Pass filtered data
               totalData={{
                 totalEvents,
                 totalQuotedEarnings,

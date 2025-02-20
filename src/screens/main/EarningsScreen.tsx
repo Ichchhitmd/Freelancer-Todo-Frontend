@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { useSelector } from 'react-redux';
@@ -35,12 +34,11 @@ export default function EarningsScreen() {
 
   const {
     data: earningsData,
-    isLoading: earningsIsLoading,
     isError: earningsIsError,
     refetch: earningsRefetch,
   } = useGetEarnings(userId || 0);
 
-  const { data: eventsData, isLoading, isError, refetch } = useGetEvents(userId || 0);
+  const { data: eventsData, isError, refetch } = useGetEvents(userId || 0);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -204,52 +202,6 @@ export default function EarningsScreen() {
       </LinearGradient>
     </TouchableOpacity>
   );
-
-  if (isLoading || earningsIsLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="relative bg-red-500 p-6 pt-16">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="absolute left-6 top-16 z-10">
-            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-          </TouchableOpacity>
-          <Text className="text-center text-2xl font-bold text-white">My Earnings</Text>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#E50914" />
-          <Text className="text-gray-600 mt-4">Loading your earnings data...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (isError || earningsIsError) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="relative bg-red-500 p-6 pt-16">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="absolute left-6 top-16 z-10">
-            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-          </TouchableOpacity>
-          <Text className="text-center text-2xl font-bold text-white">My Earnings</Text>
-        </View>
-        <View className="flex-1 items-center justify-center px-4">
-          <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#E50914" />
-          <Text className="text-gray-800 mt-4 text-center text-lg">
-            Unable to load earnings data
-          </Text>
-          <Text className="text-gray-600 mt-2 text-center">
-            Please check your internet connection and try again
-          </Text>
-          <TouchableOpacity onPress={onRefresh} className="mt-4 rounded-full bg-red-500 px-6 py-3">
-            <Text className="font-bold text-white">Retry</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView className="mb-14 flex-1 bg-white">

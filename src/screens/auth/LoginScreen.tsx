@@ -72,11 +72,9 @@ export default function LoginScreen() {
           try {
             await AsyncStorage.setItem('cachedCredentials', JSON.stringify({ phone, password }));
             dispatch(loginSuccess(data));
-            navigation.navigate('MainTabs');
           } catch (error) {
             console.error('Error caching credentials:', error);
             dispatch(loginSuccess(data));
-            navigation.navigate('MainTabs');
           }
         },
         onError: (error) => {
@@ -110,7 +108,6 @@ export default function LoginScreen() {
         {
           onSuccess: (data) => {
             dispatch(loginSuccess(data));
-            navigation.navigate('TabNavigator');
           },
           onError: (error) => {
             Alert.alert('Login Error', handleAxiosError(error));

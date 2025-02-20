@@ -32,17 +32,24 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(1);
 
+  useEffect(() => {
+    if (scrollViewRef.current && availableMonths.length > 0) {
+      scrollViewRef.current.scrollTo({ x: 0, animated: false });
+    }
+  }, []);
+
+  // Return null if no data is available
+  if (!monthlyData || Object.keys(monthlyData).length === 0) {
+    return null;
+  }
+
   const availableMonths = Object.keys(monthlyData).sort((a, b) => {
     const [yearA, monthA] = a.split('-').map(Number);
     const [yearB, monthB] = b.split('-').map(Number);
     return yearA === yearB ? monthA - monthB : yearA - yearB;
   });
 
-  useEffect(() => {
-    if (scrollViewRef.current && availableMonths.length > 0) {
-      scrollViewRef.current.scrollTo({ x: 0, animated: false });
-    }
-  }, []);
+ 
 
   const handleScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -188,19 +195,8 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
     </View>
   );
 
-  const monthPairs = [];
+  // Handle single month case
   if (availableMonths.length === 1) {
-    monthPairs.push({
-      monthKey1: availableMonths[0],
-    });
-  } else {
-    for (let i = 0; i < availableMonths.length; i += 2) {
-      monthPairs.push({
-        monthKey1: availableMonths[i],
-        monthKey2: availableMonths[i + 1] || availableMonths[i], // Use same month if no next month
-      });
-    }
-
     return (
       <ScrollView
         ref={scrollViewRef}
@@ -209,17 +205,45 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={10}>
-        {monthPairs.map((pair, index) => (
-          <MonthlyCard
-            key={`${pair.monthKey1}-${pair.monthKey2}`}
-            monthKey1={pair.monthKey1}
-            monthKey2={pair.monthKey2}
-          />
-        ))}
+        <MonthlyCard monthKey1={availableMonths[0]} />
         <SummaryCard />
       </ScrollView>
     );
   }
+
+  // Handle multiple months case
+  const monthPairs = [];
+  for (let i = 0; i < availableMonths.length; i += 2) {
+    if (i + 1 < availableMonths.length) {
+      monthPairs.push({
+        monthKey1: availableMonths[i],
+        monthKey2: availableMonths[i + 1],
+      });
+    } else {
+      monthPairs.push({
+        monthKey1: availableMonths[i],
+      });
+    }
+  }
+
+  return (
+    <ScrollView
+      ref={scrollViewRef}
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      onScroll={handleScroll}
+      scrollEventThrottle={10}>
+      {monthPairs.map((pair, index) => (
+        <MonthlyCard
+          key={`${pair.monthKey1}-${pair.monthKey2 || 'single'}`}
+          monthKey1={pair.monthKey1}
+          monthKey2={pair.monthKey2}
+        />
+      ))}
+      <SummaryCard />
+    </ScrollView>
+  );
 };
 
 export default SwipeableUnifiedCard;

@@ -10,6 +10,7 @@ import { WorkItem } from 'components/WorkingsScreen/WorkItem';
 import { EmptyState } from 'components/WorkingsScreen/EmptyState';
 import { FilterType, SimplifiedWorkItem, SortType, WorkEvent } from 'types/WorkingScreenTypes';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { getDaysStatus } from 'utils/utils';
 
 type RootStackParamList = {
   DateDetails: { details: WorkEvent };
@@ -37,40 +38,32 @@ const WorkingScreen: React.FC = () => {
   const processEvents = (events: WorkEvent | WorkEvent[]): SimplifiedWorkItem[] => {
     const eventsArray = Array.isArray(events) ? events : [events];
     const currentTimestamp = new Date().getTime();
-
-    const sortedEvents = eventsArray.sort(
-      (a, b) => new Date(a.eventDate[0]).getTime() - new Date(b.eventDate[0]).getTime()
-    );
-
     const today = new Date();
-    const todayEvents = sortedEvents.map((event) => {
-      const eventDate = new Date(event.eventDate[0]);
-      const isToday = eventDate.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0);
-      const daysDifference = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-      return {
-        ...event,
-        isToday,
-        daysDifference,
-      };
-    });
 
-    return todayEvents.map((event) => ({
-      id: event.id,
-      companyId: event.company?.id || 0,
-      companyName: event.company?.name || 'Unknown Company',
-      nepaliEventDate: event.nepaliEventDate,
-      detailNepaliDate: event.detailNepaliDate,
-      isUpcoming: new Date(event.eventDate[0]).getTime() > currentTimestamp,
-      eventType: event.eventType || 'Unspecified',
-      side: event.side,
-      workType: event.workType || ['Unspecified'],
-      earnings: event.earnings ? `${parseFloat(event.earnings).toLocaleString()}` : 'N/A',
-      status: 'pending',
-      location: event.location,
-      originalEvent: event,
-      isToday: event.isToday,
-      daysDifference: event.daysDifference,
-    }));
+    return eventsArray
+      .sort((a, b) => new Date(a.eventDate[0]).getTime() - new Date(b.eventDate[0]).getTime())
+      .map((event) => {
+        const eventDate = new Date(event.eventDate[0]);
+        const { statusText, statusStyle, daysDifference, isToday } = getDaysStatus(eventDate);
+        return {
+          id: event.id,
+          companyId: event.company?.id || 0,
+          companyName: event.company?.name || 'Unknown Company',
+          nepaliEventDate: event.nepaliEventDate,
+          detailNepaliDate: event.detailNepaliDate,
+          isUpcoming: new Date(event.eventDate[0]).getTime() > currentTimestamp,
+          eventType: event.eventType || 'Unspecified',
+          side: event.side,
+          workType: event.workType || ['Unspecified'],
+          earnings: event.earnings ? `${parseFloat(event.earnings).toLocaleString()}` : 'N/A',
+          location: event.location,
+          originalEvent: event,
+          statusText,
+          statusStyle,
+          daysDifference,
+          isToday,
+        };
+      });
   };
 
   useEffect(() => {
@@ -79,6 +72,7 @@ const WorkingScreen: React.FC = () => {
       setAllEvents(simplified);
     }
   }, [data, isLoading, isError]);
+
   useEffect(() => {
     let filteredEvents = [...allEvents];
 
@@ -145,9 +139,7 @@ const WorkingScreen: React.FC = () => {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{
-            paddingBottom: 80,
-          }}
+          contentContainerStyle={{ paddingBottom: 80 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

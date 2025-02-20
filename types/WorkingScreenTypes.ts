@@ -11,7 +11,6 @@ export interface SimplifiedWorkItem {
   side: string;
   workType: string | string[];
   earnings: string;
-  status: string;
   location?: string;
   detailNepaliDate: Array<{
     nepaliDay: number;
@@ -19,6 +18,11 @@ export interface SimplifiedWorkItem {
     nepaliMonth: number;
   }>;
   originalEvent?: WorkEvent;
+  statusText: string;
+  statusStyle: string;
+  daysDifference: number;
+  isToday: boolean;
+  
 }
 
 export interface WorkEvent {
