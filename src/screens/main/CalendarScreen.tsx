@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { Feather } from '@expo/vector-icons';
-import { NepaliDateInfo } from 'lib/calendar';
 import { MonthView } from 'components/test/CalendarComponent';
+import { NepaliDateInfo } from 'lib/calendar';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 
 export default function CalendarScreen() {
-  const [selectedDate, setSelectedDate] = useState<NepaliDateInfo>();
+  const [selectedDate, setSelectedDate] = useState<NepaliDateInfo | null>(null);
 
   return (
     <View style={styles.container}>
-      <MonthView selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+      <MonthView
+        selectedDate={selectedDate}
+        onSelectDate={(date: NepaliDateInfo | null) => setSelectedDate(date)}
+      />
     </View>
   );
 }

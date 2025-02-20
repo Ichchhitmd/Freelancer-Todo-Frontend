@@ -1,6 +1,7 @@
+import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+
 import {
   getMonthMatrix,
   getCurrentNepaliDate,
@@ -39,10 +40,12 @@ export function MonthView({ onSelectDate, selectedDate = null }: MonthViewProps)
   };
 
   const isDateSelected = (date: NepaliDateInfo) => {
-    return selectedDate !== null &&
+    return (
+      selectedDate !== null &&
       selectedDate.day === date.day &&
       selectedDate.month === date.month &&
-      selectedDate.year === date.year;
+      selectedDate.year === date.year
+    );
   };
 
   const handleDateSelect = (date: NepaliDateInfo) => {

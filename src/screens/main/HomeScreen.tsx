@@ -5,6 +5,7 @@ import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
+import { getCurrentNepaliDate } from 'lib/calendar';
 import React, { useCallback, useState } from 'react';
 import {
   SafeAreaView,
@@ -17,8 +18,6 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 
-import { getCurrentNepaliDate } from 'lib/calendar';
-
 interface NepaliDate {
   nepaliYear: number;
   nepaliMonth: number;
@@ -26,7 +25,6 @@ interface NepaliDate {
 }
 
 const HomeScreen = () => {
-  const [isActive, setIsActive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const { userName, userId } = useSelector((state: RootState) => ({
@@ -48,7 +46,7 @@ const HomeScreen = () => {
 
   const currentNepaliDate = getCurrentNepaliDate();
   const currentYear = currentNepaliDate.year;
-  const currentMonth1Based = currentNepaliDate.month + 1; // Convert 0-based to 1-based
+  const currentMonth1Based = currentNepaliDate.month + 1;
 
   const filterMonthlyData = (monthlyData: { [key: string]: any }) => {
     const totalMonths = currentYear * 12 + (currentMonth1Based - 1);
@@ -57,7 +55,7 @@ const HomeScreen = () => {
     const targetMonths = offsets.map((offset) => {
       const targetTotalMonths = totalMonths + offset;
       const targetYear = Math.floor(targetTotalMonths / 12);
-      const targetMonth = (targetTotalMonths % 12) + 1; // 1-based
+      const targetMonth = (targetTotalMonths % 12) + 1;
       return { year: targetYear, month: targetMonth };
     });
 
@@ -93,12 +91,7 @@ const HomeScreen = () => {
   if (eventsIsLoading || earningsIsLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <HeaderSection
-          user={userName}
-          isActive={isActive}
-          setIsActive={setIsActive}
-          remainingAmount={remainingAmount}
-        />
+        <HeaderSection user={userName} remainingAmount={remainingAmount} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#E50914" />
           <Text className="text-gray-600 mt-4">Loading your events...</Text>
@@ -137,7 +130,7 @@ const HomeScreen = () => {
     const [yearB, monthB] = keyB.split('-').map(Number);
 
     if (yearA !== yearB) return yearA - yearB;
-    if (monthA === currentMonth1Based) return -1; // Prioritize current month
+    if (monthA === currentMonth1Based) return -1;
     if (monthB === currentMonth1Based) return 1;
     return monthA - monthB;
   });
@@ -154,18 +147,12 @@ const HomeScreen = () => {
   const totalReceivedEarnings = earningsData?.total?.totalReceivedEarnings || 0;
   const totalDueAmount = earningsData?.total?.totalDueAmount || 0;
 
-  // 4. Apply filter to monthlyData
   const monthlyData = earningsData?.monthly || {};
 
   const filteredMonthlyData = filterMonthlyData(monthlyData);
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
-      <HeaderSection
-        user={userName}
-        isActive={isActive}
-        setIsActive={setIsActive}
-        remainingAmount={remainingAmount}
-      />
+      <HeaderSection user={userName} remainingAmount={remainingAmount} />
       <ScrollView
         className="mt-2"
         nestedScrollEnabled
@@ -179,7 +166,7 @@ const HomeScreen = () => {
         {!earningsIsLoading && !earningsIsError && (
           <>
             <SwipeableUnifiedCard
-              monthlyData={filteredMonthlyData} // Pass filtered data
+              monthlyData={filteredMonthlyData}
               totalData={{
                 totalEvents,
                 totalQuotedEarnings,

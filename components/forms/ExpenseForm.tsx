@@ -1,3 +1,11 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import InputField from 'components/common/InputField';
+import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
+import SelectDropdown from 'components/rare/SelectDropdown';
+import * as ImagePicker from 'expo-image-picker';
+import { useGetCompanies } from 'hooks/companies';
+import { usePostExpense } from 'hooks/expenses';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,14 +17,6 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import InputField from 'components/common/InputField';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
-import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
-import SelectDropdown from 'components/rare/SelectDropdown';
-import * as ImagePicker from 'expo-image-picker';
-import { useGetCompanies } from 'hooks/companies';
-import { usePostExpense } from 'hooks/expenses';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 
@@ -43,7 +43,7 @@ const ExpenseForm = () => {
   });
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],

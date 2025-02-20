@@ -1,5 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
+import { useLogin } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,10 +18,6 @@ import {
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from 'redux/slices/authSlices';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
-import * as LocalAuthentication from 'expo-local-authentication';
-import { useLogin } from 'hooks/useAuth';
 
 export default function LoginScreen() {
   const [formData, setFormData] = useState({
@@ -25,7 +25,7 @@ export default function LoginScreen() {
     password: '',
     role: 'freelancer',
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -37,11 +37,11 @@ export default function LoginScreen() {
       const cachedCredentials = await AsyncStorage.getItem('cachedCredentials');
       if (cachedCredentials) {
         const { phone, password } = JSON.parse(cachedCredentials);
-        setFormData(prev => ({ ...prev, phone, password }));
+        setFormData((prev) => ({ ...prev, phone, password }));
       }
       setIsLoading(false);
     };
-    
+
     initialize();
   }, []);
 
