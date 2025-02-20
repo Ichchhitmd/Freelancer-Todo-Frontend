@@ -4,9 +4,10 @@ import ExpenseForm from 'components/forms/ExpenseForm';
 import ReimbursementForm from 'components/forms/ReimbursementForm';
 import { useLogin } from 'hooks/useAuth';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginSuccess } from 'redux/slices/authSlices';
+import { RootState } from 'redux/store';
 
 import TabNavigator from './TabNavigator';
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -17,7 +18,6 @@ import EarningDetailScreen from '../screens/main/EarningDetailScreen';
 import WorkScreen from '../screens/main/WorkScreen';
 
 import HomeScreen from '~/screens/main/HomeScreen';
-import { RootState } from 'redux/store';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,8 +58,7 @@ export const AppNavigator = () => {
 
   if (isLoading) {
     return <ActivityIndicator />;
-  };
-  
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -75,7 +74,7 @@ export const AppNavigator = () => {
           <Stack.Screen name="Add Work" component={WorkScreen} />
         </>
       ) : (
-        <>  
+        <>
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
         </>

@@ -1,5 +1,7 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
 import React, { useState } from 'react';
 import {
   Text,
@@ -12,8 +14,6 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
 
 interface Company {
   bio: string;
@@ -171,7 +171,7 @@ const DateDetails: React.FC = () => {
           navigation.setParams({
             details: {
               ...details,
-              actualEarnings: actualEarnings,
+              actualEarnings,
               dueAmount: localDueAmount,
             },
           });
@@ -268,7 +268,7 @@ const DateDetails: React.FC = () => {
     <SafeAreaView className="flex-1 bg-white">
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={showEarningsModal}
         onRequestClose={() => setShowEarningsModal(false)}>
         <View className="flex-1 justify-center bg-black/50">
@@ -360,7 +360,7 @@ const DateDetails: React.FC = () => {
             icon="currency-inr"
             label="Actual Earnings"
             value={`₹ ${actualEarnings}`}
-            isActualEarnings={true}
+            isActualEarnings
           />
           <DetailRow icon="cash-clock" label="Due Amount" value={`₹ ${localDueAmount}`} />
         </View>

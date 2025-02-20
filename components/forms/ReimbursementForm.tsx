@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Image, Platform } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from '@react-navigation/native';
 import { usePostReimbursement } from 'hooks/reimbursements';
-import { useRoute } from '@react-navigation/native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  Alert,
+  Image,
+  Platform,
+} from 'react-native';
 
 const EXPENSE_TYPES = [
   { id: 'TRAVEL', label: 'Travel', icon: 'car' },
@@ -28,7 +36,7 @@ const ReimbursementForm = () => {
   });
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -59,7 +67,7 @@ const ReimbursementForm = () => {
       formData.append('image', {
         uri: Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri,
         name: `photo.${fileType}`,
-        type: `image/${fileType}`
+        type: `image/${fileType}`,
       } as any);
     }
 
@@ -70,11 +78,12 @@ const ReimbursementForm = () => {
       },
       onError: (error: any) => {
         const errorData = error?.response?.data;
-        const errorMessage = errorData?.message 
-          || error?.message 
-          || 'Failed to submit reimbursement. Please try again.';
+        const errorMessage =
+          errorData?.message ||
+          error?.message ||
+          'Failed to submit reimbursement. Please try again.';
         Alert.alert('Error', errorMessage);
-      }
+      },
     });
   };
 

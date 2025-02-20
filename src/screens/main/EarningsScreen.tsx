@@ -32,13 +32,9 @@ export default function EarningsScreen() {
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
-  const {
-    data: earningsData,
-    isError: earningsIsError,
-    refetch: earningsRefetch,
-  } = useGetEarnings(userId || 0);
+  const { data: earningsData, refetch: earningsRefetch } = useGetEarnings(userId || 0);
 
-  const { data: eventsData, isError, refetch } = useGetEvents(userId || 0);
+  const { data: eventsData, refetch } = useGetEvents(userId || 0);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -117,7 +113,7 @@ export default function EarningsScreen() {
   const handleMonthSelect = (monthData: MonthlyData) => {
     // Extract year and month from monthData.month (e.g., "Falgun 2081")
     const [monthName, yearStr] = monthData.month.split(' ');
-    const year = parseInt(yearStr);
+    const year = parseInt(yearStr, 10);
 
     // Convert Nepali month name to number (1-12)
     const nepaliMonths = [
@@ -206,11 +202,6 @@ export default function EarningsScreen() {
   return (
     <SafeAreaView className="mb-14 flex-1 bg-white">
       <View className="relative bg-primary/35 p-6 pt-16">
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="absolute left-6 top-16 z-10">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
         <Text className="text-center text-2xl font-bold text-white">My Earnings</Text>
       </View>
 

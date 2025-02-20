@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationProp, ParamListBase } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
+
+import EarningsScreen from '../screens/main/EarningsScreen';
 import HomeScreen from '../screens/main/HomeScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
-import EarningsScreen from '../screens/main/EarningsScreen';
 import WorkingScreen from '../screens/main/WorkingScreen';
+
 import DateDetails from '~/screens/main/DateDetailScreen';
 
 const Tab = createBottomTabNavigator();
 
-// Modal Component
-const CustomModal = ({ visible, onClose, navigation }) => {
+const CustomModal = ({
+  visible,
+  onClose,
+  navigation,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  navigation: NavigationProp<ParamListBase>;
+}) => {
   const animatedValue = new Animated.Value(0);
 
   React.useEffect(() => {
@@ -33,7 +42,7 @@ const CustomModal = ({ visible, onClose, navigation }) => {
 
   const translateY = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [500, 0], // Slide up from bottom
+    outputRange: [500, 0],
   });
 
   if (!visible) return null;
@@ -124,7 +133,7 @@ export default function TabNavigator({
                 case 'Profile':
                   return focused ? 'account' : 'account-outline';
                 default:
-                  return 'help-outline';
+                  return 'home-outline';
               }
             })();
             return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
@@ -144,13 +153,13 @@ export default function TabNavigator({
         />
         <Tab.Screen
           name="Plus"
-          component={() => null} // No screen assigned
+          component={() => null}
           options={{
             tabBarLabel: '',
           }}
           listeners={{
             tabPress: (e) => {
-              e.preventDefault(); // Prevents navigation
+              e.preventDefault();
               setModalVisible(true);
             },
           }}
@@ -168,8 +177,6 @@ export default function TabNavigator({
     </View>
   );
 }
-
-// Styles
 const styles = StyleSheet.create({
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
