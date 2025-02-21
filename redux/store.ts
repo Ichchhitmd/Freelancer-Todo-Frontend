@@ -1,5 +1,4 @@
-
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, createSelector } from '@reduxjs/toolkit';
 
 import authReducer from './slices/authSlices';
 import companyReducer from './slices/companySlices';
@@ -17,3 +16,21 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+export const selectAuth = (state: RootState) => state.auth;
+
+export const selectUser = createSelector([selectAuth], (auth) =>
+  auth.user ? { ...auth.user } : null
+);
+
+export const selectUserDetails = createSelector([selectUser], (user) =>
+  user
+    ? {
+        isActive: !!user,
+        userId: user.id,
+        userName: user.name,
+      }
+    : null
+);
+
+export const selectIsAuthenticated = createSelector([selectAuth], (auth) => auth.isAuthenticated);

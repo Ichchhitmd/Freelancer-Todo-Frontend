@@ -77,6 +77,8 @@ const CustomModal = ({
   );
 };
 
+const EmptyScreen = () => <View />;
+
 export default function TabNavigator({
   navigation,
 }: {
@@ -153,7 +155,7 @@ export default function TabNavigator({
         />
         <Tab.Screen
           name="Plus"
-          component={() => null}
+          component={EmptyScreen}
           options={{
             tabBarLabel: '',
           }}

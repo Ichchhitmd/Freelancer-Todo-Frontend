@@ -16,7 +16,7 @@ import {
   Text,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { RootState } from 'redux/store';
+import { selectUserDetails } from 'redux/store';
 
 interface NepaliDate {
   nepaliYear: number;
@@ -27,11 +27,9 @@ interface NepaliDate {
 const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
-  const { userName, userId } = useSelector((state: RootState) => ({
-    userName: state.auth.user?.name,
-    isActive: state.auth.user?.isActive,
-    userId: state.auth.user?.id,
-  }));
+  const userDetails = useSelector(selectUserDetails);
+  const userName = userDetails?.userName;
+  const userId = userDetails?.userId;
 
   const navigation = useNavigation();
 
