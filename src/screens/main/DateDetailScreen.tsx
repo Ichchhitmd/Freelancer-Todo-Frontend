@@ -362,7 +362,7 @@ const DateDetails: React.FC = () => {
             value={`₹ ${actualEarnings}`}
             isActualEarnings
           />
-          <DetailRow icon="cash-clock" label="Due Amount" value={`₹ ${localDueAmount}`} />
+          <DetailRow icon="currency-inr" label="Due Amount" value={`₹ ${localDueAmount}`} />
         </View>
 
         <View className="mt-4 bg-white">
