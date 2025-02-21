@@ -254,14 +254,6 @@ const AddWorkForm: React.FC = () => {
     location,
   ]);
 
-  if (companiesLoading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView className="bg-gray-50 flex-1">
       <FlatList
@@ -269,7 +261,6 @@ const AddWorkForm: React.FC = () => {
         data={[1]}
         renderItem={() => (
           <>
-            {/* Header */}
             <View className="bg-red-500 px-6 py-12 shadow-lg">
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
@@ -285,9 +276,7 @@ const AddWorkForm: React.FC = () => {
               </Text>
             </View>
 
-            {/* Form */}
             <View className="-mt-6 rounded-3xl bg-white p-4 shadow-xl">
-              {/* Calendar */}
               <View className="mb-6">
                 <MonthView
                   onSelectDate={handleDateSelect}
@@ -295,7 +284,6 @@ const AddWorkForm: React.FC = () => {
                 />
               </View>
 
-              {/* Event Types */}
               <View
                 style={{ height: 120 }}
                 className="mb-6 overflow-hidden rounded-2xl border border-gray/10 bg-white shadow-sm">
