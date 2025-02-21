@@ -9,7 +9,7 @@ import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
-import { FilterType, SimplifiedWorkItem, SortType, WorkEvent } from 'types/WorkingScreenTypes';
+import { WorkEvent, FilterType, SortType, SimplifiedWorkItem } from 'types/WorkingScreenTypes';
 import { getDaysStatus } from 'utils/utils';
 
 type RootStackParamList = {
@@ -22,6 +22,7 @@ const WorkingScreen: React.FC = () => {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('upcoming');
   const [activeSort, setActiveSort] = useState<SortType>('date-desc');
+  const [activeCompany, setActiveCompany] = useState<string | undefined>(undefined);
   const [visibleEvents, setVisibleEvents] = useState<SimplifiedWorkItem[]>([]);
   const [allEvents, setAllEvents] = useState<SimplifiedWorkItem[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -38,7 +39,6 @@ const WorkingScreen: React.FC = () => {
   const processEvents = (events: WorkEvent | WorkEvent[]): SimplifiedWorkItem[] => {
     const eventsArray = Array.isArray(events) ? events : [events];
     const currentTimestamp = new Date().getTime();
-    const today = new Date();
 
     return eventsArray
       .sort((a, b) => new Date(a.eventDate[0]).getTime() - new Date(b.eventDate[0]).getTime())
@@ -76,6 +76,12 @@ const WorkingScreen: React.FC = () => {
   useEffect(() => {
     let filteredEvents = [...allEvents];
 
+    // Company filter
+    if (activeCompany && activeCompany !== 'All Companies') {
+      filteredEvents = filteredEvents.filter((event) => event.companyName === activeCompany);
+    }
+
+    // Filter by type
     switch (activeFilter) {
       case 'upcoming':
         filteredEvents = filteredEvents.filter((event) => event.isUpcoming);
@@ -85,12 +91,33 @@ const WorkingScreen: React.FC = () => {
         break;
     }
 
+    // Sort events
+    switch (activeSort) {
+      case 'date-desc':
+        filteredEvents.sort(
+          (a, b) =>
+            new Date(b.originalEvent?.eventDate[0] || 0).getTime() -
+            new Date(a.originalEvent?.eventDate[0] || 0).getTime()
+        );
+        break;
+      case 'date-asc':
+        filteredEvents.sort(
+          (a, b) =>
+            new Date(a.originalEvent?.eventDate[0] || 0).getTime() -
+            new Date(b.originalEvent?.eventDate[0] || 0).getTime()
+        );
+        break;
+      case 'company':
+        filteredEvents.sort((a, b) => a.companyName.localeCompare(b.companyName));
+        break;
+    }
+
     if (activeFilter === 'upcoming') {
       filteredEvents = filteredEvents.slice(0, 10);
     }
 
     setVisibleEvents(filteredEvents);
-  }, [allEvents, activeFilter, activeSort]);
+  }, [allEvents, activeFilter, activeSort, activeCompany]);
 
   const handleWorkItemPress = (item: SimplifiedWorkItem) => {
     if (item.originalEvent) {
@@ -128,6 +155,8 @@ const WorkingScreen: React.FC = () => {
           setActiveSort={setActiveSort}
           showFilters={showFilters}
           setShowFilters={setShowFilters}
+          activeCompany={activeCompany}
+          setActiveCompany={setActiveCompany}
         />
       </View>
 

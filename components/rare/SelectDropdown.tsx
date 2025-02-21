@@ -1,19 +1,20 @@
+import { usePostCompanies, useGetCompanies } from 'hooks/companies';
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, Animated, Modal } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { usePostCompanies, useGetCompanies } from 'hooks/companies';
 import { CompanyRequest } from 'types/companiesTypes';
 
 interface SelectDropdownProps {
   data: string[];
   onSelect: (item: string) => void;
   defaultButtonText?: string;
+  showAddOption?: boolean;
 }
 
 const SelectDropdown: React.FC<SelectDropdownProps> = ({
   data,
   onSelect,
   defaultButtonText = 'Select a company',
+  showAddOption = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -57,7 +58,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
   };
 
   const handleSelect = (item: string) => {
-    if (item === 'Add Company') {
+    if (item === 'Add Company' && showAddOption) {
       setIsModalVisible(true);
     } else {
       setSelectedItem(item);
@@ -127,16 +128,18 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
       {isRenderDropdown && (
         <View className="rounded-lg border border-secondary bg-white">
           <ScrollView
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
             style={{ maxHeight: 120 }}
             className="border-gray-200 border-t">
-            <TouchableOpacity
-              className="border-gray-200 border-b bg-white px-4 py-3"
-              onPress={() => handleSelect('Add Company')}
-              activeOpacity={0.7}>
-              <Text className="text-base text-red-500">+ Add Company</Text>
-            </TouchableOpacity>
+            {showAddOption && (
+              <TouchableOpacity
+                className="border-gray-200 border-b bg-white px-4 py-3"
+                onPress={() => handleSelect('Add Company')}
+                activeOpacity={0.7}>
+                <Text className="text-base text-red-500">+ Add Company</Text>
+              </TouchableOpacity>
+            )}
             {filteredData.map((item, index) => (
               <TouchableOpacity
                 key={index}
@@ -154,10 +157,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
         </View>
       )}
 
-      <Modal
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-        transparent={true}>
+      <Modal visible={isModalVisible} onRequestClose={() => setIsModalVisible(false)} transparent>
         <View className="flex-1 items-center justify-center bg-black/50">
           <View className="w-4/5 rounded-lg bg-white p-6 shadow-lg">
             <Text className="mb-6 text-center text-xl font-bold">Add Company</Text>

@@ -192,15 +192,15 @@ const AddWorkForm: React.FC = () => {
       ];
 
       const formattedData: EventRequest & { userId: number; id?: number } = {
-        userId: userId,
+        userId,
         earnings: parseFloat(estimatedEarning) || 0,
         actualEarnings: actualEarning ? parseFloat(actualEarning) : null,
         clientContactPerson1: contactPerson,
         clientContactNumber1: contactInfo,
         clientContactNumber2: clientContactNumber,
-        workType: workType,
-        side: side,
-        eventType: eventType,
+        workType,
+        side,
+        eventType,
         eventDate: eventDates,
         eventStartTime: time.toLocaleTimeString('en-US', {
           hour: '2-digit',
@@ -209,7 +209,7 @@ const AddWorkForm: React.FC = () => {
         }),
         nepaliEventDate: nepaliEventDates,
         detailNepaliDate: nepaliDetailDates,
-        location: location,
+        location,
       };
 
       // Add companyId only if a company is selected
@@ -299,7 +299,7 @@ const AddWorkForm: React.FC = () => {
               <View
                 style={{ height: 120 }}
                 className="mb-6 overflow-hidden rounded-2xl border border-gray/10 bg-white shadow-sm">
-                <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+                <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
                   {EVENT_TYPES.map((item) => {
                     const isSelected = eventType === item.id;
                     return (

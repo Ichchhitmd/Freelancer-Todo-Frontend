@@ -9,7 +9,9 @@ const PAYMENT_STATUS_CONFIG = {
   UNPAID: { color: '#EF4444', label: 'Unpaid' },
   PAID: { color: '#10B981', label: 'Paid' },
   PARTIALLY_PAID: { color: '#F59E0B', label: 'Partially Paid' },
-};
+} as const;
+
+type PaymentStatusKey = keyof typeof PAYMENT_STATUS_CONFIG;
 
 interface WorkItemProps {
   item: SimplifiedWorkItem;
@@ -58,7 +60,7 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
     ? item.workType
     : item.workType?.split(',').map((type) => type.trim()) || [];
 
-  const paymentStatus = item.originalEvent?.paymentStatus || 'UNPAID';
+  const paymentStatus = (item.originalEvent?.paymentStatus || 'UNPAID') as PaymentStatusKey;
   const statusConfig = PAYMENT_STATUS_CONFIG[paymentStatus] || PAYMENT_STATUS_CONFIG.UNPAID;
 
   const dueAmount = item.originalEvent?.dueAmount || (item as any).dueAmount || 0;
@@ -79,8 +81,15 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
         className="rounded-2xl bg-white shadow-lg">
         <View className="p-6">
           <View className="flex-row items-center justify-between">
-            <View className="rounded-lg bg-blue-100 px-4 py-2">
-              <Text className="text-base font-semibold text-blue-800">
+            <View
+              className={`rounded-lg px-4 py-2 ${
+                item.isToday
+                  ? 'bg-blue-500'
+                  : item.daysDifference < 0
+                    ? 'bg-red-500'
+                    : 'bg-green-500'
+              }`}>
+              <Text className="text-base font-semibold text-white">
                 <NepaliDateFormatter dates={item.detailNepaliDate} />
               </Text>
             </View>
