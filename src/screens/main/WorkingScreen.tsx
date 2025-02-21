@@ -1,15 +1,15 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { EmptyState } from 'components/WorkingsScreen/EmptyState';
+import { FilterBar } from 'components/WorkingsScreen/FilterBar';
+import { WorkItem } from 'components/WorkingsScreen/WorkItem';
+import { useGetEvents } from 'hooks/events';
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
 import { RootState } from 'redux/store';
-import { useGetEvents } from 'hooks/events';
-import { FilterBar } from 'components/WorkingsScreen/FilterBar';
-import { WorkItem } from 'components/WorkingsScreen/WorkItem';
-import { EmptyState } from 'components/WorkingsScreen/EmptyState';
 import { FilterType, SimplifiedWorkItem, SortType, WorkEvent } from 'types/WorkingScreenTypes';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getDaysStatus } from 'utils/utils';
 
 type RootStackParamList = {

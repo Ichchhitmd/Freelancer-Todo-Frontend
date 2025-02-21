@@ -66,11 +66,11 @@ const CustomModal = ({
         <TouchableOpacity
           onPress={() => {
             onClose();
-            navigation.navigate('Add Expenses');
+            navigation.navigate('Add Income');
           }}
           style={styles.modalOption}>
           <MaterialCommunityIcons name="cash-plus" size={24} color="#ef4444" />
-          <Text style={styles.modalOptionText}>Add Expenses</Text>
+          <Text style={styles.modalOptionText}>Add Income</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>

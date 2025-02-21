@@ -14,6 +14,7 @@ export interface EventRequest {
   clientContactPerson2?: string | null;
   clientContactNumber2?: string | null;
   location: string;
+  paymentStatus?: string;
   actualEarnings?: number | null; // Matches the example nullability
 }
 

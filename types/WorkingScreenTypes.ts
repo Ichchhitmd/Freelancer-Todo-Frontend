@@ -1,5 +1,6 @@
 export type FilterType = 'all' | 'upcoming' | 'past';
 export type SortType = 'date-desc' | 'date-asc' | 'company';
+export type PaymentStatus = 'UNPAID' | 'PAID' | 'PARTIALLY_PAID';
 
 export interface SimplifiedWorkItem {
   id: string | number;
@@ -12,27 +13,28 @@ export interface SimplifiedWorkItem {
   workType: string | string[];
   earnings: string;
   location?: string;
-  detailNepaliDate: Array<{
+  detailNepaliDate: {
     nepaliDay: number;
     nepaliYear: number;
     nepaliMonth: number;
-  }>;
+  }[];
   originalEvent?: WorkEvent;
   statusText: string;
   statusStyle: string;
   daysDifference: number;
   isToday: boolean;
-  
+  paymentStatus?: PaymentStatus;
 }
 
 export interface WorkEvent {
+  paymentStatus: string;
   eventDate: string[];
   nepaliEventDate: string[];
-  detailNepaliDate: Array<{
+  detailNepaliDate: {
     nepaliDay: number;
     nepaliYear: number;
     nepaliMonth: number;
-  }>;
+  }[];
   dueAmount: number;
   id: number;
   userId: number;

@@ -1,4 +1,5 @@
-import { Company, CompanyRequest, CompanyResponse } from 'types/companiesTypes';
+import { CompanyRequest, CompanyResponse } from 'types/companiesTypes';
+
 import { get, post } from './api';
 
 export const getCompanies = async (): Promise<CompanyResponse[]> => {

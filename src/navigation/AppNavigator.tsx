@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ExpenseForm from 'components/forms/ExpenseForm';
+import IncomeForm from 'components/forms/IncomeForm';
 import ReimbursementForm from 'components/forms/ReimbursementForm';
 import { useLogin } from 'hooks/useAuth';
 import React, { useEffect, useState } from 'react';
@@ -68,7 +68,7 @@ export const AppNavigator = () => {
           <Stack.Screen name="ReimbursementForm" component={ReimbursementForm} />
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
-          <Stack.Screen name="Add Expenses" component={ExpenseForm} />
+          <Stack.Screen name="Add Income" component={IncomeForm} />
           <Stack.Screen name="Add Work" component={WorkScreen} />
         </>
       ) : (

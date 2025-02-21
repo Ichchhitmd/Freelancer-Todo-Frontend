@@ -1,8 +1,15 @@
-import React, { useEffect } from 'react';
-import { NepaliDateFormatter } from '../utils/NepaliDateFormatter';
-import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { SimplifiedWorkItem } from 'types/WorkingScreenTypes';
+
+import { NepaliDateFormatter } from '../utils/NepaliDateFormatter';
+
+const PAYMENT_STATUS_CONFIG = {
+  UNPAID: { color: '#EF4444', label: 'Unpaid' },
+  PAID: { color: '#10B981', label: 'Paid' },
+  PARTIALLY_PAID: { color: '#F59E0B', label: 'Partially Paid' },
+};
 
 interface WorkItemProps {
   item: SimplifiedWorkItem;
@@ -51,6 +58,14 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
     ? item.workType
     : item.workType?.split(',').map((type) => type.trim()) || [];
 
+  const paymentStatus = item.originalEvent?.paymentStatus || 'UNPAID';
+  const statusConfig = PAYMENT_STATUS_CONFIG[paymentStatus] || PAYMENT_STATUS_CONFIG.UNPAID;
+
+  const dueAmount = item.originalEvent?.dueAmount || (item as any).dueAmount || 0;
+
+  const shouldShowDueAmount =
+    (paymentStatus === 'UNPAID' || paymentStatus === 'PARTIALLY_PAID') && dueAmount > 0;
+
   return (
     <Animated.View
       style={{
@@ -63,22 +78,30 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
         activeOpacity={0.95}
         className="rounded-2xl bg-white shadow-lg">
         <View className="p-6">
-          {/* Header Section */}
           <View className="flex-row items-center justify-between">
-            {/* Highlighted Date */}
             <View className="rounded-lg bg-blue-100 px-4 py-2">
               <Text className="text-base font-semibold text-blue-800">
                 <NepaliDateFormatter dates={item.detailNepaliDate} />
               </Text>
             </View>
 
-            {/* Status Label */}
-            <View className={`bg-gray-100 rounded-md px-3 py-1`}>
+            <View className="bg-gray-100 rounded-md px-3 py-1">
               <Text className="text-gray-700 text-sm font-medium">{item.statusText}</Text>
+            </View>
+
+            <View
+              className="flex-row items-center rounded-full px-2 py-1"
+              style={{ backgroundColor: `${statusConfig.color}20` }}>
+              <View
+                className="mr-2 h-2 w-2 rounded-full"
+                style={{ backgroundColor: statusConfig.color }}
+              />
+              <Text className="text-xs font-semibold" style={{ color: statusConfig.color }}>
+                {statusConfig.label}
+              </Text>
             </View>
           </View>
 
-          {/* Main Content */}
           <View className="mt-4">
             <Text className="text-gray-900 text-xl font-bold">{item.companyName}</Text>
             {item.location && (
@@ -109,6 +132,13 @@ export const WorkItem = ({ item, onPress, index }: WorkItemProps) => {
 
           <View className="border-gray-200 mt-6 flex-row items-center justify-between border-t pt-4">
             <Text className="text-2xl font-bold text-green-600">{item.earnings}</Text>
+            {shouldShowDueAmount && (
+              <View className="rounded-lg p-2" style={{ backgroundColor: '#FEF3C7' }}>
+                <Text className="text-lg font-semibold text-yellow-700">
+                  Due: {dueAmount.toLocaleString()}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
