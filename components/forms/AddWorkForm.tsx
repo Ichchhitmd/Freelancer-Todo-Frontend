@@ -12,7 +12,7 @@ import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
-import { selectUserId } from 'redux/selectors/authSelectors';
+import { RootState } from 'redux/store';
 import { EventRequest } from 'types/eventTypes';
 import type { RootStackParamList } from 'types/navigation';
 
@@ -105,7 +105,9 @@ const AddWorkForm: React.FC = () => {
   );
 
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
-  const userId = useSelector(selectUserId);
+
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
+
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
 
   const handleSubmit = useCallback(async () => {
