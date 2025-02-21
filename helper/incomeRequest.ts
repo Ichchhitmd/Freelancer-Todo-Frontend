@@ -1,8 +1,8 @@
 import { post } from './api';
 
 export const postIncome = async (payload: {
-  companyId: string;
-  userId: string;
+  companyId: number;
+  userId: number;
   amount: number;
 }): Promise<any> => {
   const { companyId, userId, amount } = payload;
@@ -11,9 +11,5 @@ export const postIncome = async (payload: {
     throw new Error('Invalid payload');
   }
 
-  const submissionPayload = {
-    amount: amount.toString(),
-  };
-
-  return post<any>(`/companies/${companyId}/users/${userId}/process-payment`, submissionPayload);
+  return post<any>(`/companies/${companyId}/users/${userId}/process-payment`, { amount });
 };

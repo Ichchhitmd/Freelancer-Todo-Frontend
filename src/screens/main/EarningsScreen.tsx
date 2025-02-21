@@ -1,9 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import CompanyDropdown from 'components/EarningsScreen/CompanyDropdown';
 import { MonthlyEventsModal } from 'components/EarningsScreen/MonthlyEventsModal';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useGetCompanies } from 'hooks/companies';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
+import { useGetFinancials } from 'hooks/finance';
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -29,12 +32,15 @@ export default function EarningsScreen() {
   const navigation = useNavigation();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string | null>(null);
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
   const { data: earningsData, refetch: earningsRefetch } = useGetEarnings(userId || 0);
-
   const { data: eventsData, refetch } = useGetEvents(userId || 0);
+  const { data: companiesData } = useGetCompanies();
+  const { data: FinancialData } = useGetFinancials(userId, selectedCompanyId || 0);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -80,6 +86,14 @@ export default function EarningsScreen() {
   }, [earningsData?.monthly]);
 
   const totals = useMemo(() => {
+    if (selectedCompanyId && FinancialData) {
+      return {
+        quoted: FinancialData.totalEarnings,
+        received: FinancialData.totalReceived,
+        due: FinancialData.totalDue,
+      };
+    }
+
     if (!earningsData?.total) return { quoted: 0, received: 0, due: 0 };
 
     return {
@@ -87,7 +101,7 @@ export default function EarningsScreen() {
       received: earningsData.total.totalReceivedEarnings,
       due: earningsData.total.totalDueAmount,
     };
-  }, [earningsData?.total]);
+  }, [earningsData?.total, selectedCompanyId, FinancialData]);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMonthEvents, setSelectedMonthEvents] = useState<
@@ -111,11 +125,9 @@ export default function EarningsScreen() {
   });
 
   const handleMonthSelect = (monthData: MonthlyData) => {
-    // Extract year and month from monthData.month (e.g., "Falgun 2081")
     const [monthName, yearStr] = monthData.month.split(' ');
     const year = parseInt(yearStr, 10);
 
-    // Convert Nepali month name to number (1-12)
     const nepaliMonths = [
       'Baisakh',
       'Jestha',
@@ -132,7 +144,6 @@ export default function EarningsScreen() {
     ];
     const month = nepaliMonths.indexOf(monthName) + 1;
 
-    // Get events for the selected month from earningsData
     const monthEventIds = new Set(
       earningsData?.events
         ?.filter((event) => {
@@ -142,10 +153,8 @@ export default function EarningsScreen() {
         .map((event) => event.id) || []
     );
 
-    // Get full event details from eventsData
     const monthEvents = eventsData?.filter((event) => monthEventIds.has(event.id)) || [];
 
-    // Transform events to match the modal's expected format
     const transformedEvents = monthEvents.map((event) => ({
       id: event.id,
       eventDate: event.nepaliEventDate,
@@ -165,6 +174,16 @@ export default function EarningsScreen() {
       due: monthData.dueAmount,
     });
     setModalVisible(true);
+  };
+
+  const handleCompanySelect = (companyId: number | null) => {
+    setSelectedCompanyId(companyId);
+    if (companyId === null) {
+      setSelectedCompanyName(null);
+    } else {
+      const company = companiesData?.find((c) => c.id === companyId);
+      setSelectedCompanyName(company?.name || null);
+    }
   };
 
   const renderMonthlyCard = (data: MonthlyData) => (
@@ -198,6 +217,230 @@ export default function EarningsScreen() {
       </LinearGradient>
     </TouchableOpacity>
   );
+
+  const renderCompanyStats = () => {
+    if (!selectedCompanyId || !FinancialData) {
+      return (
+        <View className="mt-4 items-center justify-center rounded-2xl bg-white p-8 shadow-sm">
+          <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#9CA3AF" />
+          <Text className="text-gray-600 mt-4 text-center text-lg font-medium">
+            No Data Available
+          </Text>
+          <Text className="text-gray-500 mt-2 text-center">
+            Please select a company you have worked with to view their events and earnings.
+          </Text>
+        </View>
+      );
+    }
+
+    if (!FinancialData.events || FinancialData.events.length === 0) {
+      return (
+        <View className="mt-4 items-center justify-center rounded-2xl bg-white p-8 shadow-sm">
+          <MaterialCommunityIcons name="calendar-blank" size={48} color="#9CA3AF" />
+          <Text className="text-gray-600 mt-4 text-center text-lg font-medium">
+            No Events Found
+          </Text>
+          <Text className="text-gray-500 mt-2 text-center">
+            You haven't recorded any events with {selectedCompanyName} yet.
+          </Text>
+          <TouchableOpacity
+            onPress={() => handleCompanySelect(null)}
+            className="mt-6 rounded-xl bg-primary px-6 py-3">
+            <Text className="text-white">View All Companies</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const handleEventPress = (event) => {
+      const fullEvent = eventsData?.find((e) => e.id === event.id);
+      if (fullEvent) {
+        navigation.navigate('DateDetails', {
+          details: {
+            id: fullEvent.id,
+            eventDate: fullEvent.nepaliEventDate,
+            earnings: fullEvent.earnings.toString(),
+            eventType: fullEvent.eventType,
+            workType: Array.isArray(fullEvent.workType)
+              ? fullEvent.workType
+              : [fullEvent.eventType],
+            company: fullEvent.company,
+            location: fullEvent.location || '',
+            clientContactPerson1: fullEvent.clientContactPerson1 || 'Client',
+          },
+        });
+      }
+    };
+
+    return (
+      <View className=" mt-4">
+        <View className="rounded-2xl bg-primary/90 p-5 ">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xl font-bold text-white">{selectedCompanyName}</Text>
+            <MaterialCommunityIcons name="office-building" size={24} color="white" />
+          </View>
+
+          <View className="mt-4 flex-row flex-wrap justify-between">
+            <View className="mb-3 w-[48%] rounded-xl bg-white/10 p-3">
+              <MaterialCommunityIcons name="calendar-multiple" size={20} color="white" />
+              <Text className="mt-1 text-sm text-white/80">Total Events</Text>
+              <Text className="text-xl font-bold text-white">{FinancialData.totalEvents}</Text>
+            </View>
+            <View className="mb-3 w-[48%] rounded-xl bg-white/10 p-3">
+              <MaterialCommunityIcons name="cash-multiple" size={20} color="white" />
+              <Text className="mt-1 text-sm text-white/80">Total Earnings</Text>
+              <Text className="text-xl font-bold text-white">
+                रू{FinancialData.totalEarnings.toLocaleString()}
+              </Text>
+            </View>
+            <View className="w-[48%] rounded-xl bg-white/10 p-3">
+              <MaterialCommunityIcons name="cash-check" size={20} color="white" />
+              <Text className="mt-1 text-sm text-white/80">Received</Text>
+              <Text className="text-xl font-bold text-white">
+                रू{FinancialData.totalReceived.toLocaleString()}
+              </Text>
+            </View>
+            <View className="w-[48%] rounded-xl bg-white/10 p-3">
+              <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
+              <Text className="mt-1 text-sm text-white/80">Due Amount</Text>
+              <Text className="text-xl font-bold text-white">
+                रू{FinancialData.totalDue.toLocaleString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Payment Status Cards */}
+        <View className="mt-4 flex-row justify-between">
+          <TouchableOpacity
+            className="w-[31%] rounded-xl bg-white p-3 shadow-sm"
+            onPress={() => {
+              const paidEvents = FinancialData.events
+                .filter((e) => e.paymentStatus === 'PAID')
+                .map((event) => ({
+                  id: event.id,
+                  eventDate: event.eventDate,
+                  earnings: event.earnings,
+                  eventType: event.eventType,
+                  workType: [event.eventType],
+                  location: '',
+                  clientContactPerson1: 'Client',
+                }));
+              setSelectedMonthEvents(paidEvents);
+              setModalVisible(true);
+            }}>
+            <MaterialCommunityIcons name="check-circle" size={24} color="#E50914" />
+            <Text className="text-gray-800 mt-2 text-2xl font-bold">
+              {FinancialData.paymentStatus.paid}
+            </Text>
+            <Text className="text-gray-600 text-sm">Paid Events</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="w-[31%] rounded-xl bg-white p-3 shadow-sm"
+            onPress={() => {
+              const partialEvents = FinancialData.events
+                .filter((e) => e.paymentStatus === 'PARTIALLY_PAID')
+                .map((event) => ({
+                  id: event.id,
+                  eventDate: event.eventDate,
+                  earnings: event.earnings,
+                  eventType: event.eventType,
+                  workType: [event.eventType],
+                }));
+              setSelectedMonthEvents(partialEvents);
+              setModalVisible(true);
+            }}>
+            <MaterialCommunityIcons name="alert-circle" size={24} color="#E50914" />
+            <Text className="text-gray-800 mt-2 text-2xl font-bold">
+              {FinancialData.paymentStatus.partiallyPaid}
+            </Text>
+            <Text className="text-gray-600 text-sm">Partial</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="w-[31%] rounded-xl bg-white p-3 shadow-sm"
+            onPress={() => {
+              const unpaidEvents = FinancialData.events
+                .filter((e) => e.paymentStatus === 'UNPAID')
+                .map((event) => ({
+                  id: event.id,
+                  eventDate: event.eventDate,
+                  earnings: event.earnings,
+                  eventType: event.eventType,
+                  workType: [event.eventType],
+                }));
+              setSelectedMonthEvents(unpaidEvents);
+              setModalVisible(true);
+            }}>
+            <MaterialCommunityIcons name="close-circle" size={24} color="#E50914" />
+            <Text className="text-gray-800 mt-2 text-2xl font-bold">
+              {FinancialData.paymentStatus.unpaid}
+            </Text>
+            <Text className="text-gray-600 text-sm">Unpaid</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Events List */}
+        {FinancialData.events && FinancialData.events.length > 0 && (
+          <View className="mt-4">
+            <Text className="mb-3 text-lg font-bold">Recent Events</Text>
+            {FinancialData.events.map((event) => (
+              <TouchableOpacity
+                key={event.id}
+                onPress={() => handleEventPress(event)}
+                className="mb-4 overflow-hidden rounded-2xl">
+                <LinearGradient
+                  colors={['#E50914', '#FF4B4B']}
+                  className="p-4"
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}>
+                  <View className="flex-row items-center justify-between p-3">
+                    <View>
+                      <View className="flex-row items-center">
+                        <MaterialCommunityIcons
+                          name={
+                            event.eventType === 'WEDDING'
+                              ? 'ring'
+                              : event.eventType === 'ENGAGEMENT'
+                                ? 'heart'
+                                : 'party-popper'
+                          }
+                          size={20}
+                          color="white"
+                        />
+                        <Text className="ml-2 text-lg font-bold text-white">{event.eventType}</Text>
+                      </View>
+                      <View className="mt-2 flex-row">
+                        <View className="mr-4 flex-row items-center">
+                          <MaterialCommunityIcons name="calendar" size={16} color="white" />
+                          <Text className="ml-2 text-white">
+                            {Array.isArray(event.eventDate) ? event.eventDate[0] : event.eventDate}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="mt-2 flex-row items-center">
+                        <MaterialCommunityIcons name="cash" size={16} color="white" />
+                        <Text className="ml-2 text-white">
+                          रू{parseFloat(event.earnings).toLocaleString()}
+                        </Text>
+                        <View className="ml-4 rounded-full bg-white/20 px-3 py-1">
+                          <Text className="text-sm text-white">
+                            {event.paymentStatus.replace('_', ' ')}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={24} color="white" />
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView className="mb-14 flex-1 bg-white">
@@ -242,8 +485,19 @@ export default function EarningsScreen() {
         </View>
 
         <View className="mt-4 px-4">
-          <Text className="mb-4 text-xl font-bold">Monthly Breakdown</Text>
-          {monthlyBreakdown.length > 0 ? (
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className={`text-xl font-bold ${selectedCompanyId ? 'hidden' : 'block'}`}>
+              Monthly Breakdown
+            </Text>
+            <CompanyDropdown
+              onSelectCompany={handleCompanySelect}
+              activeCompany={selectedCompanyName}
+            />
+          </View>
+
+          {selectedCompanyId ? (
+            renderCompanyStats()
+          ) : monthlyBreakdown.length > 0 ? (
             monthlyBreakdown.map(renderMonthlyCard)
           ) : (
             <View className="items-center py-8">
@@ -257,11 +511,10 @@ export default function EarningsScreen() {
       <MonthlyEventsModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        events={selectedMonthEvents || []}
+        events={selectedMonthEvents}
         monthName={selectedMonth || ''}
         onEventPress={(event) => {
           setModalVisible(false);
-          // Add a small delay before navigating to ensure modal is closed
           setTimeout(() => {
             navigation.navigate('DateDetails', {
               details: event,
