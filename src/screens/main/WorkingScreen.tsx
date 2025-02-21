@@ -96,15 +96,15 @@ const WorkingScreen: React.FC = () => {
       case 'date-desc':
         filteredEvents.sort(
           (a, b) =>
-            new Date(b.originalEvent?.eventDate[0] || 0).getTime() -
-            new Date(a.originalEvent?.eventDate[0] || 0).getTime()
+            new Date(a.originalEvent?.eventDate[0] || 0).getTime() -
+            new Date(b.originalEvent?.eventDate[0] || 0).getTime()
         );
         break;
       case 'date-asc':
         filteredEvents.sort(
           (a, b) =>
-            new Date(a.originalEvent?.eventDate[0] || 0).getTime() -
-            new Date(b.originalEvent?.eventDate[0] || 0).getTime()
+            new Date(b.originalEvent?.eventDate[0] || 0).getTime() -
+            new Date(a.originalEvent?.eventDate[0] || 0).getTime()
         );
         break;
       case 'company':
