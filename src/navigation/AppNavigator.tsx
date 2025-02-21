@@ -14,7 +14,6 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ChangePasswordScreen from '../screens/main/ChangePasswordScreen';
 import CompanyDetails from '../screens/main/CompanyDetailsScreen';
-import EarningDetailScreen from '../screens/main/EarningDetailScreen';
 import WorkScreen from '../screens/main/WorkScreen';
 
 import HomeScreen from '~/screens/main/HomeScreen';
@@ -66,7 +65,6 @@ export const AppNavigator = () => {
         <>
           <Stack.Screen name="MainTabs" component={TabNavigator} />
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="EarningDetailScreen" component={EarningDetailScreen} />
           <Stack.Screen name="ReimbursementForm" component={ReimbursementForm} />
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
