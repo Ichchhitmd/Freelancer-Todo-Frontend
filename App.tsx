@@ -1,5 +1,4 @@
 import { enableScreens } from 'react-native-screens';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,8 +15,7 @@ import DateDetails from '~/screens/main/DateDetailScreen';
 import { TouchableOpacity, View } from 'react-native';
 import { NavigationProp, ParamListBase, NavigationContainer } from '@react-navigation/native';
 
-import { useEffect, useState } from 'react';
-import { requestNotificationPermission } from 'utils/notification';
+import { useState } from 'react';
 
 import { useFonts } from 'expo-font';
 
@@ -152,16 +150,13 @@ function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase
 }
 
 export default function App() {
-  useEffect(() => {
-    requestNotificationPermission();
-  }, []);
-
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
     'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
     'Poppins-Light': require('./assets/fonts/Poppins-Light.ttf'),
     'Poppins-SemiBold': require('./assets/fonts/Poppins-SemiBold.ttf'),
   });
+
   if (!fontsLoaded) {
     return null;
   }

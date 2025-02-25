@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
 import { useSignup } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import {
@@ -59,7 +60,7 @@ export default function RegisterScreen() {
       },
       onError: (error) => {
         console.error('Signup error:', error);
-        Alert.alert('Signup Failed', error.message || 'An error occurred');
+        Alert.alert('Signup Failed', handleAxiosError(error));
       },
     });
   };

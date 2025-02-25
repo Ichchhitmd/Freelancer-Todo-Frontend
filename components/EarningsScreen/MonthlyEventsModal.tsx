@@ -51,7 +51,7 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
       <View className="flex-1 bg-black/50">
         <View className="mt-20 flex-1 rounded-t-3xl bg-white">
           <LinearGradient
-            colors={['#E50914', '#FF4B4B']}
+            colors={['#E5091459', '#FF4B4B']}
             className="rounded-t-3xl p-4"
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}>

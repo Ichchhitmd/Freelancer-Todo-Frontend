@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { monthNames, engToNepNum } from 'components/utils/NepaliDateFormatter';
+import { getCurrentNepaliDate } from 'lib/calendar';
 import React from 'react';
 import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-native';
 
@@ -82,17 +83,16 @@ const BookedDates: React.FC<BookedDatesProps> = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Get current Nepali date
+    const currentNepaliDate = getCurrentNepaliDate();
+    const currentNepaliYear = currentNepaliDate.year;
+    // Add 1 to convert from 0-based to 1-based month
+    const currentNepaliMonth = currentNepaliDate.month + 1;
+
     // Sort selected dates by month and then by day
     const sortedDates = selectedDates.sort((a, b) => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
-
-      // Prioritize today's month
-      if (dateA.getFullYear() === today.getFullYear() && dateA.getMonth() === today.getMonth())
-        return -1;
-      if (dateB.getFullYear() === today.getFullYear() && dateB.getMonth() === today.getMonth())
-        return 1;
-
       return dateA.getTime() - dateB.getTime();
     });
 
@@ -100,11 +100,16 @@ const BookedDates: React.FC<BookedDatesProps> = ({
       const eventDate = new Date(item.date);
       eventDate.setHours(0, 0, 0, 0);
 
-      // Skip past dates
-      if (eventDate < today) return acc;
-
       const nepaliDate = getNepaliDate(item.date);
       if (!nepaliDate) return acc;
+
+      // Skip if it's a past month
+      if (
+        nepaliDate.nepaliYear < currentNepaliYear ||
+        (nepaliDate.nepaliYear === currentNepaliYear && nepaliDate.nepaliMonth < currentNepaliMonth)
+      ) {
+        return acc;
+      }
 
       const monthName = monthNames[nepaliDate.nepaliMonth - 1];
 
@@ -220,10 +225,17 @@ const BookedDates: React.FC<BookedDatesProps> = ({
         </ScrollView>
         <View
           className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"
-          style={{ opacity: 0.8 }}
+          style={{ opacity: 0.9 }}
         />
-        <View className="absolute bottom-2 right-2 rounded-full bg-white p-1.5 shadow-sm">
-          <MaterialCommunityIcons name="gesture-swipe-vertical" size={18} color="#ef4444" />
+        <View
+          className="absolute bottom-4 right-4 rounded-full bg-white p-2 shadow-md"
+          style={{ elevation: 3, opacity: 0.9 }}>
+          <MaterialCommunityIcons
+            name="gesture-swipe-vertical"
+            size={20}
+            color="#dc2626"
+            style={{ transform: [{ scale: 1.1 }] }}
+          />
         </View>
       </View>
     </SafeAreaView>

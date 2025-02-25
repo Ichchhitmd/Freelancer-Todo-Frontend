@@ -106,7 +106,7 @@ export default function TabNavigator({
                 <View
                   style={{
                     position: 'absolute',
-                    top: -5,
+                    top: -8,
                     backgroundColor: 'red',
                     width: 60,
                     height: 60,
