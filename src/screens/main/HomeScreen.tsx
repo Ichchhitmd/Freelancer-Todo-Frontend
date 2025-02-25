@@ -5,7 +5,6 @@ import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
-import { useNotifications } from 'hooks/useNotification';
 import { getCurrentNepaliDate } from 'lib/calendar';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -18,7 +17,7 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState, selectUserDetails } from 'redux/store';
-import { registerForPushNotificationsAsync } from 'utils/notification';
+import { scheduleEventNotifications } from '~/utils/notificationScheduler';
 
 interface NepaliDate {
   nepaliYear: number;
@@ -33,15 +32,6 @@ const HomeScreen = () => {
   const userName = userDetails?.userName;
   const userId = userDetails?.userId;
 
-  const token = useSelector((state: RootState) => state.auth.token);
-  console.log(token);
-  useNotifications();
-
-  useEffect(() => {
-    if (token) {
-      registerForPushNotificationsAsync(token);
-    }
-  }, [token]);
   const navigation = useNavigation();
 
   const { data, isLoading: eventsIsLoading, refetch: eventsRefetch } = useGetEvents(userId || 0);
@@ -100,6 +90,14 @@ const HomeScreen = () => {
       const events = Array.isArray(data) ? data : [data];
 
       events.forEach(async (event) => {
+        console.log('Event data:', {
+          id: event.id,
+          eventDate: event.eventDate,
+          eventStartTime: event.eventStartTime,
+          eventType: event.eventCategory?.name,
+          location: event.venueDetails?.name,
+        });
+
         await scheduleEventNotifications({
           eventId: event.id,
           eventDate: event.eventDate,
