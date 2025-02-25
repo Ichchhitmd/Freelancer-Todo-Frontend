@@ -5,7 +5,30 @@ import { Text, TouchableOpacity, View, ScrollView, SafeAreaView } from 'react-na
 
 interface DateDetail {
   date: string;
-  details: any;
+  details: {
+    eventId: number;
+    eventType: string;
+    side: string;
+    earnings: string;
+    contactPerson: string;
+    eventStartTime: string;
+    location: string;
+    clientContactPerson1: string;
+    clientContactNumber1: string;
+    clientContactNumber2: string;
+    company?: {
+      name: string;
+    };
+    assignedBy?: string | null;
+    assignedContactNumber?: number | null;
+    eventDate: string[];
+    nepaliEventDate: string[];
+    detailNepaliDate: Array<{
+      nepaliDay: number;
+      nepaliYear: number;
+      nepaliMonth: number;
+    }>;
+  };
   isToday?: boolean;
   nepaliDate?: {
     nepaliDay: number;
@@ -97,15 +120,6 @@ const BookedDates: React.FC<BookedDatesProps> = ({
     }, {});
   }, [selectedDates]);
 
-  const eventColors: Record<string, string> = {
-    WEDDING: '#FF2400',
-    MEHENDI: '#34D399',
-    RECEPTION: '#FBBF24',
-    ENGAGEMENT: '#F88379',
-    'PRE-WEDDING': '#FDE047',
-    UNKNOWN: '#6D28D9',
-  };
-
   const getMonthlyTotals = (month: string) => {
     if (!monthlyTotals) return null;
 
@@ -119,80 +133,99 @@ const BookedDates: React.FC<BookedDatesProps> = ({
 
   return (
     <SafeAreaView className="w-full">
-      <ScrollView style={{ maxHeight: 350 }} nestedScrollEnabled className="w-full flex-1">
-        {groupedDates &&
-          Object.entries(groupedDates).map(([month, dates]) => {
-            const monthTotals = getMonthlyTotals(month);
+      <View className="relative">
+        <ScrollView
+          style={{ maxHeight: 350 }}
+          nestedScrollEnabled
+          className="w-full flex-1"
+          showsVerticalScrollIndicator={true}
+          indicatorStyle="black">
+          {groupedDates &&
+            Object.entries(groupedDates).map(([month, dates]) => {
+              const monthTotals = getMonthlyTotals(month);
 
-            return (
-              <View
-                key={month}
-                className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
-                <View className="mb-2 flex-row items-center">
-                  <MaterialCommunityIcons name="calendar-month" size={24} color="#ef4444" />
-                  <Text className="text-gray-900 ml-2 text-xl font-bold">{month}</Text>
-                </View>
+              return (
+                <View
+                  key={month}
+                  className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
+                  <View className="mb-2 flex-row items-center">
+                    <MaterialCommunityIcons name="calendar-month" size={24} color="#ef4444" />
+                    <Text className="text-gray-900 ml-2 text-xl font-bold">{month}</Text>
+                  </View>
 
-                <View className="flex-row flex-wrap gap-2">
-                  {dates
-                    .sort((a, b) => (a.nepaliDate?.nepaliDay || 0) - (b.nepaliDate?.nepaliDay || 0))
-                    .map((item: DateDetail, index: number) => (
-                      <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
-                        <View
-                          className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
-                            item.isToday ? 'border-2 border-white' : 'border border-gray/5'
-                          }`}
-                          style={{
-                            backgroundColor:
-                              eventColors[item.details?.eventType] || eventColors.UNKNOWN,
-                            transform: [{ scale: item.isToday ? 1.1 : 1 }],
-                          }}>
-                          <Text className="text-center text-sm font-semibold text-white">
-                            {engToNepNum(item.nepaliDate?.nepaliDay)}
+                  <View className="flex-row flex-wrap gap-2">
+                    {dates
+                      .sort(
+                        (a, b) => (a.nepaliDate?.nepaliDay || 0) - (b.nepaliDate?.nepaliDay || 0)
+                      )
+                      .map((item: DateDetail, index: number) => (
+                        <TouchableOpacity key={index} onPress={() => handleDateClick(item.details)}>
+                          <View
+                            className={`h-12 w-12 flex-col items-center justify-center rounded-full border ${
+                              item.isToday ? 'border-2 border-white' : 'border border-gray/5'
+                            }`}
+                            style={{
+                              backgroundColor: '#ef4444',
+                              transform: [{ scale: item.isToday ? 1.1 : 1 }],
+                            }}>
+                            <Text className="text-center text-sm font-semibold text-white">
+                              {engToNepNum(item.nepaliDate?.nepaliDay)}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                  </View>
+
+                  {monthTotals && (
+                    <View className="mx-3 my-3">
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex flex-col items-center justify-center">
+                          <Text className="text-xl font-semibold text-blue-600">
+                            ₹{monthTotals.quotedEarnings}
+                          </Text>
+                          <Text className="text-sm font-semibold text-blue-600">
+                            Total Earnings
                           </Text>
                         </View>
-                      </TouchableOpacity>
-                    ))}
-                </View>
 
-                {monthTotals && (
-                  <View className="mx-3 my-3">
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex flex-col items-center justify-center">
-                        <Text className="text-xl font-semibold text-blue-600">
-                          ₹{monthTotals.quotedEarnings}
-                        </Text>
-                        <Text className="text-sm font-semibold text-blue-600">Total Earnings</Text>
-                      </View>
+                        <View className="mx-2 h-8 w-[1px] bg-gray" />
+                        <View className="flex flex-col items-center justify-center">
+                          <Text className="text-xl font-semibold text-green-600">
+                            ₹{monthTotals.receivedEarnings}
+                          </Text>
+                          <Text className="text-sm font-semibold text-green-600">
+                            Total Received
+                          </Text>
+                        </View>
 
-                      <View className="mx-2 h-8 w-[1px] bg-gray" />
-                      <View className="flex flex-col items-center justify-center">
-                        <Text className="text-2xl font-semibold text-red-600">
-                          ₹{monthTotals.dueAmount}
-                        </Text>
-                        <Text className="text-sm font-semibold text-red-600">Total Due</Text>
-                      </View>
-
-                      <View className="mx-2 h-8 w-[1px] bg-gray" />
-                      <View className="flex flex-col items-center justify-center">
-                        <Text className="text-xl font-semibold text-green-600">
-                          ₹{monthTotals.receivedEarnings}
-                        </Text>
-                        <Text className="text-sm font-semibold text-green-600">Total Received</Text>
+                        <View className="mx-2 h-8 w-[1px] bg-gray" />
+                        <View className="flex flex-col items-center justify-center">
+                          <Text className="text-2xl font-semibold text-red-600">
+                            ₹{monthTotals.dueAmount}
+                          </Text>
+                          <Text className="text-sm font-semibold text-red-600">Total Due</Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                )}
-              </View>
-            );
-          })}
+                  )}
+                </View>
+              );
+            })}
 
-        {Object.keys(groupedDates).length === 0 && (
-          <View className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
-            <Text className="text-gray-500 text-center">No upcoming dates available</Text>
-          </View>
-        )}
-      </ScrollView>
+          {Object.keys(groupedDates).length === 0 && (
+            <View className="mb-4 w-full rounded-xl bg-white p-4 shadow-sm shadow-black">
+              <Text className="text-gray-500 text-center">No upcoming dates available</Text>
+            </View>
+          )}
+        </ScrollView>
+        <View
+          className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"
+          style={{ opacity: 0.8 }}
+        />
+        <View className="absolute bottom-2 right-2 rounded-full bg-white p-1.5 shadow-sm">
+          <MaterialCommunityIcons name="gesture-swipe-vertical" size={18} color="#ef4444" />
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

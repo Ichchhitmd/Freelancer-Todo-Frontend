@@ -2,7 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
-import React, { useState } from 'react';
+import { useGetEventTypes } from 'hooks/eventTypes';
+import React, { useState, useCallback } from 'react';
 import {
   Text,
   ScrollView,
@@ -14,60 +15,15 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-
-interface Company {
-  bio: string;
-  contactInfo: string;
-  contactPerson: string | null;
-  id: number;
-  name: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-  phone: string;
-}
-
-interface EventDetails {
-  actualEarnings: string | null;
-  company?: Company | null;
-  companyId?: number;
-  contactInfo: string | null;
-  contactPerson: string | null;
-  createdAt: string;
-  earnings: string;
-  eventDate: string[];
-  eventStartTime: string;
-  eventType: string;
-  freelancerId: number | null;
-  id: number;
-  side: 'BRIDE' | 'GROOM';
-  updatedAt: string;
-  user: User;
-  userId: number;
-  workType: string[];
-  dueAmount: number;
-  nepaliEventDate: string[];
-  detailNepaliDate: {
-    nepaliDay: number;
-    nepaliYear: number;
-    nepaliMonth: number;
-  }[];
-  clientContactPerson1: string | null;
-  clientContactNumber1: string | null;
-  clientContactPerson2: string | null;
-  clientContactNumber2: string | null;
-  location: string;
-}
+import { WorkEvent } from 'types/WorkingScreenTypes';
 
 type RootStackParamList = {
   DateDetail: {
-    details: EventDetails;
+    details: WorkEvent;
   };
   'Add Work': {
     isEditMode: boolean;
-    details: EventDetails;
+    details: WorkEvent;
   };
 };
 
@@ -80,18 +36,26 @@ const DateDetails: React.FC = () => {
 
   // Fetch complete event details
   const { data: details, isLoading } = useGetEventById(initialDetails.id);
+  const { data: eventTypes } = useGetEventTypes();
   const [actualEarnings, setActualEarnings] = useState<string>('');
-  const [localDueAmount, setLocalDueAmount] = useState<number>(initialDetails.dueAmount);
+  const [localDueAmount, setLocalDueAmount] = useState<number>(initialDetails.dueAmount || 0);
   const [showEarningsModal, setShowEarningsModal] = useState(false);
   const { mutate: deleteEvent } = useDeleteEvent();
   const { mutate: updateEvent } = usePatchEvent();
+
+  const getEventTypeName = useCallback(
+    (eventCategoryId: number) => {
+      const eventType = eventTypes?.find((type) => type.id === eventCategoryId);
+      return eventType?.name || 'Unknown';
+    },
+    [eventTypes]
+  );
 
   // Use the refresh function when component mounts
   React.useEffect(() => {
     if (refresh) {
       refresh().then((freshData) => {
         if (freshData) {
-          // Update the route params with fresh data
           navigation.setParams({
             details: freshData,
           });
@@ -103,16 +67,28 @@ const DateDetails: React.FC = () => {
   // Update local state when details change
   React.useEffect(() => {
     if (details) {
-      setActualEarnings(details.actualEarnings || '');
-      setLocalDueAmount(details.dueAmount);
+      setActualEarnings(details.actualEarnings?.toString() || '');
+      setLocalDueAmount(details.dueAmount || 0);
     }
   }, [details]);
+
+  const getCompanyName = () => {
+    // First try to get from API response
+    if (details?.company?.name) return details.company.name;
+    // Then try from initial details (WorkEvent)
+    if (initialDetails.company?.name) return initialDetails.company.name;
+    // Then try from primary contact
+    if (details?.primaryContact?.name) return `${details.primaryContact.name}'s Event`;
+    if (initialDetails.clientContactPerson1)
+      return `${initialDetails.clientContactPerson1}'s Event`;
+    return 'Personal Event';
+  };
 
   // Calculate due amount instantly when actual earnings change
   const handleActualEarningsChange = (text: string) => {
     setActualEarnings(text);
     if (details) {
-      const earnings = parseFloat(details.earnings);
+      const earnings = parseFloat(details.earnings?.toString() || '0');
       const actual = text ? parseFloat(text) : 0;
       setLocalDueAmount(earnings - actual);
     }
@@ -167,11 +143,10 @@ const DateDetails: React.FC = () => {
       {
         onSuccess: () => {
           Alert.alert('Success', 'Actual earnings updated successfully');
-          // Force a refresh of the route params
           navigation.setParams({
             details: {
               ...details,
-              actualEarnings,
+              actualEarnings: parsedActualEarnings,
               dueAmount: localDueAmount,
             },
           });
@@ -300,12 +275,15 @@ const DateDetails: React.FC = () => {
           </View>
         </View>
       </Modal>
+
       <ScrollView className="mb-24 flex-1">
         <View className="bg-red-400 px-4 py-8">
-          <Text className="text-center text-xl font-semibold text-white">{details.eventType}</Text>
+          <Text className="text-center text-xl font-semibold text-white">
+            {details.eventCategory?.name || 'Unknown Event Type'}
+          </Text>
 
           <View className="flex flex-row items-center justify-center">
-            {details.detailNepaliDate.map((date, index) => (
+            {details.detailNepaliDate?.map((date, index) => (
               <Text
                 key={index}
                 className="items-center justify-center pt-2 text-center text-3xl font-bold text-white">
@@ -321,10 +299,10 @@ const DateDetails: React.FC = () => {
             <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-100">
               <MaterialCommunityIcons name="office-building" size={32} color="#ef4444" />
             </View>
-            <Text className="text-gray-900 mt-2 text-xl font-bold">
-              {details.company?.name || `${details.clientContactPerson1}'s Work`}
+            <Text className="text-gray-900 mt-2 text-xl font-bold">{getCompanyName()}</Text>
+            <Text className="text-gray-500 text-base">
+              {details.venueDetails?.location || 'Location not specified'}
             </Text>
-            <Text className="text-gray-500 text-base">{details.location}</Text>
             <View className="mt-4 flex-row items-center justify-center gap-12">
               <TouchableOpacity
                 className="flex-row items-center rounded-xl bg-red-500 px-4 py-2"
@@ -348,37 +326,53 @@ const DateDetails: React.FC = () => {
 
         <View className="mt-4 bg-white">
           <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Event Details</Text>
-          <DetailRow icon="account-heart" label="Side" value={details.side} />
-          <DetailRow icon="clock-outline" label="Start Time" value={details.eventStartTime} />
-          <DetailRow icon="camera-outline" label="Work Type" value={details.workType.join(', ')} />
+          <DetailRow icon="account-heart" label="Side" value={details.side || 'Not specified'} />
+          <DetailRow
+            icon="clock-outline"
+            label="Start Time"
+            value={details.eventStartTime || 'Not specified'}
+          />
+          <DetailRow
+            icon="camera-outline"
+            label="Work Type"
+            value={details.workType?.join(', ') || 'Not specified'}
+          />
         </View>
 
         <View className="mt-4 bg-white">
           <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Financial Details</Text>
-          <DetailRow icon="currency-inr" label="Total Amount" value={`₹ ${details.earnings}`} />
+          <DetailRow
+            icon="currency-inr"
+            label="Total Amount"
+            value={`रू ${parseFloat(details.earnings?.toString() || '0').toLocaleString()}`}
+          />
           <DetailRow
             icon="currency-inr"
             label="Actual Earnings"
-            value={`₹ ${actualEarnings}`}
+            value={actualEarnings ? `रू ${parseFloat(actualEarnings).toLocaleString()}` : 'Not set'}
             isActualEarnings
           />
-          <DetailRow icon="currency-inr" label="Due Amount" value={`₹ ${localDueAmount}`} />
+          <DetailRow
+            icon="currency-inr"
+            label="Due Amount"
+            value={`रू ${localDueAmount.toLocaleString()}`}
+          />
         </View>
 
         <View className="mt-4 bg-white">
           <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Contact Information</Text>
-          {details.clientContactPerson1 && (
+          {details.primaryContact && (
             <DetailRow
               icon="account-outline"
               label="Primary Contact"
-              value={`${details.clientContactPerson1} - ${details.clientContactNumber1}`}
+              value={`${details.primaryContact.name} - ${details.primaryContact.phoneNumber}`}
             />
           )}
-          {details.clientContactPerson2 && (
+          {details.secondaryContact && (
             <DetailRow
               icon="account-outline"
               label="Secondary Contact"
-              value={`${details.clientContactPerson2} - ${details.clientContactNumber2}`}
+              value={`${details.secondaryContact.name} - ${details.secondaryContact.phoneNumber}`}
             />
           )}
           {details.company && (

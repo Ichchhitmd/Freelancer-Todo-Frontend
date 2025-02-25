@@ -5,7 +5,6 @@ import {
   ScrollView,
   TextInput,
   Dimensions,
-  TouchableWithoutFeedback,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { useGetCompanies } from 'hooks/companies';

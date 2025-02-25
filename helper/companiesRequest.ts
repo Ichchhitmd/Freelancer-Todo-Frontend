@@ -3,7 +3,7 @@ import { CompanyRequest, CompanyResponse } from 'types/companiesTypes';
 import { get, post } from './api';
 
 export const getCompanies = async (): Promise<CompanyResponse[]> => {
-  return get<CompanyResponse[]>(`/companies/`);
+  return get<CompanyResponse[]>(`/companies`);
 };
 
 export const getCompaniesById = async (id: number): Promise<CompanyResponse> => {

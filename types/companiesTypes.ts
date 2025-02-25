@@ -13,9 +13,9 @@ export interface Company {
 export interface CompanyResponse {
   id: number;
   name: string;
-  bio: string;
-  contactInfo: string;
-  contactPerson: string;
+  bio?: string;
+  contactInfo?: string;
+  contactPerson?: string;
   location?: string;
   imageUrl?: string;
   createdAt: string;

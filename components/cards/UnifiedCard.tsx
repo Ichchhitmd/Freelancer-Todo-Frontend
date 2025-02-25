@@ -173,13 +173,13 @@ const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData
           <View className="mt-6">
             <View className="mb-4 flex-row justify-between">
               <Text className="text-lg font-semibold text-blue-700">Total Earnings</Text>
-              <Text className="text-xl font-bold text-emerald-500">
+              <Text className="text-xl font-bold text-blue-700">
                 रू{formatAmount(totalData.totalQuotedEarnings)}
               </Text>
             </View>
             <View className="mb-4 flex-row justify-between">
               <Text className="text-lg font-semibold text-green-700">Total Received</Text>
-              <Text className="text-xl font-bold text-blue-500">
+              <Text className="text-xl font-bold text-green-700">
                 रू{formatAmount(totalData.totalReceivedEarnings)}
               </Text>
             </View>

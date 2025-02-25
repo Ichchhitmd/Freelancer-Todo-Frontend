@@ -3,60 +3,41 @@ import { Text, View, TouchableOpacity, Platform, Linking, ScrollView } from 'rea
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatNepaliDates } from '../utils/NepaliDateFormatter';
 import { getDaysStatus } from 'utils/utils';
-
-interface EventDetails {
-  eventId: number;
-  eventType: string;
-  side: string;
-  earnings: string;
-  contactPerson: string;
-  eventStartTime: string;
-  location: string;
-  clientContactPerson1: string;
-  clientContactNumber1: string;
-  clientContactNumber2: string;
-  company?: {
-    name: string;
-  };
-  eventDate: string[];
-  nepaliEventDate: string[];
-  detailNepaliDate: Array<{
-    nepaliDay: number;
-    nepaliYear: number;
-    nepaliMonth: number;
-  }>;
-}
+import { EventResponse } from 'types/eventTypes';
 
 interface UpcomingEventReminderProps {
-  events: {
-    date: string;
-    details: EventDetails;
-  }[];
+  events: EventResponse[];
 }
 
 const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events }) => {
   const today = new Date();
   const futureEvents = events.filter((event) => {
-    const eventDate = new Date(event.details.eventDate[0]);
+    const eventDate = new Date(event.eventDate[0]);
     return eventDate.setHours(0, 0, 0, 0) >= today.setHours(0, 0, 0, 0);
   });
   const sortedEvents = [...futureEvents].sort((a, b) => {
-    const dateA = new Date(a.details.eventDate[0]);
-    const dateB = new Date(b.details.eventDate[0]);
+    const dateA = new Date(a.eventDate[0]);
+    const dateB = new Date(b.eventDate[0]);
     return dateA.getTime() - dateB.getTime();
   });
 
-
-  const formatEventName = (details: EventDetails) => `${details.eventType} (${details.side})`;
-
-  const getDisplayName = (details: EventDetails) => {
-    if (details.company) {
-      return details.company.name;
-    }
-    return `${details.clientContactPerson1}'s Work`;
+  const formatEventName = (event: EventResponse) => {
+    const categoryName = event.eventCategory?.name || 'Event';
+    return `${categoryName} (${event.side})`;
   };
 
-  const handlePhonePress = (phoneNumber: string) => {
+  const getDisplayName = (event: EventResponse) => {
+    if (event.companyId && event.company) {
+      return event.company.name || event.venueDetails?.name || `Event #${event.id}`;
+    }
+    return event.primaryContact?.name
+      ? `${event.primaryContact.name}'s Work`
+      : `Event #${event.id}`;
+  };
+
+  const handlePhonePress = (phoneNumber?: string) => {
+    if (!phoneNumber) return;
+
     if (Platform.OS === 'ios') {
       Linking.openURL(`telprompt:${phoneNumber}`);
     } else {
@@ -76,14 +57,13 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
         decelerationRate="fast"
         snapToAlignment="center">
         {sortedEvents.map((event, index) => {
-          const eventDate = new Date(event.details.eventDate[0]);
+          const eventDate = new Date(event.eventDate[0]);
           const { statusText, statusStyle, isToday } = getDaysStatus(eventDate);
-
-          const formattedDates = formatNepaliDates(event.details.detailNepaliDate);
+          const formattedDates = formatNepaliDates(event.detailNepaliDate);
 
           return (
             <TouchableOpacity
-              key={index}
+              key={event.id}
               activeOpacity={0.9}
               className={`mb-5 overflow-hidden rounded-2xl border-l-4 
               bg-white shadow-sm ${isToday ? 'border-blue-500' : 'border-orange-400'}`}
@@ -94,22 +74,20 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
                 width: 360,
-                marginRight: 0,
+                marginRight: 16,
               }}>
               <View className="p-5">
                 <View className="mb-3 flex-row items-start justify-between">
                   <View className="flex-1 pr-2">
                     <Text className="text-gray-900 text-lg font-bold" numberOfLines={2}>
-                      {formatEventName(event.details)}
+                      {getDisplayName(event)}
                     </Text>
-                    <Text className="text-gray-500 mt-1 text-sm">
-                      {getDisplayName(event.details)}
-                    </Text>
+                    <Text className="text-gray-600 text-sm">{formatEventName(event)}</Text>
                   </View>
                   <View className="mt-4 flex-row items-center justify-end gap-5">
                     <View className={`rounded-full px-3 py-1 ${statusStyle}`}>
                       <Text className="text-xs font-semibold">{statusText}</Text>
-                    </View> 
+                    </View>
 
                     <View className="flex-row items-center justify-end">
                       <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">
@@ -125,17 +103,19 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                 <View className="bg-gray-100 my-4 h-px" />
 
                 <View className="flex-row flex-wrap">
-                  <View className="mb-4 w-1/2 pr-2">
-                    <View className="flex-row items-center rounded-lg bg-blue-50 p-3">
-                      <MaterialCommunityIcons name="clock-outline" size={18} color="#3B82F6" />
-                      <View className="ml-2">
-                        <Text className="text-gray-500 text-xs">Starts at</Text>
-                        <Text className="text-gray-900 text-sm font-medium">
-                          {event.details.eventStartTime}
-                        </Text>
+                  {event.eventStartTime && (
+                    <View className="mb-4 w-1/2 pr-2">
+                      <View className="flex-row items-center rounded-lg bg-blue-50 p-3">
+                        <MaterialCommunityIcons name="clock-outline" size={18} color="#3B82F6" />
+                        <View className="ml-2">
+                          <Text className="text-gray-500 text-xs">Starts at</Text>
+                          <Text className="text-gray-900 text-sm font-medium">
+                            {event.eventStartTime}
+                          </Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
+                  )}
 
                   <View className="mb-4 w-1/2 pl-2">
                     <View className="flex-row items-center rounded-lg bg-green-50 p-3">
@@ -143,54 +123,65 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       <View className="ml-2">
                         <Text className="text-gray-500 text-xs">Earnings</Text>
                         <Text className="text-lg font-semibold text-green-800">
-                          रू {parseFloat(event.details.earnings).toLocaleString()}
+                          रू {Number(event.earnings).toLocaleString()}
                         </Text>
                       </View>
                     </View>
                   </View>
 
-                  {/* Location Card */}
-                  <View className="mb-4 w-full">
-                    <View className="flex-row items-center rounded-lg bg-purple-50 p-3">
-                      <MaterialCommunityIcons name="map-marker-outline" size={18} color="#8B5CF6" />
-                      <View className="ml-2 flex-1">
-                        <Text className="text-gray-500 text-xs">Location</Text>
-                        <Text className="text-gray-900 text-sm font-medium" numberOfLines={2}>
-                          {event.details.location}
-                        </Text>
+                  {event.venueDetails?.location && (
+                    <View className="mb-4 w-full">
+                      <View className="flex-row items-center rounded-lg bg-purple-50 p-3">
+                        <MaterialCommunityIcons
+                          name="map-marker-outline"
+                          size={18}
+                          color="#8B5CF6"
+                        />
+                        <View className="ml-2 flex-1">
+                          <Text className="text-gray-500 text-xs">Location</Text>
+                          <Text className="text-gray-900 text-sm font-medium" numberOfLines={2}>
+                            {event.venueDetails.location}
+                          </Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
+                  )}
                 </View>
 
-                {/* Contact Section */}
-                <View className="mt-2">
-                  {event.details.clientContactNumber1 && (
+                {/* Contact Information */}
+                <View className="space-y-2">
+                  {event.primaryContact?.phoneNumber && (
                     <TouchableOpacity
-                      className="bg-gray-50 mb-2 flex-row items-center rounded-lg p-3"
-                      onPress={() => handlePhonePress(event.details.clientContactNumber1)}>
+                      onPress={() => handlePhonePress(event.primaryContact?.phoneNumber)}
+                      className="bg-gray-50 flex-row items-center rounded-lg p-3">
                       <MaterialCommunityIcons name="phone-outline" size={18} color="#6B7280" />
                       <Text className="ml-3 font-medium text-blue-600">
-                        {event.details.clientContactNumber1}
+                        {event.primaryContact.phoneNumber}
                       </Text>
                       <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
                         <Text className="text-xs text-blue-800">
-                          Tap to call {event.details.clientContactPerson1}
+                          {event.primaryContact.name
+                            ? `Call ${event.primaryContact.name}`
+                            : 'Primary Contact'}
                         </Text>
                       </View>
                     </TouchableOpacity>
                   )}
 
-                  {event.details.clientContactNumber2 && (
+                  {event.secondaryContact?.phoneNumber && (
                     <TouchableOpacity
-                      className="bg-gray-50 flex-row items-center rounded-lg p-3"
-                      onPress={() => handlePhonePress(event.details.clientContactNumber2)}>
-                      <MaterialCommunityIcons name="phone-outline" size={18} color="#6B7280" />
+                      onPress={() => handlePhonePress(event.secondaryContact?.phoneNumber)}
+                      className="bg-gray-50 flex-row items-center rounded-lg p-3">
+                      <MaterialCommunityIcons name="phone-plus-outline" size={18} color="#6B7280" />
                       <Text className="ml-3 font-medium text-blue-600">
-                        {event.details.clientContactNumber2}
+                        {event.secondaryContact.phoneNumber}
                       </Text>
                       <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
-                        <Text className="text-xs text-blue-800">Tap to call</Text>
+                        <Text className="text-xs text-blue-800">
+                          {event.secondaryContact.name
+                            ? `Call ${event.secondaryContact.name}`
+                            : 'Secondary Contact'}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   )}

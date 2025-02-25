@@ -175,14 +175,7 @@ const HomeScreen = () => {
           </>
         )}
 
-        {events.length > 0 && (
-          <UpcomingEventReminder
-            events={events.map((event) => ({
-              date: event.eventDate[0],
-              details: event,
-            }))}
-          />
-        )}
+        {events.length > 0 && <UpcomingEventReminder events={events} />}
       </ScrollView>
     </SafeAreaView>
   );
