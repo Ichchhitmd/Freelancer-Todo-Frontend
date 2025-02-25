@@ -152,7 +152,6 @@ const AddWorkForm: React.FC = () => {
       }
     }
 
-
     try {
       const selectedDate = selectedDates[0];
       const eventDates = [selectedDate.englishDate];
@@ -518,14 +517,20 @@ const AddWorkForm: React.FC = () => {
                 </Text>
                 <View className="border-gray-100 space-y-6 rounded-2xl border bg-white p-4 shadow-sm">
                   <View className="space-y-4">
-                    <Text className="text-gray-700 text-base font-medium">Primary Contact</Text>
+                    <Text className="text-gray-700 text-base font-medium">
+                      {side === 'BRIDE'
+                        ? "Bride's Contact"
+                        : side === 'GROOM'
+                          ? "Groom's Contact"
+                          : 'Primary Contact'}
+                    </Text>
                     <InputField
                       label="Name"
                       value={primaryContact.name}
                       onChangeText={(text) =>
                         setPrimaryContact((prev) => ({ ...prev, name: text }))
                       }
-                      placeholder="Enter primary contact name"
+                      placeholder={`Enter ${side === 'BRIDE' ? "bride's" : side === 'GROOM' ? "groom's" : 'primary contact'} name`}
                       icon="account"
                     />
                     <InputField
@@ -535,14 +540,19 @@ const AddWorkForm: React.FC = () => {
                         setPrimaryContact((prev) => ({ ...prev, phoneNumber: text }))
                       }
                       keyboardType="numeric"
-                      placeholder="Enter primary contact number"
+                      placeholder={`Enter ${side === 'BRIDE' ? "bride's" : side === 'GROOM' ? "groom's" : 'primary contact'} number`}
                       icon="phone"
                     />
                   </View>
 
                   <View className="space-y-4">
                     <Text className="text-gray-700 text-base font-medium">
-                      Secondary Contact (Optional)
+                      {side === 'BRIDE'
+                        ? "Bride's Secondary Contact"
+                        : side === 'GROOM'
+                          ? "Groom's Secondary Contact"
+                          : 'Secondary Contact'}{' '}
+                      (Optional)
                     </Text>
                     <InputField
                       label="Name"
@@ -559,7 +569,7 @@ const AddWorkForm: React.FC = () => {
                               }
                         )
                       }
-                      placeholder="Enter secondary contact name"
+                      placeholder={`Enter ${side === 'BRIDE' ? "bride's" : side === 'GROOM' ? "groom's" : 'secondary contact'} name`}
                       icon="account"
                     />
                     <InputField
@@ -578,7 +588,7 @@ const AddWorkForm: React.FC = () => {
                         )
                       }
                       keyboardType="numeric"
-                      placeholder="Enter secondary contact number"
+                      placeholder={`Enter ${side === 'BRIDE' ? "bride's" : side === 'GROOM' ? "groom's" : 'secondary contact'} number`}
                       icon="phone"
                     />
                   </View>
