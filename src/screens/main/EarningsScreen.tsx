@@ -78,10 +78,10 @@ export default function EarningsScreen() {
         };
       })
       .sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
+        if (a.year !== b.year) return a.year - b.year;
         const aMonthIndex = nepaliMonths.indexOf(a.month.split(' ')[0]);
         const bMonthIndex = nepaliMonths.indexOf(b.month.split(' ')[0]);
-        return bMonthIndex - aMonthIndex;
+        return aMonthIndex - bMonthIndex;
       });
   }, [earningsData?.monthly]);
 
@@ -116,6 +116,10 @@ export default function EarningsScreen() {
         name: string;
       };
       location?: string;
+      clientContactPerson1: string;
+      paymentStatus: string;
+      dueAmount: number;
+      eventCategory: string;
     }[]
   >([]);
   const [selectedMonthTotals, setSelectedMonthTotals] = useState({
@@ -164,6 +168,9 @@ export default function EarningsScreen() {
       company: event.company,
       location: event.location || '',
       clientContactPerson1: event.clientContactPerson1 || 'Client',
+      paymentStatus: event.paymentStatus,
+      dueAmount: event.dueAmount,
+      eventCategory: event.eventCategory,
     }));
 
     setSelectedMonth(monthData.month);
@@ -218,6 +225,11 @@ export default function EarningsScreen() {
     </TouchableOpacity>
   );
 
+  const recentEvents = useMemo(() => {
+    if (!FinancialData?.events) return [];
+    return FinancialData.events.slice(0, 10); // Limit to 10 recent events for better performance
+  }, [FinancialData?.events]);
+
   const renderCompanyStats = () => {
     if (!selectedCompanyId || !FinancialData) {
       return (
@@ -233,48 +245,9 @@ export default function EarningsScreen() {
       );
     }
 
-    if (!FinancialData.events || FinancialData.events.length === 0) {
-      return (
-        <View className="mt-4 items-center justify-center rounded-2xl bg-white p-8 shadow-sm">
-          <MaterialCommunityIcons name="calendar-blank" size={48} color="#9CA3AF" />
-          <Text className="text-gray-600 mt-4 text-center text-lg font-medium">
-            No Events Found
-          </Text>
-          <Text className="text-gray-500 mt-2 text-center">
-            You haven't recorded any events with {selectedCompanyName} yet.
-          </Text>
-          <TouchableOpacity
-            onPress={() => handleCompanySelect(null)}
-            className="mt-6 rounded-xl bg-primary px-6 py-3">
-            <Text className="text-white">View All Companies</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    const handleEventPress = (event) => {
-      const fullEvent = eventsData?.find((e) => e.id === event.id);
-      if (fullEvent) {
-        navigation.navigate('DateDetails', {
-          details: {
-            id: fullEvent.id,
-            eventDate: fullEvent.nepaliEventDate,
-            earnings: fullEvent.earnings.toString(),
-            eventType: fullEvent.eventType,
-            workType: Array.isArray(fullEvent.workType)
-              ? fullEvent.workType
-              : [fullEvent.eventType],
-            company: fullEvent.company,
-            location: fullEvent.location || '',
-            clientContactPerson1: fullEvent.clientContactPerson1 || 'Client',
-          },
-        });
-      }
-    };
-
     return (
-      <View className=" mt-4">
-        <View className="rounded-2xl bg-primary/90 p-5 ">
+      <View className="mt-4">
+        <View className="rounded-2xl bg-primary/90 p-5">
           <View className="flex-row items-center justify-between">
             <Text className="text-xl font-bold text-white">{selectedCompanyName}</Text>
             <MaterialCommunityIcons name="office-building" size={24} color="white" />
@@ -310,136 +283,80 @@ export default function EarningsScreen() {
           </View>
         </View>
 
-        {/* Payment Status Cards */}
-        <View className="mt-4 flex-row justify-between">
-          <TouchableOpacity
-            className="w-[31%] rounded-xl bg-white p-3 shadow-sm"
-            onPress={() => {
-              const paidEvents = FinancialData.events
-                .filter((e) => e.paymentStatus === 'PAID')
-                .map((event) => ({
-                  id: event.id,
-                  eventDate: event.eventDate,
-                  earnings: event.earnings,
-                  eventType: event.eventType,
-                  workType: [event.eventType],
-                  location: '',
-                  clientContactPerson1: 'Client',
-                }));
-              setSelectedMonthEvents(paidEvents);
-              setModalVisible(true);
-            }}>
-            <MaterialCommunityIcons name="check-circle" size={24} color="#E50914" />
-            <Text className="text-gray-800 mt-2 text-2xl font-bold">
-              {FinancialData.paymentStatus.paid}
-            </Text>
-            <Text className="text-gray-600 text-sm">Paid Events</Text>
-          </TouchableOpacity>
+        <View className="mt-4">
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="text-gray-800 text-lg font-semibold">Recent Events</Text>
+            <TouchableOpacity>
+              <Text className="text-sm font-medium text-red-500">View All</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            className="w-[31%] rounded-xl bg-white p-3 shadow-sm"
-            onPress={() => {
-              const partialEvents = FinancialData.events
-                .filter((e) => e.paymentStatus === 'PARTIALLY_PAID')
-                .map((event) => ({
-                  id: event.id,
-                  eventDate: event.eventDate,
-                  earnings: event.earnings,
-                  eventType: event.eventType,
-                  workType: [event.eventType],
-                }));
-              setSelectedMonthEvents(partialEvents);
-              setModalVisible(true);
-            }}>
-            <MaterialCommunityIcons name="alert-circle" size={24} color="#E50914" />
-            <Text className="text-gray-800 mt-2 text-2xl font-bold">
-              {FinancialData.paymentStatus.partiallyPaid}
-            </Text>
-            <Text className="text-gray-600 text-sm">Partial</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="w-[31%] rounded-xl bg-white p-3 shadow-sm"
-            onPress={() => {
-              const unpaidEvents = FinancialData.events
-                .filter((e) => e.paymentStatus === 'UNPAID')
-                .map((event) => ({
-                  id: event.id,
-                  eventDate: event.eventDate,
-                  earnings: event.earnings,
-                  eventType: event.eventType,
-                  workType: [event.eventType],
-                }));
-              setSelectedMonthEvents(unpaidEvents);
-              setModalVisible(true);
-            }}>
-            <MaterialCommunityIcons name="close-circle" size={24} color="#E50914" />
-            <Text className="text-gray-800 mt-2 text-2xl font-bold">
-              {FinancialData.paymentStatus.unpaid}
-            </Text>
-            <Text className="text-gray-600 text-sm">Unpaid</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Events List */}
-        {FinancialData.events && FinancialData.events.length > 0 && (
-          <View className="mt-4">
-            <Text className="mb-3 text-lg font-bold">Recent Events</Text>
-            {FinancialData.events.map((event) => (
+          <ScrollView className="">
+            {recentEvents.map((event) => (
               <TouchableOpacity
                 key={event.id}
                 onPress={() => handleEventPress(event)}
-                className="mb-4 overflow-hidden rounded-2xl">
+                className="mb-3 overflow-hidden rounded-xl shadow-sm">
                 <LinearGradient
                   colors={['#E50914', '#FF4B4B']}
                   className="p-4"
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}>
-                  <View className="flex-row items-center justify-between p-3">
-                    <View>
-                      <View className="flex-row items-center">
-                        <MaterialCommunityIcons
-                          name={
-                            event.eventType === 'WEDDING'
-                              ? 'ring'
-                              : event.eventType === 'ENGAGEMENT'
-                                ? 'heart'
-                                : 'party-popper'
-                          }
-                          size={20}
-                          color="white"
-                        />
-                        <Text className="ml-2 text-lg font-bold text-white">{event.eventType}</Text>
-                      </View>
-                      <View className="mt-2 flex-row">
-                        <View className="mr-4 flex-row items-center">
-                          <MaterialCommunityIcons name="calendar" size={16} color="white" />
-                          <Text className="ml-2 text-white">
-                            {Array.isArray(event.eventDate) ? event.eventDate[0] : event.eventDate}
-                          </Text>
-                        </View>
-                      </View>
-                      <View className="mt-2 flex-row items-center">
-                        <MaterialCommunityIcons name="cash" size={16} color="white" />
-                        <Text className="ml-2 text-white">
-                          रू{parseFloat(event.earnings).toLocaleString()}
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text className="mb-1 font-medium text-white" numberOfLines={1}>
+                        {event.title || 'Event'}
+                      </Text>
+                      <Text className="text-xs text-white/70">{event.date || 'Unknown date'}</Text>
+                    </View>
+
+                    <View className="items-end">
+                      <Text className="text-lg font-bold text-white">
+                        रू {typeof event.earnings === 'number' ? event.earnings : event.earnings}
+                      </Text>
+                      <View
+                        className={`mt-1 rounded-full ${event.paymentStatus === 'PAID' ? 'bg-green-500/30' : 'bg-white/20'} px-3 py-1`}>
+                        <Text
+                          className={`text-xs ${event.paymentStatus === 'PAID' ? 'text-green-100' : 'text-white'}`}>
+                          {event.paymentStatus || 'UNPAID'}
                         </Text>
-                        <View className="ml-4 rounded-full bg-white/20 px-3 py-1">
-                          <Text className="text-sm text-white">
-                            {event.paymentStatus.replace('_', ' ')}
-                          </Text>
-                        </View>
                       </View>
                     </View>
-                    <MaterialCommunityIcons name="chevron-right" size={24} color="white" />
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
             ))}
-          </View>
-        )}
+          </ScrollView>
+
+          {recentEvents.length === 0 && (
+            <View className="items-center justify-center py-8">
+              <Text className="text-gray-400">No recent events found</Text>
+            </View>
+          )}
+        </View>
       </View>
     );
+  };
+
+  const handleEventPress = (event) => {
+    const fullEvent = eventsData?.find((e) => e.id === event.id);
+    if (fullEvent) {
+      navigation.navigate('DateDetails', {
+        details: {
+          id: fullEvent.id,
+          eventDate: fullEvent.nepaliEventDate,
+          earnings: fullEvent.earnings,
+          eventType: fullEvent.eventType,
+          workType: Array.isArray(fullEvent.workType) ? fullEvent.workType : [fullEvent.eventType],
+          company: fullEvent.company,
+          location: fullEvent.location || '',
+          clientContactPerson1: fullEvent.clientContactPerson1 || 'Client',
+          paymentStatus: fullEvent.paymentStatus,
+          dueAmount: fullEvent.dueAmount,
+          eventCategory: fullEvent.eventCategory,
+        },
+      });
+    }
   };
 
   return (

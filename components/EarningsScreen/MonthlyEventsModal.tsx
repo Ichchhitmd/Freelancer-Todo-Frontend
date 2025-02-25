@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 interface Event {
   id: number;
   eventDate: string[];
-  earnings: string;
+  earnings: string | number;
   eventType: string;
   company?: {
     id: number;
@@ -14,7 +14,13 @@ interface Event {
   } | null;
   location?: string;
   workType: string[];
-  clientContactPerson1: string;
+  clientContactPerson1?: string;
+  paymentStatus?: string;
+  dueAmount?: number;
+  eventCategory?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 interface MonthlyEventsModalProps {
@@ -96,11 +102,24 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
                   <View className="flex-row items-center justify-between">
                     <View>
                       <Text className="text-gray-900 text-lg font-bold">
-                        {event.company?.name || `${event.clientContactPerson1}'s Work`}
+                        {event.company?.name || `${event.clientContactPerson1 || 'Client'}'s Work`}
                       </Text>
-                      <Text className="text-gray-600 mt-1">{event.eventType}</Text>
+                      <Text className="text-gray-600 mt-1">
+                        {event.eventCategory?.name || event.eventType}
+                      </Text>
                     </View>
-                    <Text className="text-lg font-bold text-blue-600">रू{event.earnings}</Text>
+                    <View className="items-end">
+                      <Text className="text-lg font-bold text-blue-600">
+                        रू{typeof event.earnings === 'string' ? event.earnings : event.earnings.toLocaleString()}
+                      </Text>
+                      {event.paymentStatus && (
+                        <View className={`mt-1 rounded-full px-2 py-0.5 ${event.paymentStatus === 'PAID' ? 'bg-green-100' : 'bg-red-100'}`}>
+                          <Text className={`text-xs ${event.paymentStatus === 'PAID' ? 'text-green-700' : 'text-red-700'}`}>
+                            {event.paymentStatus}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
 
                   <View className="mt-3 flex-row flex-wrap">
@@ -115,6 +134,13 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
                     <View className="mt-2 flex-row items-center">
                       <MaterialCommunityIcons name="map-marker" size={16} color="#6B7280" />
                       <Text className="text-gray-600 ml-1 text-sm">{event.location}</Text>
+                    </View>
+                  )}
+                  
+                  {event.dueAmount > 0 && (
+                    <View className="mt-2 flex-row items-center">
+                      <MaterialCommunityIcons name="cash-remove" size={16} color="#EF4444" />
+                      <Text className="text-red-500 ml-1 text-sm">Due: रू{event.dueAmount.toLocaleString()}</Text>
                     </View>
                   )}
                 </TouchableOpacity>

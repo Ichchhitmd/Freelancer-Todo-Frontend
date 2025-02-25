@@ -8,12 +8,13 @@ import SelectDropdown from 'components/rare/SelectDropdown';
 import { MonthView } from 'components/test/CalendarComponent';
 import { useGetCompanies } from 'hooks/companies';
 import { useEvents } from 'hooks/events';
+import { useGetEventTypes } from 'hooks/eventTypes';
 import { NepaliDateInfo } from 'lib/calendar';
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
-import { EventRequest } from 'types/eventTypes';
+import { Contact, EventRequest, SecondaryContact, VenueDetails } from 'types/eventTypes';
 import type { RootStackParamList } from 'types/navigation';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -26,25 +27,37 @@ const AddWorkForm: React.FC = () => {
 
   // Form states
   const [selectedDates, setSelectedDates] = useState<NepaliDateInfo[]>([]);
-
-  const handleDateSelect = (date: NepaliDateInfo | null) => {
-    setSelectedDates(date ? [date] : []);
-  };
-
-  const getCurrentSelectedDate = () => selectedDates[0] || null;
   const [estimatedEarning, setEstimatedEarning] = useState('');
-  const [actualEarning, setActualEarning] = useState('');
-  const [contactPerson, setContactPerson] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
+  const [actualEarning, setActualEarning] = useState<string | null>(null);
+  const [assignedBy, setAssignedBy] = useState('');
+  const [assignedContactNumber, setAssignedContactNumber] = useState('');
+  const [primaryContact, setPrimaryContact] = useState<Contact>({
+    name: '',
+    phoneNumber: '',
+  });
+  const [secondaryContact, setSecondaryContact] = useState<SecondaryContact | undefined>();
+  const [venueDetails, setVenueDetails] = useState<VenueDetails>({
+    location: '',
+  });
   const [workType, setWorkType] = useState<string[]>([]);
   const [time, setTime] = useState<Date | null>(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [side, setSide] = useState('');
-  const [eventType, setEventType] = useState('');
-  const [companyId, setCompanyId] = useState(0);
-  const [clientContactNumber, setClientContactNumber] = useState('');
-  const [location, setLocation] = useState('');
-  const [noCompany, setNoCompany] = useState(false); // <-- New no company state
+  const [companyId, setCompanyId] = useState<number | undefined>();
+  const [noCompany, setNoCompany] = useState(false);
+  const [eventCategoryId, setEventCategoryId] = useState(eventTypes?.[0]?.id);
+  const scrollViewRef = useRef(null);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  const handleScrollEnd = (event) => {
+    const scrollOffset = event.nativeEvent.contentOffset.y;
+    const itemHeight = 48; // Approximate height of each item (adjust if needed)
+    const middleIndex = Math.round((scrollOffset + containerHeight / 2) / itemHeight);
+
+    if (eventTypes[middleIndex]) {
+      setEventCategoryId(eventTypes[middleIndex].id);
+    }
+  };
 
   useEffect(() => {
     if (isEditMode && details) {
@@ -61,30 +74,22 @@ const AddWorkForm: React.FC = () => {
       }
       setEstimatedEarning(details.earnings.toString());
       setActualEarning(details.actualEarnings?.toString() || '');
-      setContactPerson(details.clientContactPerson1);
-      setContactInfo(details.clientContactNumber1);
+      setAssignedBy(details.assignedBy);
+      setAssignedContactNumber(details.assignedContactNumber.toString());
+      setPrimaryContact(details.primaryContact);
+      if (details.secondaryContact) {
+        setSecondaryContact(details.secondaryContact);
+      }
+      setVenueDetails(details.venueDetails);
       setWorkType(details.workType);
       setSide(details.side);
-      setEventType(details.eventType);
+      setEventCategoryId(details.eventCategoryId);
       setCompanyId(details.companyId);
-
-      if (details.location) {
-        setLocation(details.location);
-      }
     }
   }, [isEditMode, details]);
 
-  const EVENT_TYPES = useMemo(
-    () => [
-      { id: 'UNKNOWN', label: 'Unknown', icon: 'help-circle' },
-      { id: 'MEHENDI', label: 'Mehendi', icon: 'flower' },
-      { id: 'WEDDING', label: 'Wedding', icon: 'heart-multiple' },
-      { id: 'RECEPTION', label: 'Reception', icon: 'party-popper' },
-      { id: 'ENGAGEMENT', label: 'Engagement', icon: 'ring' },
-      { id: 'PRE-WEDDING', label: 'Pre-Wedding', icon: 'camera-wireless' },
-    ],
-    []
-  );
+  const { data: eventTypes = [] } = useGetEventTypes();
+  const { data: companies = [] } = useGetCompanies();
 
   const SIDE = useMemo(
     () => [
@@ -104,8 +109,6 @@ const AddWorkForm: React.FC = () => {
     []
   );
 
-  const { data: companies, isLoading: companiesLoading } = useGetCompanies();
-
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
   const { mutate: postEvent, mutate: updateEvent } = useEvents();
@@ -116,23 +119,8 @@ const AddWorkForm: React.FC = () => {
       return;
     }
 
-    if (userId === undefined) {
-      alert('User not authenticated!');
-      return;
-    }
-
-    if (!noCompany && !companyId) {
-      alert('Please select a company or check "No Company"');
-      return;
-    }
-
-    if (!eventType) {
+    if (!eventCategoryId) {
       alert('Please select an event type.');
-      return;
-    }
-
-    if (!workType.length) {
-      alert('Please select a work type.');
       return;
     }
 
@@ -142,83 +130,125 @@ const AddWorkForm: React.FC = () => {
     }
 
     if (!estimatedEarning) {
-      alert('Please enter an estimated earning.');
+      alert('Please enter estimated earning.');
       return;
     }
 
-    if (!contactPerson) {
-      alert('Please enter a contact person.');
+    if (!workType.length) {
+      alert('Please select at least one work type.');
       return;
     }
 
-    if (!contactInfo || contactInfo.length !== 10) {
-      alert('Contact Number should be exactly 10 digits.');
+    if (noCompany) {
+      if (!assignedBy) {
+        alert('Please enter who assigned the work.');
+        return;
+      }
+
+      if (!assignedContactNumber) {
+        alert("Please enter assigner's contact number.");
+        return;
+      }
+    }
+
+    if (!primaryContact.name || !primaryContact.phoneNumber) {
+      alert('Please enter primary contact details.');
       return;
     }
 
-    if (!clientContactNumber || clientContactNumber.length !== 10) {
-      alert('Client contact number must be exactly 10 digits.');
-      return;
-    }
-
-    if (!time) {
-      alert('Please select event time.');
-      return;
-    }
-
-    if (!location) {
-      alert('Please enter location.');
+    if (!venueDetails.location) {
+      alert('Please enter venue location.');
       return;
     }
 
     try {
-      // Format the selected date
-      if (!selectedDates[0].englishDate) {
-        alert('No valid English date found. Please select a date again.');
-        return;
-      }
-
       const selectedDate = selectedDates[0];
       const eventDates = [selectedDate.englishDate];
       const nepaliEventDates = [
-        `${selectedDate.year}-${String(selectedDate.month + 1).padStart(2, '0')}-${String(selectedDate.day).padStart(2, '0')}`,
+        `${selectedDate.year}-${String(selectedDate.month + 1).padStart(2, '0')}-${String(
+          selectedDate.day
+        ).padStart(2, '0')}`,
       ];
-      const nepaliDetailDates = [
+      const detailNepaliDate = [
         {
           nepaliYear: selectedDate.year,
-          nepaliMonth: selectedDate.month + 1,
+          nepaliMonth: selectedDate.month + 1, // Convert from 0-based to 1-based month
           nepaliDay: selectedDate.day,
         },
       ];
 
-      const formattedData: EventRequest & { userId: number; id?: number } = {
-        userId,
-        earnings: parseFloat(estimatedEarning) || 0,
-        actualEarnings: actualEarning ? parseFloat(actualEarning) : null,
-        clientContactPerson1: contactPerson,
-        clientContactNumber1: contactInfo,
-        clientContactNumber2: clientContactNumber,
-        workType,
-        side,
-        eventType,
-        eventDate: eventDates,
-        eventStartTime: time.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-        }),
-        nepaliEventDate: nepaliEventDates,
-        detailNepaliDate: nepaliDetailDates,
-        location,
+      // Helper function to clean undefined values from an object
+      const cleanObject = (obj: any) => {
+        if (!obj) return obj;
+
+        // If it's an array, clean each element
+        if (Array.isArray(obj)) {
+          return obj.filter((item) => item !== undefined && item !== null);
+        }
+
+        // If it's not an object, return as is
+        if (typeof obj !== 'object') return obj;
+
+        const cleaned = Object.entries(obj).reduce((acc, [key, value]) => {
+          if (value === undefined || value === null) return acc;
+
+          if (typeof value === 'object') {
+            const cleanedValue = cleanObject(value);
+            if (
+              Array.isArray(cleanedValue)
+                ? cleanedValue.length > 0
+                : Object.keys(cleanedValue).length > 0
+            ) {
+              acc[key] = cleanedValue;
+            }
+            return acc;
+          }
+          acc[key] = value;
+          return acc;
+        }, {} as any);
+        return cleaned;
       };
 
-      // Add companyId only if a company is selected
-      if (!noCompany && companyId) {
-        formattedData.companyId = companyId;
-      }
+      const formattedData: EventRequest = cleanObject({
+        eventDate: eventDates || [],
+        nepaliEventDate: nepaliEventDates || [],
+        detailNepaliDate,
+        eventCategoryId: eventCategoryId || 0,
+        side: side || '',
+        earnings: parseFloat(estimatedEarning) || 0,
+        userId: userId || 0,
+        eventStartTime: time
+          ? time.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+            })
+          : '',
+        workType: workType || [],
+        primaryContact: {
+          name: primaryContact.name || '',
+          phoneNumber: primaryContact.phoneNumber || '',
+          whatsappNumber: primaryContact.whatsappNumber || '',
+        },
+        venueDetails: {
+          name: venueDetails.name || '',
+          location: venueDetails.location || '',
+          photographerFirstPlace: venueDetails.photographerFirstPlace || '',
+        },
+        ...(secondaryContact
+          ? {
+              secondaryContact: {
+                name: secondaryContact.name || '',
+                phoneNumber: secondaryContact.phoneNumber || '',
+                relationId: secondaryContact.relationId || 0,
+                relationContactNumber: secondaryContact.relationContactNumber || '',
+              },
+            }
+          : {}),
+        ...(companyId ? { companyId } : {}),
+      });
 
-      // Add id if in edit mode
-      if (isEditMode && details) {
+      if (isEditMode && details?.id) {
         formattedData.id = details.id;
       }
 
@@ -230,29 +260,43 @@ const AddWorkForm: React.FC = () => {
 
       navigation.goBack();
     } catch (e) {
-      console.error(e);
+      console.error('Error submitting form:', e);
       alert('Failed to save work details. Please try again.');
     }
   }, [
     selectedDates,
     userId,
+    eventCategoryId,
+    side,
     estimatedEarning,
     actualEarning,
-    contactPerson,
-    contactInfo,
+    time,
     workType,
-    side,
-    eventType,
+    assignedBy,
+    assignedContactNumber,
+    primaryContact,
+    secondaryContact,
+    venueDetails,
     companyId,
+    noCompany,
     isEditMode,
     details,
-    clientContactNumber,
-    postEvent,
     updateEvent,
+    postEvent,
     navigation,
-    time,
-    location,
   ]);
+
+  const getCurrentSelectedDate = () => selectedDates[0] || null;
+
+  useEffect(() => {}, [showTimePicker, time]);
+
+  const handleTimeSelect = (event: any, selectedTime: Date | undefined) => {
+    setShowTimePicker(false);
+
+    if (selectedTime && event.type === 'set') {
+      setTime(selectedTime);
+    }
+  };
 
   return (
     <SafeAreaView className="bg-gray-50 flex-1">
@@ -261,7 +305,8 @@ const AddWorkForm: React.FC = () => {
         data={[1]}
         renderItem={() => (
           <>
-            <View className="bg-red-500 px-6 py-12 shadow-lg">
+            {/* Header Section */}
+            <View className="bg-red-500 px-6 py-14 shadow-lg">
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 className="absolute left-6 top-16 z-10"
@@ -276,181 +321,288 @@ const AddWorkForm: React.FC = () => {
               </Text>
             </View>
 
-            <View className="-mt-6 rounded-3xl bg-white p-4 shadow-xl">
-              <View className="mb-6">
+            <View className="-mt-6 rounded-t-3xl bg-white px-6 pb-8 pt-6 shadow-xl">
+              <View className="mb-8">
+                <Text className="text-gray-800 mb-4 text-lg font-semibold">Select Date</Text>
                 <MonthView
-                  onSelectDate={handleDateSelect}
+                  onSelectDate={(date: NepaliDateInfo | null) => {
+                    setSelectedDates(date ? [date] : []);
+                  }}
                   selectedDate={getCurrentSelectedDate()}
                 />
               </View>
 
-              <View
-                style={{ height: 120 }}
-                className="mb-6 overflow-hidden rounded-2xl border border-gray/10 bg-white shadow-sm">
-                <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                  {EVENT_TYPES.map((item) => {
-                    const isSelected = eventType === item.id;
-                    return (
-                      <View key={item.id} className="border-b border-gray/5 last:border-b-0">
+              <View className="mb-8">
+                <Text className="text-gray-800 mb-4 text-lg font-semibold">Event Type</Text>
+                <View
+                  className="border-gray-100 h-[120px] overflow-hidden rounded-2xl border bg-white shadow-sm"
+                  onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}>
+                  <ScrollView
+                    ref={scrollViewRef}
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator={false}
+                    onMomentumScrollEnd={handleScrollEnd}>
+                    {eventTypes?.map((type) => {
+                      const isSelected = eventCategoryId === type.id;
+                      return (
                         <TouchableOpacity
+                          key={type.id}
                           style={{
                             backgroundColor: isSelected ? '#E50914' : 'white',
                           }}
-                          className="w-full"
-                          onPress={() => setEventType(item.id)}>
-                          <View className="flex-row items-center justify-center space-x-3 p-3">
-                            <MaterialCommunityIcons
-                              name={item.icon}
-                              size={22}
-                              color={isSelected ? 'white' : '#374151'}
-                            />
+                          className="border-gray-100 w-full border-b last:border-b-0"
+                          onPress={() => setEventCategoryId(type.id)}>
+                          <View className="p-4">
                             <Text
-                              className={`text-lg font-medium ${
+                              className={`text-center text-lg font-medium ${
                                 isSelected ? 'text-white' : 'text-gray-700'
                               }`}>
-                              {item.label}
+                              {type.name}
                             </Text>
                           </View>
                         </TouchableOpacity>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-              <View className="mb-4 flex-row items-center">
-                <TouchableOpacity
-                  onPress={() => {
-                    setNoCompany(!noCompany);
-                    if (!noCompany) setCompanyId(0);
-                  }}
-                  className="flex-row items-center">
-                  <MaterialCommunityIcons
-                    name={noCompany ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                    size={24}
-                    color="#000000"
-                  />
-                  <Text className="text-gray-700 ml-2 text-base">No Company</Text>
-                </TouchableOpacity>
-              </View>
-
-              {!noCompany && (
-                <View className="mb-6">
-                  <SelectDropdown
-                    data={companies?.map((company) => company.name) || []}
-                    onSelect={(value) => {
-                      const selectedCompany = companies?.find((company) => company.name === value);
-                      setCompanyId(selectedCompany?.id || null);
-                    }}
-                    defaultButtonText={isEditMode ? details?.company?.name : 'Select Company'}
-                  />
+                      );
+                    })}
+                  </ScrollView>
                 </View>
-              )}
-              <View className="space-y-6">
-                <HorizontalSelector
-                  label="Pick Side"
-                  icon="account-heart"
-                  options={SIDE}
-                  value={side}
-                  onChange={(value: string | string[]) => {
-                    if (typeof value === 'string') {
-                      setSide(value);
-                    }
-                  }}
-                />
+              </View>
 
-                <HorizontalSelector
-                  label="Work Type"
-                  icon="wrench"
-                  options={WORK_TYPE}
-                  value={workType}
-                  onChange={(value) => {
-                    setWorkType(Array.isArray(value) ? value : [value]);
-                  }}
-                  selectMultiple
-                />
+              {/* Company Section */}
+              <View className="mb-8">
+                <Text className="text-gray-800 mb-4 text-lg font-semibold">Company Details</Text>
+                <View className="border-gray-100 space-y-6 rounded-2xl border bg-white p-4 shadow-sm">
+                  <TouchableOpacity
+                    onPress={() => {
+                      setNoCompany(!noCompany);
+                      if (!noCompany) {
+                        setCompanyId(undefined);
+                      } else {
+                        setAssignedBy('');
+                        setAssignedContactNumber('');
+                      }
+                    }}
+                    className="flex-row items-center">
+                    <MaterialCommunityIcons
+                      name={noCompany ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={24}
+                      color="#E50914"
+                    />
+                    <Text className="text-gray-700 ml-2 text-base">No Company</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => setShowTimePicker(true)}
-                  className="mb-4 flex-row items-center gap-2 space-x-2 rounded-lg border border-slate-200 bg-white p-4">
-                  <MaterialCommunityIcons name="clock-outline" size={24} color="#374151" />
-                  <View>
-                    <Text className="text-gray-500 text-sm">Event Time</Text>
-                    <Text className="text-gray-700 text-sm">
-                      {time
-                        ? time.toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true,
-                          })
-                        : 'Select Event Time'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+                  {!noCompany ? (
+                    <View className="mt-4">
+                      <SelectDropdown
+                        data={companies?.map((company) => company.name) || []}
+                        onSelect={(value) => {
+                          const selectedCompany = companies?.find(
+                            (company) => company.name === value
+                          );
+                          if (selectedCompany) {
+                            setCompanyId(selectedCompany.id);
+                          }
+                        }}
+                        defaultButtonText={
+                          isEditMode && details?.company?.name
+                            ? details.company.name
+                            : 'Select Company'
+                        }
+                      />
+                    </View>
+                  ) : (
+                    <View className="mt-4 space-y-6">
+                      <InputField
+                        label="Assigned By"
+                        value={assignedBy}
+                        onChangeText={setAssignedBy}
+                        placeholder="Enter who assigned the work"
+                        icon="account"
+                      />
+                      <InputField
+                        label="Assigned Contact Number"
+                        value={assignedContactNumber}
+                        onChangeText={setAssignedContactNumber}
+                        placeholder="Enter assigner's contact number"
+                        keyboardType="numeric"
+                        icon="phone"
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
 
-                {showTimePicker && (
-                  <DateTimePicker
-                    value={time}
-                    mode="time"
-                    is24Hour={false}
-                    onChange={(event, selectedTime) => {
-                      setShowTimePicker(false);
-                      if (selectedTime && event.type === 'set') {
-                        setTime(selectedTime);
+              {/* Event Details Section */}
+              <View className="mb-8">
+                <Text className="text-gray-800 mb-4 text-lg font-semibold">Event Details</Text>
+                <View className="border-gray-100 space-y-8 rounded-2xl border bg-white p-4 shadow-sm">
+                  <HorizontalSelector
+                    label="Pick Side"
+                    icon="account-heart"
+                    options={SIDE}
+                    value={side}
+                    onChange={(value: string | string[]) => {
+                      if (typeof value === 'string') {
+                        setSide(value);
                       }
                     }}
                   />
-                )}
 
-                <InputField
-                  placeholder="Estimated Earning (Income from this work)"
-                  value={estimatedEarning}
-                  onChangeText={setEstimatedEarning}
-                  keyboardType="numeric"
-                  icon="currency-inr"
-                />
-                {isEditMode && (
-                  <InputField
-                    placeholder="Enter actual received amount"
-                    value={actualEarning}
-                    onChangeText={setActualEarning}
-                    keyboardType="numeric"
-                    icon="currency-inr"
+                  <HorizontalSelector
+                    label="Work Type"
+                    icon="wrench"
+                    options={WORK_TYPE}
+                    value={workType}
+                    onChange={(value) => {
+                      setWorkType(Array.isArray(value) ? value : [value]);
+                    }}
+                    selectMultiple
                   />
-                )}
 
-                <InputField
-                  placeholder="Assigned By"
-                  value={contactPerson}
-                  onChangeText={setContactPerson}
-                  icon="account"
-                />
-                <InputField
-                  placeholder={
-                    contactPerson ? `${contactPerson}'s Contact Number` : 'Contact Number'
-                  }
-                  value={contactInfo}
-                  onChangeText={setContactInfo}
-                  keyboardType="numeric"
-                  icon="phone"
-                />
-                <InputField
-                  placeholder="Enter Client's Number"
-                  value={clientContactNumber}
-                  onChangeText={setClientContactNumber}
-                  keyboardType="numeric"
-                  icon="phone"
-                />
+                  <View className="space-y-8">
+                    <TouchableOpacity
+                      onPress={() => setShowTimePicker(true)}
+                      className="border-gray-200 flex-row items-center gap-2 space-x-2 rounded-lg border bg-white p-4 shadow-sm">
+                      <MaterialCommunityIcons name="clock-outline" size={24} color="#E50914" />
+                      <View className="flex-1">
+                        <Text className="text-gray-700 text-sm font-medium">Event Time</Text>
+                        <Text className="text-gray-900 mt-1 text-base">
+                          {time
+                            ? time.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true,
+                              })
+                            : 'Select Event Time'}
+                        </Text>
+                      </View>
+                      <MaterialCommunityIcons name="chevron-right" size={24} color="#9CA3AF" />
+                    </TouchableOpacity>
 
-                <InputField
-                  placeholder="Enter your work location"
-                  value={location}
-                  onChangeText={setLocation}
-                  icon="map-marker"
-                />
+                    {showTimePicker && (
+                      <DateTimePicker
+                        testID="timePicker"
+                        value={time || new Date()}
+                        mode="time"
+                        is24Hour={false}
+                        display="default"
+                        onChange={handleTimeSelect}
+                        themeVariant="light"
+                        accentColor="#E50914"
+                      />
+                    )}
+
+                    <InputField
+                      label="Estimated Earning"
+                      value={estimatedEarning}
+                      onChangeText={setEstimatedEarning}
+                      keyboardType="numeric"
+                      placeholder="Enter earnings"
+                      icon="cash"
+                    />
+                  </View>
+                </View>
               </View>
 
+              {/* Contact Information */}
+              <View className="mb-8">
+                <Text className="text-gray-800 mb-4 text-lg font-semibold">
+                  Contact Information
+                </Text>
+                <View className="border-gray-100 space-y-6 rounded-2xl border bg-white p-4 shadow-sm">
+                  <View className="space-y-4">
+                    <Text className="text-gray-700 text-base font-medium">Primary Contact</Text>
+                    <InputField
+                      label="Name"
+                      value={primaryContact.name}
+                      onChangeText={(text) =>
+                        setPrimaryContact((prev) => ({ ...prev, name: text }))
+                      }
+                      placeholder="Enter primary contact name"
+                      icon="account"
+                    />
+                    <InputField
+                      label="Phone Number"
+                      value={primaryContact.phoneNumber}
+                      onChangeText={(text) =>
+                        setPrimaryContact((prev) => ({ ...prev, phoneNumber: text }))
+                      }
+                      keyboardType="numeric"
+                      placeholder="Enter primary contact number"
+                      icon="phone"
+                    />
+                  </View>
+
+                  <View className="space-y-4">
+                    <Text className="text-gray-700 text-base font-medium">
+                      Secondary Contact (Optional)
+                    </Text>
+                    <InputField
+                      label="Name"
+                      value={secondaryContact?.name}
+                      onChangeText={(text) =>
+                        setSecondaryContact((prev) =>
+                          prev
+                            ? { ...prev, name: text }
+                            : {
+                                name: text,
+                                phoneNumber: '',
+                                relationId: 0,
+                                relationContactNumber: '',
+                              }
+                        )
+                      }
+                      placeholder="Enter secondary contact name"
+                      icon="account"
+                    />
+                    <InputField
+                      label="Phone Number"
+                      value={secondaryContact?.phoneNumber}
+                      onChangeText={(text) =>
+                        setSecondaryContact((prev) =>
+                          prev
+                            ? { ...prev, phoneNumber: text }
+                            : {
+                                name: '',
+                                phoneNumber: text,
+                                relationId: 0,
+                                relationContactNumber: '',
+                              }
+                        )
+                      }
+                      keyboardType="numeric"
+                      placeholder="Enter secondary contact number"
+                      icon="phone"
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Venue Details */}
+              <View className="mb-8">
+                <Text className="text-gray-800 mb-4 text-lg font-semibold">Venue Details</Text>
+                <View className="border-gray-100 space-y-4 rounded-2xl border bg-white p-4 shadow-sm">
+                  <InputField
+                    label="Location"
+                    value={venueDetails.location}
+                    onChangeText={(text) =>
+                      setVenueDetails((prev) => ({ ...prev, location: text }))
+                    }
+                    placeholder="Enter venue location"
+                    icon="map-marker"
+                  />
+                  <InputField
+                    label="Name"
+                    value={venueDetails.name}
+                    onChangeText={(text) => setVenueDetails((prev) => ({ ...prev, name: text }))}
+                    placeholder="Enter venue name"
+                    icon="home"
+                  />
+                </View>
+              </View>
+
+              {/* Submit Button */}
               <TouchableOpacity
-                className="mt-8 rounded-2xl bg-red-600 p-4 shadow-lg shadow-red-600/30"
+                className="mt-6 rounded-2xl bg-red-600 p-4 shadow-lg shadow-red-600/30"
                 onPress={handleSubmit}>
                 <Text className="text-center text-lg font-semibold text-white">
                   {isEditMode ? 'Update Work' : 'Add Work'}

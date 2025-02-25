@@ -142,7 +142,7 @@ export function MonthView({ onSelectDate, selectedDate = null }: MonthViewProps)
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 1,
   },
   header: {
     flexDirection: 'row',
