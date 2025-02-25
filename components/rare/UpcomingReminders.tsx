@@ -1,5 +1,13 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, Platform, Linking, ScrollView } from 'react-native';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  Platform,
+  Linking,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatNepaliDates } from '../utils/NepaliDateFormatter';
 import { getDaysStatus } from 'utils/utils';
@@ -8,6 +16,8 @@ import { EventResponse } from 'types/eventTypes';
 interface UpcomingEventReminderProps {
   events: EventResponse[];
 }
+
+const screenWidth = Dimensions.get('window').width;
 
 const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events }) => {
   const today = new Date();
@@ -37,12 +47,7 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
 
   const handlePhonePress = (phoneNumber?: string) => {
     if (!phoneNumber) return;
-
-    if (Platform.OS === 'ios') {
-      Linking.openURL(`telprompt:${phoneNumber}`);
-    } else {
-      Linking.openURL(`tel:${phoneNumber}`);
-    }
+    Linking.openURL(Platform.OS === 'ios' ? `telprompt:${phoneNumber}` : `tel:${phoneNumber}`);
   };
 
   return (
@@ -53,7 +58,7 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingRight: 10 }}
-        snapToInterval={360}
+        snapToInterval={Dimensions.get('window').width - 32} // Adjust for padding
         decelerationRate="fast"
         snapToAlignment="center">
         {sortedEvents.map((event, index) => {
@@ -73,7 +78,7 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
-                width: 360,
+                width: Dimensions.get('window').width - 47,
                 marginRight: 16,
               }}>
               <View className="p-5">
@@ -89,7 +94,7 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       <Text className="text-xs font-semibold">{statusText}</Text>
                     </View>
 
-                    <View className="flex-row items-center justify-end">
+                    <View className="flex-row items-center">
                       <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">
                         <MaterialCommunityIcons name="calendar-blank" size={14} color="#F59E0B" />
                         <Text className="ml-2 text-sm font-medium text-orange-800">
@@ -158,31 +163,6 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       <Text className="ml-3 font-medium text-blue-600">
                         {event.primaryContact.phoneNumber}
                       </Text>
-                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
-                        <Text className="text-xs text-blue-800">
-                          {event.primaryContact.name
-                            ? `Call ${event.primaryContact.name}`
-                            : 'Primary Contact'}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-
-                  {event.secondaryContact?.phoneNumber && (
-                    <TouchableOpacity
-                      onPress={() => handlePhonePress(event.secondaryContact?.phoneNumber)}
-                      className="bg-gray-50 flex-row items-center rounded-lg p-3">
-                      <MaterialCommunityIcons name="phone-plus-outline" size={18} color="#6B7280" />
-                      <Text className="ml-3 font-medium text-blue-600">
-                        {event.secondaryContact.phoneNumber}
-                      </Text>
-                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
-                        <Text className="text-xs text-blue-800">
-                          {event.secondaryContact.name
-                            ? `Call ${event.secondaryContact.name}`
-                            : 'Secondary Contact'}
-                        </Text>
-                      </View>
                     </TouchableOpacity>
                   )}
                 </View>

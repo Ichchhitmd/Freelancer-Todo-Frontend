@@ -36,8 +36,8 @@ const IncomeForm = () => {
     }
 
     const incomePayload = {
-      companyId: companyId.toString(),
-      userId: user.id.toString(),
+      companyId: companyId,
+      userId: user.id,
       amount: parseFloat(income.amount),
     };
 

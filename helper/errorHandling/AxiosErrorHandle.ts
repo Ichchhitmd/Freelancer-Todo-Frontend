@@ -11,6 +11,12 @@ export const handleAxiosError = (error: any) => {
           return 'Unauthorized access. Please verify your credentials and try again.';
         case 404:
           return 'The requested resource could not be found. Please check the URL or try again later.';
+        case 409:
+          return (
+            error.response.data?.message ||
+            'This email or account already exists. Please try a different one.'
+          );
+
         case 500:
           return 'Oops! Something went wrong on our end. Please try again later.';
         default:

@@ -1,5 +1,4 @@
 import { enableScreens } from 'react-native-screens';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,19 +8,20 @@ import './global.css';
 import EarningsScreen from '~/screens/main/EarningsScreen';
 import WorkScreen from '~/screens/main/WorkScreen';
 import WorkingScreen from '~/screens/main/WorkingScreen';
-import { Provider } from 'react-redux';
-import { store } from 'redux/store';
+import { Provider, useSelector } from 'react-redux';
+import { RootState, store } from 'redux/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DateDetails from '~/screens/main/DateDetailScreen';
 import { TouchableOpacity, View } from 'react-native';
 import { NavigationProp, ParamListBase, NavigationContainer } from '@react-navigation/native';
 
-import { useEffect, useState } from 'react';
-import { requestNotificationPermission } from 'utils/notification';
+import { useEffect, useRef, useState } from 'react';
+import * as Notifications from 'expo-notifications';
 
 import { useFonts } from 'expo-font';
 
 import { AppNavigator } from '~/navigation/AppNavigator';
+import { registerForPushNotificationsAsync } from 'utils/notification';
 
 enableScreens();
 
@@ -152,9 +152,7 @@ function TabNavigator({ navigation }: { navigation: NavigationProp<ParamListBase
 }
 
 export default function App() {
-  useEffect(() => {
-    requestNotificationPermission();
-  }, []);
+
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
@@ -162,6 +160,45 @@ export default function App() {
     'Poppins-Light': require('./assets/fonts/Poppins-Light.ttf'),
     'Poppins-SemiBold': require('./assets/fonts/Poppins-SemiBold.ttf'),
   });
+
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
+
+  useEffect(() => {
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('🔔 Notification Received in Foreground:', {
+        title: notification.request.content.title,
+        body: notification.request.content.body,
+        data: notification.request.content.data,
+        trigger: notification.request.trigger,
+        date: new Date().toISOString()
+      });
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('👆 User Tapped Notification:', {
+        title: response.notification.request.content.title,
+        body: response.notification.request.content.body,
+        data: response.notification.request.content.data,
+        actionIdentifier: response.actionIdentifier,
+        date: new Date().toISOString()
+      });
+    });
+
+    console.log('🎧 Notification listeners initialized');
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+        console.log('🔕 Foreground notification listener removed');
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+        console.log('🔕 Response notification listener removed');
+      }
+    };
+  }, []);
+
   if (!fontsLoaded) {
     return null;
   }

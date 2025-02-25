@@ -186,7 +186,7 @@ export default function ProfileScreen() {
             tintColor="#E50914"
           />
         }>
-        <View className="bg-red-500 px-4 py-10">
+        <View className="bg-primary/35 px-4 py-10">
           <Text className="pt-5 text-center text-3xl font-bold text-white">My Profile</Text>
           <Text className="mt-2 text-center text-base text-red-100">
             Manage your personal information
@@ -199,18 +199,18 @@ export default function ProfileScreen() {
               {user.photo ? (
                 <Image
                   source={{ uri: `${process.env.UPLOADS_BASE_URL}/${user.photo}` }}
-                  className="h-40 w-40 rounded-full border-4 border-red-500"
+                  className="h-40 w-40 rounded-full border-4 border-primary/35"
                   onError={() => dispatch(setError('Failed to load profile image'))}
                 />
               ) : (
-                <View className="h-40 w-40 items-center justify-center rounded-full border-4 border-[#E50914] bg-red-100">
-                  <Text className="text-4xl font-bold text-[#E50914]">
+                <View className="h-40 w-40 items-center justify-center rounded-full border-4 border-primary/35 bg-primary/10">
+                  <Text className="text-4xl font-bold text-primary/90">
                     {getInitials(user.name)}
                   </Text>
                 </View>
               )}
               <TouchableOpacity
-                className="absolute bottom-0 right-0 rounded-full bg-[#E50914] p-3 shadow-lg"
+                className="absolute bottom-0 right-0 rounded-full bg-primary/50 p-3 shadow-lg"
                 onPress={pickImage}>
                 <MaterialCommunityIcons name="pencil" size={24} color="white" />
               </TouchableOpacity>
@@ -225,7 +225,7 @@ export default function ProfileScreen() {
                   <MaterialCommunityIcons
                     name="email"
                     size={24}
-                    color="#E50914"
+                    color="#E5091480"
                     style={{ marginRight: 16 }}
                   />
                   <View className="flex-1">
@@ -238,7 +238,7 @@ export default function ProfileScreen() {
                   <MaterialCommunityIcons
                     name="phone"
                     size={24}
-                    color="#E50914"
+                    color="#E5091480"
                     style={{ marginRight: 16 }}
                   />
                   <View className="flex-1">
@@ -253,7 +253,7 @@ export default function ProfileScreen() {
                   <MaterialCommunityIcons
                     name="map-marker"
                     size={24}
-                    color="#E50914"
+                    color="#E5091480"
                     style={{ marginRight: 16 }}
                   />
                   <View className="flex-1">
@@ -266,7 +266,7 @@ export default function ProfileScreen() {
 
             <TouchableOpacity
               onPress={() => navigation.navigate('ChangePassword')}
-              className="mt-6 flex-row items-center justify-center rounded-xl bg-[#E50914] p-4">
+              className="mt-6 flex-row items-center justify-center rounded-xl bg-primary/60 p-4">
               <MaterialCommunityIcons name="lock-reset" size={24} color="white" className="mr-2" />
               <Text className="text-lg font-bold text-white">Change Password</Text>
             </TouchableOpacity>

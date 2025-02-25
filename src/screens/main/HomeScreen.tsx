@@ -5,8 +5,9 @@ import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
+import { useNotifications } from 'hooks/useNotification';
 import { getCurrentNepaliDate } from 'lib/calendar';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -16,7 +17,8 @@ import {
   Text,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { selectUserDetails } from 'redux/store';
+import { RootState, selectUserDetails } from 'redux/store';
+import { registerForPushNotificationsAsync } from 'utils/notification';
 
 interface NepaliDate {
   nepaliYear: number;
@@ -31,6 +33,15 @@ const HomeScreen = () => {
   const userName = userDetails?.userName;
   const userId = userDetails?.userId;
 
+  const token = useSelector((state: RootState) => state.auth.token);
+  console.log(token);
+  useNotifications();
+
+  useEffect(() => {
+    if (token) {
+      registerForPushNotificationsAsync(token);
+    }
+  }, [token]);
   const navigation = useNavigation();
 
   const { data, isLoading: eventsIsLoading, refetch: eventsRefetch } = useGetEvents(userId || 0);
@@ -80,6 +91,24 @@ const HomeScreen = () => {
       eventsRefetch();
       earningsRefetch();
     }, [eventsRefetch, earningsRefetch])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!data) return;
+
+      const events = Array.isArray(data) ? data : [data];
+
+      events.forEach(async (event) => {
+        await scheduleEventNotifications({
+          eventId: event.id,
+          eventDate: event.eventDate,
+          eventStartTime: event.eventStartTime,
+          eventType: event.eventCategory?.name || 'Event',
+          location: event.venueDetails?.name,
+        });
+      });
+    }, [data])
   );
 
   const remainingAmount = earningsData?.total?.totalDueAmount || 0;

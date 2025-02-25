@@ -7,8 +7,8 @@ import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import SelectDropdown from 'components/rare/SelectDropdown';
 import { MonthView } from 'components/test/CalendarComponent';
 import { useGetCompanies } from 'hooks/companies';
-import { useEvents } from 'hooks/events';
 import { useGetEventTypes } from 'hooks/eventTypes';
+import { useEvents } from 'hooks/events';
 import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
@@ -45,6 +45,7 @@ const AddWorkForm: React.FC = () => {
   const [side, setSide] = useState('');
   const [companyId, setCompanyId] = useState<number | undefined>();
   const [noCompany, setNoCompany] = useState(false);
+  const [advanceReceived, setAdvanceReceived] = useState<number | undefined>();
   const [eventCategoryId, setEventCategoryId] = useState(eventTypes?.[0]?.id);
   const scrollViewRef = useRef(null);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -130,7 +131,7 @@ const AddWorkForm: React.FC = () => {
     }
 
     if (!estimatedEarning) {
-      alert('Please enter estimated earning.');
+      alert('Please enter your earnings for this event.');
       return;
     }
 
@@ -151,15 +152,6 @@ const AddWorkForm: React.FC = () => {
       }
     }
 
-    if (!primaryContact.name || !primaryContact.phoneNumber) {
-      alert('Please enter primary contact details.');
-      return;
-    }
-
-    if (!venueDetails.location) {
-      alert('Please enter venue location.');
-      return;
-    }
 
     try {
       const selectedDate = selectedDates[0];
@@ -225,6 +217,7 @@ const AddWorkForm: React.FC = () => {
             })
           : '',
         workType: workType || [],
+        advanceReceived: advanceReceived || 0,
         primaryContact: {
           name: primaryContact.name || '',
           phoneNumber: primaryContact.phoneNumber || '',
@@ -255,6 +248,7 @@ const AddWorkForm: React.FC = () => {
       if (isEditMode) {
         await updateEvent(formattedData);
       } else {
+        console.log(formattedData);
         await postEvent(formattedData);
       }
 
@@ -479,26 +473,40 @@ const AddWorkForm: React.FC = () => {
                     </TouchableOpacity>
 
                     {showTimePicker && (
-                      <DateTimePicker
-                        testID="timePicker"
-                        value={time || new Date()}
-                        mode="time"
-                        is24Hour={false}
-                        display="default"
-                        onChange={handleTimeSelect}
-                        themeVariant="light"
-                        accentColor="#E50914"
-                      />
+                      <View style={{ marginBottom: 50 }}>
+                        <DateTimePicker
+                          testID="timePicker"
+                          value={time || new Date()}
+                          mode="time"
+                          is24Hour={false}
+                          display="default"
+                          onChange={handleTimeSelect}
+                          themeVariant="light"
+                          accentColor="#E50914"
+                          style={{ marginBottom: 30 }}
+                        />
+                      </View>
                     )}
 
-                    <InputField
-                      label="Estimated Earning"
-                      value={estimatedEarning}
-                      onChangeText={setEstimatedEarning}
-                      keyboardType="numeric"
-                      placeholder="Enter earnings"
-                      icon="cash"
-                    />
+                    <View style={{ marginTop: 20 }}>
+                      <InputField
+                        label="Estimated Earning"
+                        value={estimatedEarning}
+                        onChangeText={setEstimatedEarning}
+                        keyboardType="numeric"
+                        placeholder="Enter your earnings for this event"
+                        icon="cash"
+                      />
+
+                      <InputField
+                        label="Advance Received"
+                        value={advanceReceived}
+                        onChangeText={setAdvanceReceived}
+                        keyboardType="numeric"
+                        placeholder="Enter your advance received for this event"
+                        icon="cash"
+                      />
+                    </View>
                   </View>
                 </View>
               </View>

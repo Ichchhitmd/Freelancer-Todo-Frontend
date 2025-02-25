@@ -7,7 +7,7 @@ import { useGetCompanies } from 'hooks/companies';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
 import { useGetFinancials } from 'hooks/finance';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   ScrollView,
   SafeAreaView,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
@@ -34,6 +35,17 @@ export default function EarningsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
   const [selectedCompanyName, setSelectedCompanyName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedCompanyId) {
+      setIsLoading(true);
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCompanyId]);
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
@@ -185,8 +197,11 @@ export default function EarningsScreen() {
 
   const handleCompanySelect = (companyId: number | null) => {
     setSelectedCompanyId(companyId);
+    setIsLoading(true);
+
     if (companyId === null) {
       setSelectedCompanyName(null);
+      setIsLoading(false);
     } else {
       const company = companiesData?.find((c) => c.id === companyId);
       setSelectedCompanyName(company?.name || null);
@@ -199,7 +214,7 @@ export default function EarningsScreen() {
       onPress={() => handleMonthSelect(data)}
       className="mb-4 overflow-hidden rounded-2xl">
       <LinearGradient
-        colors={['#E50914', '#FF4B4B']}
+        colors={['#A30000', '#B32800']}
         className="p-4"
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
@@ -232,6 +247,17 @@ export default function EarningsScreen() {
 
   const renderCompanyStats = () => {
     if (!selectedCompanyId || !FinancialData) {
+      if (isLoading) {
+        return (
+          <View className="mt-4 items-center justify-center rounded-2xl bg-white p-8 shadow-sm">
+            <ActivityIndicator size="large" color="#E50914" />
+            <Text className="text-gray-600 mt-4 text-center text-base">
+              Loading company data...
+            </Text>
+          </View>
+        );
+      }
+
       return (
         <View className="mt-4 items-center justify-center rounded-2xl bg-white p-8 shadow-sm">
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#9CA3AF" />
@@ -252,7 +278,6 @@ export default function EarningsScreen() {
             <Text className="text-xl font-bold text-white">{selectedCompanyName}</Text>
             <MaterialCommunityIcons name="office-building" size={24} color="white" />
           </View>
-
           <View className="mt-4 flex-row flex-wrap justify-between">
             <View className="mb-3 w-[48%] rounded-xl bg-white/10 p-3">
               <MaterialCommunityIcons name="calendar-multiple" size={20} color="white" />
@@ -280,15 +305,19 @@ export default function EarningsScreen() {
                 रू{FinancialData.totalDue.toLocaleString()}
               </Text>
             </View>
+            <View className="mt-3 w-[48%] rounded-xl bg-white/10 p-3">
+              <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
+              <Text className="mt-1 text-sm text-white/80">Advance Balance</Text>
+              <Text className="text-xl font-bold text-white">
+                रू{FinancialData.advancePaymentBalance.toLocaleString()}
+              </Text>
+            </View>
           </View>
         </View>
 
         <View className="mt-4">
           <View className="mb-4 flex-row items-center justify-between">
             <Text className="text-gray-800 text-lg font-semibold">Recent Events</Text>
-            <TouchableOpacity>
-              <Text className="text-sm font-medium text-red-500">View All</Text>
-            </TouchableOpacity>
           </View>
 
           <ScrollView className="">
@@ -298,16 +327,18 @@ export default function EarningsScreen() {
                 onPress={() => handleEventPress(event)}
                 className="mb-3 overflow-hidden rounded-xl shadow-sm">
                 <LinearGradient
-                  colors={['#E50914', '#FF4B4B']}
+                  colors={['#A30000', '#B32800']}
                   className="p-4"
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}>
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1">
                       <Text className="mb-1 font-medium text-white" numberOfLines={1}>
-                        {event.title || 'Event'}
+                        {event.eventCategory || 'Event'}
                       </Text>
-                      <Text className="text-xs text-white/70">{event.date || 'Unknown date'}</Text>
+                      <Text className="text-xs text-white/70">
+                        {event.nepaliEventDate || 'Unknown date'}
+                      </Text>
                     </View>
 
                     <View className="items-end">
@@ -371,7 +402,7 @@ export default function EarningsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <View className="mx-4 mt-4 overflow-hidden rounded-2xl">
           <LinearGradient
-            colors={['#E50914', '#FF4B4B']}
+            colors={['#A30000', '#B32800']}
             className="p-4"
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}>
