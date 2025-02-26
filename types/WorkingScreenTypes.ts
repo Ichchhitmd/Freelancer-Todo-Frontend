@@ -6,6 +6,8 @@ export interface SimplifiedWorkItem {
   id: string | number;
   companyId?: string | number;
   companyName?: string;
+  assignedBy?: string;
+  assignedContactNumber?: number | null;
   nepaliEventDate: string[];
   isUpcoming: boolean;
   eventType?: string;
@@ -19,6 +21,7 @@ export interface SimplifiedWorkItem {
     nepaliMonth: number;
   }[];
   originalEvent?: WorkEvent;
+
   statusText: string;
   statusStyle: string;
   daysDifference: number;
@@ -27,6 +30,9 @@ export interface SimplifiedWorkItem {
 }
 
 export interface WorkEvent {
+  eventCategory: any;
+  assignedContactNumber: any;
+  assignedBy: any;
   paymentStatus?: string;
   eventDate: string[];
   nepaliEventDate: string[];

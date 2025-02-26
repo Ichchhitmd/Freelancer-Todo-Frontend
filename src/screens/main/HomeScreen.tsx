@@ -15,8 +15,10 @@ import {
   RefreshControl,
   Text,
 } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState, selectUserDetails } from 'redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAssignees } from 'redux/slices/eventAssigneeSlice';
+import { selectUserDetails } from 'redux/store';
+import { EventResponse } from 'types/eventTypes';
 import { scheduleEventNotifications } from '~/utils/notificationScheduler';
 
 interface NepaliDate {
@@ -31,6 +33,7 @@ const HomeScreen = () => {
   const userDetails = useSelector(selectUserDetails);
   const userName = userDetails?.userName;
   const userId = userDetails?.userId;
+
 
   const navigation = useNavigation();
 
@@ -83,6 +86,8 @@ const HomeScreen = () => {
     }, [eventsRefetch, earningsRefetch])
   );
 
+  const scheduledEvents = new Set<number>(); // Store event IDs
+
   useFocusEffect(
     useCallback(() => {
       if (!data) return;
@@ -90,6 +95,9 @@ const HomeScreen = () => {
       const events = Array.isArray(data) ? data : [data];
 
       events.forEach(async (event) => {
+        if (scheduledEvents.has(event.id)) return; // Prevent duplicate scheduling
+        scheduledEvents.add(event.id);
+
         console.log('Event data:', {
           id: event.id,
           eventDate: event.eventDate,
@@ -112,6 +120,17 @@ const HomeScreen = () => {
   const remainingAmount = earningsData?.total?.totalDueAmount || 0;
 
   const events = Array.isArray(data) ? data : [data];
+
+  const dispatch = useDispatch();
+
+  const assignedBy = events
+    .filter((event): event is EventResponse => event !== undefined)
+    .map((event) => ({
+      assignedBy: event.assignedBy,
+      assignedContactNumber: event.assignedContactNumber as number | null,
+    }));
+
+  dispatch(setAssignees(assignedBy));
 
   if (eventsIsLoading || earningsIsLoading) {
     return (

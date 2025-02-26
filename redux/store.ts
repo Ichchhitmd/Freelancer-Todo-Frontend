@@ -4,6 +4,7 @@ import authReducer from './slices/authSlices';
 import companyReducer from './slices/companySlices';
 import expenseReducer from './slices/expensesSlices';
 import reimbursementReducer from './slices/reimbursementSlices';
+import assigneesReducer from './slices/eventAssigneeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     company: companyReducer,
     expenses: expenseReducer,
     reimbursement: reimbursementReducer,
+    assignees: assigneesReducer,
   },
 });
 

@@ -13,6 +13,8 @@ interface Event {
     name: string;
   } | null;
   location?: string;
+  assignedBy?: string;
+  assignedContactNumber?: number;
   workType: string[];
   clientContactPerson1?: string;
   paymentStatus?: string;
@@ -102,7 +104,7 @@ export const MonthlyEventsModal: React.FC<MonthlyEventsModalProps> = ({
                   <View className="flex-row items-center justify-between">
                     <View>
                       <Text className="text-gray-900 text-lg font-bold">
-                        {event.company?.name || `${event.clientContactPerson1 || 'Client'}'s Work`}
+                        {event.company?.name || `${event.assignedBy}'s Work`}
                       </Text>
                       <Text className="text-gray-600 mt-1">
                         {event.eventCategory?.name || event.eventType}

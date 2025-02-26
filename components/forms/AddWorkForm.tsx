@@ -30,7 +30,7 @@ const AddWorkForm: React.FC = () => {
   const [estimatedEarning, setEstimatedEarning] = useState('');
   const [actualEarning, setActualEarning] = useState<string | null>(null);
   const [assignedBy, setAssignedBy] = useState('');
-  const [assignedContactNumber, setAssignedContactNumber] = useState('');
+  const [assignedContactNumber, setAssignedContactNumber] = useState<number | null>(null);
   const [primaryContact, setPrimaryContact] = useState<Contact>({
     name: '',
     phoneNumber: '',
@@ -76,7 +76,7 @@ const AddWorkForm: React.FC = () => {
       setEstimatedEarning(details.earnings.toString());
       setActualEarning(details.actualEarnings?.toString() || '');
       setAssignedBy(details.assignedBy);
-      setAssignedContactNumber(details.assignedContactNumber.toString());
+      setAssignedContactNumber(details.assignedContactNumber);
       setPrimaryContact(details.primaryContact);
       if (details.secondaryContact) {
         setSecondaryContact(details.secondaryContact);
@@ -168,16 +168,13 @@ const AddWorkForm: React.FC = () => {
         },
       ];
 
-      // Helper function to clean undefined values from an object
       const cleanObject = (obj: any) => {
         if (!obj) return obj;
 
-        // If it's an array, clean each element
         if (Array.isArray(obj)) {
           return obj.filter((item) => item !== undefined && item !== null);
         }
 
-        // If it's not an object, return as is
         if (typeof obj !== 'object') return obj;
 
         const cleaned = Object.entries(obj).reduce((acc, [key, value]) => {
@@ -237,7 +234,12 @@ const AddWorkForm: React.FC = () => {
               },
             }
           : {}),
-        ...(companyId ? { companyId } : {}),
+        ...(companyId
+          ? { companyId }
+          : {
+              assignedBy: assignedBy || '',
+              assignedContactNumber: assignedContactNumber || null,
+            }),
       });
 
       if (isEditMode && details?.id) {
@@ -247,7 +249,6 @@ const AddWorkForm: React.FC = () => {
       if (isEditMode) {
         await updateEvent(formattedData);
       } else {
-        console.log(formattedData);
         await postEvent(formattedData);
       }
 
@@ -298,7 +299,6 @@ const AddWorkForm: React.FC = () => {
         data={[1]}
         renderItem={() => (
           <>
-            {/* Header Section */}
             <View className="bg-red-500 px-6 py-14 shadow-lg">
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
@@ -360,10 +360,9 @@ const AddWorkForm: React.FC = () => {
                 </View>
               </View>
 
-              {/* Company Section */}
               <View className="mb-8">
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">Company Details</Text>
-                <View className="border-gray-100 space-y-6 rounded-2xl border bg-white p-4 shadow-sm">
+                <View className="border-gray-200 space-y-6 rounded-2xl border bg-white p-6 shadow-md">
                   <TouchableOpacity
                     onPress={() => {
                       setNoCompany(!noCompany);
@@ -371,20 +370,22 @@ const AddWorkForm: React.FC = () => {
                         setCompanyId(undefined);
                       } else {
                         setAssignedBy('');
-                        setAssignedContactNumber('');
+                        setAssignedContactNumber(null);
                       }
                     }}
-                    className="flex-row items-center">
+                    className="bg-gray-100 flex-row items-center justify-between rounded-lg p-3">
+                    <Text className="text-gray-700 text-base font-medium">
+                      {noCompany ? 'Switch to Company' : 'Switch to Individual'}
+                    </Text>
                     <MaterialCommunityIcons
-                      name={noCompany ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                      size={24}
-                      color="#E50914"
+                      name={noCompany ? 'toggle-switch' : 'toggle-switch-off-outline'}
+                      size={40}
+                      color={noCompany ? '#E50914' : '#A0A0A0'}
                     />
-                    <Text className="text-gray-700 ml-2 text-base">No Company</Text>
                   </TouchableOpacity>
 
                   {!noCompany ? (
-                    <View className="mt-4">
+                    <View className="mt-2">
                       <SelectDropdown
                         data={companies?.map((company) => company.name) || []}
                         onSelect={(value) => {
@@ -403,28 +404,34 @@ const AddWorkForm: React.FC = () => {
                       />
                     </View>
                   ) : (
-                    <View className="mt-4 space-y-6">
-                      <InputField
-                        label="Assigned By"
-                        value={assignedBy}
-                        onChangeText={setAssignedBy}
-                        placeholder="Enter who assigned the work"
-                        icon="account"
-                      />
-                      <InputField
-                        label="Assigned Contact Number"
-                        value={assignedContactNumber}
-                        onChangeText={setAssignedContactNumber}
-                        placeholder="Enter assigner's contact number"
-                        keyboardType="numeric"
-                        icon="phone"
-                      />
+                    <View className="mt-4 space-y-4">
+                      <View className="flex flex-col gap-2 space-y-2">
+                        <Text className="text-gray-600 text-sm font-medium">Assigned By</Text>
+                        <InputField
+                          value={assignedBy}
+                          onChangeText={setAssignedBy}
+                          placeholder="Enter who assigned the work"
+                          icon="account"
+                        />
+                      </View>
+                      <View className="flex flex-col gap-2 space-y-2">
+                        <Text className="text-gray-600 text-sm font-medium">
+                          Assigned Contact Number
+                        </Text>
+                        <InputField
+                          value={assignedContactNumber?.toString() || ''}
+                          onChangeText={(text) =>
+                            setAssignedContactNumber(text ? Number(text) : null)
+                          }
+                          placeholder="Enter assigner's contact number"
+                          keyboardType="numeric"
+                          icon="phone"
+                        />
+                      </View>
                     </View>
                   )}
                 </View>
               </View>
-
-              {/* Event Details Section */}
               <View className="mb-8">
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">Event Details</Text>
                 <View className="border-gray-100 space-y-8 rounded-2xl border bg-white p-4 shadow-sm">
@@ -510,7 +517,6 @@ const AddWorkForm: React.FC = () => {
                 </View>
               </View>
 
-              {/* Contact Information */}
               <View className="mb-8">
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">
                   Contact Information
@@ -569,7 +575,7 @@ const AddWorkForm: React.FC = () => {
                               }
                         )
                       }
-                      placeholder={`Enter ${side === 'BRIDE' ? "bride's" : side === 'GROOM' ? "groom's" : 'secondary contact'} name`}
+                      placeholder={`Enter ${side === 'BRIDE' ? "bride's seconday contact" : side === 'GROOM' ? "groom's seconday contact" : 'secondary contact'} name`}
                       icon="account"
                     />
                     <InputField
@@ -588,14 +594,13 @@ const AddWorkForm: React.FC = () => {
                         )
                       }
                       keyboardType="numeric"
-                      placeholder={`Enter ${side === 'BRIDE' ? "bride's" : side === 'GROOM' ? "groom's" : 'secondary contact'} number`}
+                      placeholder={`Enter ${side === 'BRIDE' ? "bride's seconday contact" : side === 'GROOM' ? "groom's seconday contact" : 'secondary contact'} number`}
                       icon="phone"
                     />
                   </View>
                 </View>
               </View>
 
-              {/* Venue Details */}
               <View className="mb-8">
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">Venue Details</Text>
                 <View className="border-gray-100 space-y-4 rounded-2xl border bg-white p-4 shadow-sm">
@@ -618,7 +623,6 @@ const AddWorkForm: React.FC = () => {
                 </View>
               </View>
 
-              {/* Submit Button */}
               <TouchableOpacity
                 className="mt-6 rounded-2xl bg-red-600 p-4 shadow-lg shadow-red-600/30"
                 onPress={handleSubmit}>

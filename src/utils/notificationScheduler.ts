@@ -53,9 +53,10 @@ export const scheduleEventNotifications = async ({
     }
 
     // Parse the time (format: "h:mm A" or "HH:mm")
-    const timeFormat = eventStartTime.includes('AM') || eventStartTime.includes('PM') ? 'h:mm A' : 'HH:mm';
+    const timeFormat =
+      eventStartTime.includes('AM') || eventStartTime.includes('PM') ? 'h:mm A' : 'HH:mm';
     const parsedTime = dayjs(eventStartTime, timeFormat);
-    
+
     if (!parsedTime.isValid()) {
       console.error('Invalid time format:', eventStartTime);
       return;
@@ -64,7 +65,7 @@ export const scheduleEventNotifications = async ({
     // Combine date and time with timezone
     const timeStr = parsedTime.format('HH:mm');
     const eventDateTime = dayjs.tz(`${dateStr} ${timeStr}`, 'YYYY-MM-DD HH:mm', TIMEZONE);
-    
+
     if (!eventDateTime.isValid()) {
       console.error('Invalid datetime:', { dateStr, timeStr });
       return;
@@ -76,15 +77,15 @@ export const scheduleEventNotifications = async ({
       currentTime: now.format('YYYY-MM-DD HH:mm'),
       eventTime: eventDateTime.format('YYYY-MM-DD HH:mm'),
       oneDayBefore: eventDateTime.subtract(1, 'day').format('YYYY-MM-DD HH:mm'),
-      oneHourBefore: eventDateTime.subtract(1, 'hour').format('YYYY-MM-DD HH:mm')
+      oneHourBefore: eventDateTime.subtract(1, 'hour').format('YYYY-MM-DD HH:mm'),
     });
 
     // Cancel any existing notifications for this event
     const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
-    const eventNotifications = existingNotifications.filter(notification => 
-      notification.content.data?.eventId === eventId
+    const eventNotifications = existingNotifications.filter(
+      (notification) => notification.content.data?.eventId === eventId
     );
-    
+
     for (const notification of eventNotifications) {
       await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }

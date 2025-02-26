@@ -34,7 +34,7 @@ export interface EventRequest {
   actualEarnings?: number | null;
   eventStartTime: string;
   workType: string[];
-  assignedBy?: string | null;
+  assignedBy?: string;
   assignedContactNumber?: number | null;
   primaryContact: Contact;
   secondaryContact?: SecondaryContact;

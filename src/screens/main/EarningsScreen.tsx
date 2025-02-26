@@ -128,7 +128,8 @@ export default function EarningsScreen() {
         name: string;
       };
       location?: string;
-      clientContactPerson1: string;
+      assignedBy: string;
+      assignedContactNumber: string;
       paymentStatus: string;
       dueAmount: number;
       eventCategory: string;
@@ -178,8 +179,9 @@ export default function EarningsScreen() {
       eventType: event.eventType,
       workType: Array.isArray(event.workType) ? event.workType : [event.eventType],
       company: event.company,
-      location: event.location || '',
-      clientContactPerson1: event.clientContactPerson1 || 'Client',
+      location: event.venueDetails?.location || '',
+      assignedBy: event.assignedBy || '',
+      assignedContactNumber: event.assignedContactNumber,
       paymentStatus: event.paymentStatus,
       dueAmount: event.dueAmount,
       eventCategory: event.eventCategory,
@@ -381,7 +383,8 @@ export default function EarningsScreen() {
           workType: Array.isArray(fullEvent.workType) ? fullEvent.workType : [fullEvent.eventType],
           company: fullEvent.company,
           location: fullEvent.location || '',
-          clientContactPerson1: fullEvent.clientContactPerson1 || 'Client',
+          assignedBy: fullEvent.assignedBy || '',
+          assignedContactNumber: fullEvent.assignedContactNumber,
           paymentStatus: fullEvent.paymentStatus,
           dueAmount: fullEvent.dueAmount,
           eventCategory: fullEvent.eventCategory,
