@@ -78,7 +78,7 @@ const DateDetails: React.FC = () => {
     // Then try from initial details (WorkEvent)
     if (initialDetails.company?.name) return initialDetails.company.name;
     // Then try from primary contact
-    if (details?.primaryContact?.name) return `${details.primaryContact.name}'s Event`;
+    if (details?.assignedBy) return `${details.assignedBy}'s Event`;
     if (initialDetails.clientContactPerson1)
       return `${initialDetails.clientContactPerson1}'s Event`;
     return 'Personal Event';
@@ -301,7 +301,7 @@ const DateDetails: React.FC = () => {
             </View>
             <Text className="text-gray-900 mt-2 text-xl font-bold">{getCompanyName()}</Text>
             <Text className="text-gray-500 text-base">
-              {details.venueDetails?.location || 'Location not specified'}
+              {details.venueDetails?.location || 'No location provided'}
             </Text>
             <View className="mt-4 flex-row items-center justify-center gap-12">
               <TouchableOpacity

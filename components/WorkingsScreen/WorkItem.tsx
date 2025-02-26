@@ -107,7 +107,7 @@ export const WorkItem = ({ item, index }: WorkItemProps) => {
 
           {/* Company Name */}
           <Text className="text-gray-900 text-lg font-semibold mb-2">
-            {item.companyName || 'Untitled Event'}
+            {item.companyName || `${item.assignedBy}'s Work`}
           </Text>
 
           {/* Location */}

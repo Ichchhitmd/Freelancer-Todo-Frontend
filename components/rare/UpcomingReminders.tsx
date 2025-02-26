@@ -12,12 +12,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatNepaliDates } from '../utils/NepaliDateFormatter';
 import { getDaysStatus } from 'utils/utils';
 import { EventResponse } from 'types/eventTypes';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from 'types/navigation';
 
 interface UpcomingEventReminderProps {
   events: EventResponse[];
 }
 
-const screenWidth = Dimensions.get('window').width;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events }) => {
   const today = new Date();
@@ -40,15 +43,15 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
     if (event.companyId && event.company) {
       return event.company.name || event.venueDetails?.name || `Event #${event.id}`;
     }
-    return event.primaryContact?.name
-      ? `${event.primaryContact.name}'s Work`
-      : `Event #${event.id}`;
+    return `${event.assignedBy}'s Work`;
   };
 
   const handlePhonePress = (phoneNumber?: string) => {
     if (!phoneNumber) return;
     Linking.openURL(Platform.OS === 'ios' ? `telprompt:${phoneNumber}` : `tel:${phoneNumber}`);
   };
+
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <View className="bg-gray-50 p-4">
@@ -70,6 +73,9 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
             <TouchableOpacity
               key={event.id}
               activeOpacity={0.9}
+              onPress={() => {
+                navigation.navigate('DateDetails', { details: event });
+              }}
               className={`mb-5 overflow-hidden rounded-2xl border-l-4 
               bg-white shadow-sm ${isToday ? 'border-blue-500' : 'border-orange-400'}`}
               style={{

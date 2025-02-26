@@ -66,14 +66,16 @@ export const WorkingScreen = () => {
       return {
         id: event.id,
         companyId: event.company?.id || 0,
-        companyName: event.company?.name || 'Unknown Company',
+        companyName: event.company?.name,
+        assignedBy: event.assignedBy,
+        assignedContactNumber: event.assignedContactNumber,
         nepaliEventDate: event.nepaliEventDate,
         detailNepaliDate: event.detailNepaliDate,
         eventType: event.eventCategory?.name || 'Unknown Type',
         side: event.side,
         workType: event.workType || [],
         earnings: event.earnings?.toString() || '0',
-        location: event.location,
+        location: event.venueDetails?.location,
         originalEvent: event,
         statusText: isToday
           ? 'Today'
@@ -99,7 +101,7 @@ export const WorkingScreen = () => {
     // Apply company filter first if active
     if (activeCompany) {
       filteredEvents = filteredEvents.filter((event) =>
-        event.companyName.toLowerCase().includes(activeCompany.toLowerCase())
+        event.companyName?.toLowerCase().includes(activeCompany.toLowerCase())
       );
     }
 
@@ -153,7 +155,7 @@ export const WorkingScreen = () => {
         });
         break;
       case 'company':
-        filteredEvents.sort((a, b) => a.companyName.localeCompare(b.companyName));
+        filteredEvents.sort((a, b) => a.companyName?.localeCompare(b.companyName) || 0);
         break;
       case 'earnings':
         filteredEvents.sort((a, b) => {
@@ -212,7 +214,7 @@ export const WorkingScreen = () => {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-gray-600 mt-1 text-sm">
-                {visibleEvents.length} event{visibleEvents.length !== 1 ? 's' : ''} shown
+                {visibleEvents.length} event{visibleEvents.length !== 1 ? 's' : ''}
                 {activeFilter === 'upcoming' &&
                   visibleEvents.length === 10 &&
                   ' (showing first 10)'}
