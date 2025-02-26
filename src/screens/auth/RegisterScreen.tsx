@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import PolicyModal from 'components/rare/PrivacyPolicyModel';
 import * as Location from 'expo-location';
 import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
 import { useSignup } from 'hooks/useAuth';
@@ -14,6 +15,7 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 
 export default function RegisterScreen() {
@@ -25,6 +27,9 @@ export default function RegisterScreen() {
     location: '',
     role: 'freelancer',
   });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'privacyPolicy' | 'termsOfService'>('privacyPolicy');
   const navigation = useNavigation();
   const { mutate: signup, status } = useSignup();
 
@@ -47,6 +52,11 @@ export default function RegisterScreen() {
   }, []);
 
   const handleRegister = () => {
+    if (!privacyAccepted) {
+      Alert.alert('Error', 'Please accept the Privacy Policy and Terms');
+      return;
+    }
+
     const { name, phone, password, email, location } = formData;
     if (!name || !phone || !password || !email || !location) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -63,6 +73,20 @@ export default function RegisterScreen() {
         Alert.alert('Signup Failed', handleAxiosError(error));
       },
     });
+  };
+
+  const togglePrivacyAccepted = () => {
+    setPrivacyAccepted(!privacyAccepted);
+  };
+
+  const showPrivacyPolicy = () => {
+    setModalType('privacyPolicy' as 'privacyPolicy' | 'termsOfService');
+    setModalVisible(true);
+  };
+
+  const showTermsOfService = () => {
+    setModalType('termsOfService' as 'privacyPolicy' | 'termsOfService');
+    setModalVisible(true);
   };
 
   return (
@@ -139,12 +163,39 @@ export default function RegisterScreen() {
                   />
                 </View>
 
+                {/* Privacy Policy Checkbox */}
+                <View className="mb-6 flex-row items-center">
+                  <TouchableOpacity
+                    onPress={togglePrivacyAccepted}
+                    className={`h-6 w-6 items-center justify-center rounded border ${
+                      privacyAccepted
+                        ? 'border-indigo-600 bg-indigo-600'
+                        : 'border-gray-400 bg-white'
+                    }`}>
+                    {privacyAccepted && <MaterialIcons name="check" size={16} color="white" />}
+                  </TouchableOpacity>
+                  <Text className="text-gray-700 ml-2 flex-1 text-sm">
+                    I agree to the{' '}
+                    <Text className="font-medium text-indigo-600" onPress={showPrivacyPolicy}>
+                      Privacy Policy
+                    </Text>{' '}
+                    and{' '}
+                    <Text className="font-medium text-indigo-600" onPress={showTermsOfService}>
+                      Terms of Service
+                    </Text>
+                  </Text>
+                </View>
+
                 {status === 'pending' ? (
                   <ActivityIndicator size="large" color="#6366F1" className="my-4" />
                 ) : (
                   <Pressable
                     className="rounded-2xl bg-primary/75 py-4 shadow-lg shadow-primary/30"
-                    onPress={handleRegister}>
+                    onPress={
+                      privacyAccepted
+                        ? handleRegister
+                        : () => Alert.alert('Error', 'Please accept the Privacy Policy and Terms')
+                    }>
                     <Text className="text-center text-lg font-semibold text-white">
                       Create Account
                     </Text>
@@ -162,6 +213,12 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <PolicyModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        policyType={modalType}
+      />
     </SafeAreaView>
   );
 }
