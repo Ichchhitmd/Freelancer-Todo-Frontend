@@ -2,6 +2,8 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import InputField from 'components/common/InputField';
 import SelectDropdown from 'components/rare/SelectDropdown';
+import AssignerDropdown from 'components/rare/AssignerDropdown';
+import { useGetAllAssigners, useProcessAssignerPayment } from 'hooks/assignee';
 import { useGetCompanies } from 'hooks/companies';
 import { usePostIncome } from 'hooks/income';
 import React, { useState } from 'react';
@@ -12,9 +14,17 @@ import { RootState } from 'redux/store';
 const IncomeForm = () => {
   const navigation = useNavigation();
   const { user } = useSelector((state: RootState) => state.auth);
+  const userId = user?.id;
+
+  console.log(userId);
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
   const [companyId, setCompanyId] = useState(0);
   const { mutate: postIncome } = usePostIncome();
+  const { data: assignees } = useGetAllAssigners(userId!);
+  const { mutate: processAssignerPayment } = useProcessAssignerPayment();
+  const [isCompany, setIsCompany] = useState(true);
+  const [assignerId, setAssignerId] = useState('');
+
   const [income, setIncome] = useState({
     amount: '',
   });
@@ -25,8 +35,13 @@ const IncomeForm = () => {
       return;
     }
 
-    if (!companyId) {
+    if (isCompany && !companyId) {
       Alert.alert('Error', 'Please select a company.');
+      return;
+    }
+
+    if (!isCompany && !assignerId) {
+      Alert.alert('Error', 'Please select an assigner.');
       return;
     }
 
@@ -35,25 +50,47 @@ const IncomeForm = () => {
       return;
     }
 
-    const incomePayload = {
-      companyId: companyId,
-      userId: user.id,
-      amount: parseFloat(income.amount),
-    };
+    if (isCompany) {
+      const incomePayload = {
+        companyId: companyId,
+        userId: user.id,
+        amount: parseFloat(income.amount),
+      };
 
-    postIncome(incomePayload, {
-      onSuccess: (data) => {
-        Alert.alert('Success', 'Income request submitted!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
-      },
-      onError: () => {
-        Alert.alert('Error', 'Failed to submit income request. Please try again.');
-      },
-    });
+      postIncome(incomePayload, {
+        onSuccess: (data) => {
+          Alert.alert('Success', 'Income request submitted!', [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        },
+        onError: () => {
+          Alert.alert('Error', 'Failed to submit income request. Please try again.');
+        },
+      });
+    } else {
+      const assignerPayload = {
+        assignerName: assignerId,
+        userId: user.id,
+        amount: parseFloat(income.amount),
+      };
+
+      processAssignerPayment(assignerPayload, {
+        onSuccess: (data) => {
+          Alert.alert('Success', 'Assigner payment processed!', [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        },
+        onError: () => {
+          Alert.alert('Error', 'Failed to process assigner payment. Please try again.');
+        },
+      });
+    }
   };
 
   if (companiesLoading) {
@@ -94,14 +131,46 @@ const IncomeForm = () => {
             shadowOpacity: 0.1,
             shadowRadius: 8,
           }}>
-          <SelectDropdown
-            data={companies?.map((company) => company.name) || []}
-            onSelect={(value) => {
-              const selectedCompany = companies?.find((company) => company.name === value);
-              setCompanyId(selectedCompany?.id ?? 0);
-            }}
-            defaultButtonText="Select Company"
-          />
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 20 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: isCompany ? '#FF5A5F' : '#f0f0f0',
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                marginRight: 10,
+              }}
+              onPress={() => setIsCompany(true)}>
+              <Text style={{ color: isCompany ? 'white' : '#666' }}>Company</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: !isCompany ? '#FF5A5F' : '#f0f0f0',
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+              }}
+              onPress={() => setIsCompany(false)}>
+              <Text style={{ color: !isCompany ? 'white' : '#666' }}>Individual</Text>
+            </TouchableOpacity>
+          </View>
+
+          {isCompany ? (
+            <SelectDropdown
+              data={companies?.map((company) => company.name) || []}
+              onSelect={(value) => {
+                const selectedCompany = companies?.find((company) => company.name === value);
+                setCompanyId(selectedCompany?.id ?? 0);
+              }}
+              defaultButtonText="Select Company"
+            />
+          ) : (
+            <AssignerDropdown
+              data={assignees || []}
+              onSelect={(value) => setAssignerId(value)}
+              defaultButtonText="Select Individual"
+            />
+          )}
 
           <InputField
             placeholder="Enter amount"

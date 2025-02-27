@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import HeaderSection from 'components/HomeScreen/HeaderSection';
 import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
@@ -33,7 +34,6 @@ const HomeScreen = () => {
   const userDetails = useSelector(selectUserDetails);
   const userName = userDetails?.userName;
   const userId = userDetails?.userId;
-
 
   const navigation = useNavigation();
 
@@ -86,26 +86,21 @@ const HomeScreen = () => {
     }, [eventsRefetch, earningsRefetch])
   );
 
-  const scheduledEvents = new Set<number>(); // Store event IDs
+  useEffect(() => {
+    if (!data) return;
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!data) return;
+    const events = Array.isArray(data) ? data : [data];
 
-      const events = Array.isArray(data) ? data : [data];
+    const scheduleNotifications = async () => {
+      const storedEventIds = await AsyncStorage.getItem('scheduledEvents');
+      const scheduledIds: Set<number> = storedEventIds
+        ? new Set(JSON.parse(storedEventIds) as number[])
+        : new Set();
 
-      events.forEach(async (event) => {
-        if (scheduledEvents.has(event.id)) return; // Prevent duplicate scheduling
-        scheduledEvents.add(event.id);
+      for (const event of events) {
+        if (scheduledIds.has(event.id)) continue; // Prevent duplicate scheduling
 
-        console.log('Event data:', {
-          id: event.id,
-          eventDate: event.eventDate,
-          eventStartTime: event.eventStartTime,
-          eventType: event.eventCategory?.name,
-          location: event.venueDetails?.name,
-        });
-
+        console.log('Scheduling event notifications for:', event.id);
         await scheduleEventNotifications({
           eventId: event.id,
           eventDate: event.eventDate,
@@ -113,9 +108,16 @@ const HomeScreen = () => {
           eventType: event.eventCategory?.name || 'Event',
           location: event.venueDetails?.name,
         });
-      });
-    }, [data])
-  );
+
+        scheduledIds.add(event.id);
+      }
+
+      // Persist scheduled event IDs
+      await AsyncStorage.setItem('scheduledEvents', JSON.stringify([...scheduledIds]));
+    };
+
+    scheduleNotifications();
+  }, [data]); // Only runs when `data` changes
 
   const remainingAmount = earningsData?.total?.totalDueAmount || 0;
 
