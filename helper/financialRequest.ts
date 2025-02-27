@@ -1,4 +1,5 @@
-import { FinancialsResponse } from 'types/FinancialTypes';
+import { FinancialsResponse, AdvancePaymentResponse } from 'types/FinancialTypes';
+
 import { get } from './api';
 
 export const fetchFinancials = async (
@@ -10,4 +11,12 @@ export const fetchFinancials = async (
   }
 
   return get<FinancialsResponse>(`/companies/${companyId}/users/${userId}/financials`);
+};
+
+export const advanceReceipts = async (userId: number): Promise<AdvancePaymentResponse> => {
+  if (!userId) {
+    throw new Error('Invalid parameters');
+  }
+
+  return get<AdvancePaymentResponse>(`/companies/advance-payment/${userId}`);
 };

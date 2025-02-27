@@ -22,3 +22,7 @@ export interface FinancialsResponse {
     paymentStatus: string;
   }[];
 }
+
+export interface AdvancePaymentResponse {
+  totalAdvancePayment: number;
+}

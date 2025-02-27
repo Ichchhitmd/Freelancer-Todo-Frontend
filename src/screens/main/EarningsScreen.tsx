@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useGetCompanies } from 'hooks/companies';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
-import { useGetFinancials } from 'hooks/finance';
+import { useGetFinancials, useGetAdvanceReceipts } from 'hooks/finance';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
@@ -53,6 +53,9 @@ export default function EarningsScreen() {
   const { data: eventsData, refetch } = useGetEvents(userId || 0);
   const { data: companiesData } = useGetCompanies();
   const { data: FinancialData } = useGetFinancials(userId, selectedCompanyId || 0);
+  const { data: advanceReceipts } = useGetAdvanceReceipts(userId || 0);
+
+  const advancePaymentBalance = advanceReceipts?.totalAdvancePayment || 0;
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -210,6 +213,8 @@ export default function EarningsScreen() {
     }
   };
 
+  const actualReceived = Number(totals.received.toLocaleString()) + Number(advancePaymentBalance);
+
   const renderMonthlyCard = (data: MonthlyData) => (
     <TouchableOpacity
       key={data.month}
@@ -297,23 +302,35 @@ export default function EarningsScreen() {
               <MaterialCommunityIcons name="cash-check" size={20} color="white" />
               <Text className="mt-1 text-sm text-white/80">Received</Text>
               <Text className="text-xl font-bold text-white">
-                रू{FinancialData.totalReceived.toLocaleString()}
+                रू
+                {(
+                  FinancialData.totalReceived + FinancialData.advancePaymentBalance
+                ).toLocaleString()}
               </Text>
             </View>
-            <View className="w-[48%] rounded-xl bg-white/10 p-3">
-              <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
-              <Text className="mt-1 text-sm text-white/80">Due Amount</Text>
-              <Text className="text-xl font-bold text-white">
-                रू{FinancialData.totalDue.toLocaleString()}
-              </Text>
-            </View>
-            <View className="mt-3 w-[48%] rounded-xl bg-white/10 p-3">
-              <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
-              <Text className="mt-1 text-sm text-white/80">Advance Balance</Text>
-              <Text className="text-xl font-bold text-white">
-                रू{FinancialData.advancePaymentBalance.toLocaleString()}
-              </Text>
-            </View>
+            {FinancialData.totalDue > 0 ? (
+              <View className="w-[48%] rounded-xl bg-white/10 p-3">
+                <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
+                <Text className="mt-1 text-sm text-white/80">Due Amount</Text>
+                <Text className="text-xl font-bold text-white">
+                  रू{FinancialData.totalDue.toLocaleString()}
+                </Text>
+              </View>
+            ) : FinancialData.advancePaymentBalance > 0 ? (
+              <View className="w-[48%] rounded-xl bg-white/10 p-3">
+                <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
+                <Text className="mt-1 text-sm text-white/80">Advance Balance</Text>
+                <Text className="text-xl font-bold text-white">
+                  रू{FinancialData.advancePaymentBalance.toLocaleString()}
+                </Text>
+              </View>
+            ) : (
+              <View className="w-[48%] rounded-xl bg-white/10 p-3">
+                <MaterialCommunityIcons name="cash-remove" size={20} color="white" />
+                <Text className="mt-1 text-sm text-white/80">No Pending Amounts</Text>
+                <Text className="text-xl font-bold text-white">रू0</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -420,17 +437,31 @@ export default function EarningsScreen() {
               <View className="flex-1 items-center">
                 <MaterialCommunityIcons name="cash-check" size={24} color="white" />
                 <Text className="mt-2 text-sm text-white">Received</Text>
-                <Text className="mt-1 text-lg font-bold text-green-300">
-                  रू{totals.received.toLocaleString()}
-                </Text>
+                <Text className="mt-1 text-lg font-bold text-green-300">रू{actualReceived}</Text>
               </View>
-              <View className="flex-1 items-center">
-                <MaterialCommunityIcons name="cash-plus" size={24} color="white" />
-                <Text className="mt-2 text-sm text-white">Due</Text>
-                <Text className="mt-1 text-lg font-bold text-red-300">
-                  रू{totals.due.toLocaleString()}
-                </Text>
-              </View>
+              {totals.quoted.toLocaleString() > actualReceived ? (
+                <View className="flex-1 items-center">
+                  <MaterialCommunityIcons name="cash-plus" size={24} color="white" />
+                  <Text className="mt-2 text-sm text-white">Due</Text>
+                  <Text className="mt-1 text-lg font-bold text-red-300">
+                    रू{totals.due.toLocaleString()}
+                  </Text>
+                </View>
+              ) : actualReceived > totals.quoted ? (
+                <View className="flex-1 items-center">
+                  <MaterialCommunityIcons name="cash-minus" size={24} color="white" />
+                  <Text className="mt-2 text-sm text-white">Advance</Text>
+                  <Text className="mt-1 text-lg font-bold text-green-300">
+                    रू{Number(actualReceived) - Number(totals.quoted)}
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-1 items-center">
+                  <MaterialCommunityIcons name="cash-minus" size={24} color="white" />
+                  <Text className="mt-2 text-sm text-white">No Pending</Text>
+                  <Text className="mt-1 text-lg font-bold text-green-300">रू0</Text>
+                </View>
+              )}
             </View>
           </LinearGradient>
         </View>

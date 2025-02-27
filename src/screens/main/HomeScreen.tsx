@@ -5,6 +5,7 @@ import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
+import { useGetAdvanceReceipts } from 'hooks/finance';
 import { getCurrentNepaliDate } from 'lib/calendar';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -19,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setAssignees } from 'redux/slices/eventAssigneeSlice';
 import { selectUserDetails } from 'redux/store';
 import { EventResponse } from 'types/eventTypes';
+
 import { scheduleEventNotifications } from '~/utils/notificationScheduler';
 
 interface NepaliDate {
@@ -34,6 +36,7 @@ const HomeScreen = () => {
   const userName = userDetails?.userName;
   const userId = userDetails?.userId;
 
+  const { data: advanceReceipts } = useGetAdvanceReceipts(userId);
 
   const navigation = useNavigation();
 
@@ -45,6 +48,7 @@ const HomeScreen = () => {
     isError: earningsIsError,
     refetch: earningsRefetch,
   } = useGetEarnings(userId || 0);
+  console.log('yeta xa', earningsData);
 
   const currentNepaliDate = getCurrentNepaliDate();
   const currentYear = currentNepaliDate.year;
@@ -86,7 +90,7 @@ const HomeScreen = () => {
     }, [eventsRefetch, earningsRefetch])
   );
 
-  const scheduledEvents = new Set<number>(); // Store event IDs
+  const scheduledEvents = new Set<number>();
 
   useFocusEffect(
     useCallback(() => {
@@ -135,7 +139,11 @@ const HomeScreen = () => {
   if (eventsIsLoading || earningsIsLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <HeaderSection user={userName} remainingAmount={remainingAmount} />
+        <HeaderSection
+          user={userName}
+          remainingAmount={remainingAmount}
+          advanceAmount={advanceReceipts?.totalAdvancePayment || 0}
+        />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#E50914" />
           <Text className="text-gray-600 mt-4">Loading your events...</Text>
@@ -196,7 +204,11 @@ const HomeScreen = () => {
   const filteredMonthlyData = filterMonthlyData(monthlyData);
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
-      <HeaderSection user={userName} remainingAmount={remainingAmount} />
+      <HeaderSection
+        user={userName}
+        remainingAmount={remainingAmount}
+        advanceAmount={advanceReceipts?.totalAdvancePayment || 0}
+      />
       <ScrollView
         className="mt-2"
         nestedScrollEnabled
