@@ -4,7 +4,7 @@
     "slug": "Xito",
     "version": "1.0.0",
     "web": {
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/3.png"
     },
     "experiments": {
       "tsconfigPaths": true
@@ -13,15 +13,15 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png"   
+          "icon": "./assets/3.png"   
         }
       ]
     ],
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/3.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -34,7 +34,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/3.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

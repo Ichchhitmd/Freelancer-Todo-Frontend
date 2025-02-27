@@ -159,7 +159,6 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                   )}
                 </View>
 
-                {/* Contact Information */}
                 <View className="space-y-2">
                   {event.primaryContact?.phoneNumber && (
                     <TouchableOpacity
@@ -167,8 +166,31 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       className="bg-gray-50 flex-row items-center rounded-lg p-3">
                       <MaterialCommunityIcons name="phone-outline" size={18} color="#6B7280" />
                       <Text className="ml-3 font-medium text-blue-600">
-                        {event.primaryContact.phoneNumber}
+                        {event.side ? `Call ${event.side.toLowerCase()}` : 'Primary Contact'}
                       </Text>
+                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
+                        <Text className="text-xs text-blue-800">
+                          {event.primaryContact.phoneNumber}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+
+                  {event.secondaryContact?.phoneNumber && (
+                    <TouchableOpacity
+                      onPress={() => handlePhonePress(event.secondaryContact?.phoneNumber)}
+                      className="bg-gray-50 flex-row items-center rounded-lg p-3">
+                      <MaterialCommunityIcons name="phone-plus-outline" size={18} color="#6B7280" />
+                      <Text className="ml-3 font-medium text-blue-600">
+                        {event.side
+                          ? `Call ${event.side.toLowerCase()}'s secondary contact`
+                          : 'Secondary Contact'}
+                      </Text>
+                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
+                        <Text className="text-xs text-blue-800">
+                          {event.secondaryContact.phoneNumber}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>

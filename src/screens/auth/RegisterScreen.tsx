@@ -1,6 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import PolicyModal from 'components/rare/PrivacyPolicyModel';
 import * as Location from 'expo-location';
 import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
 import { useSignup } from 'hooks/useAuth';
@@ -16,6 +15,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 
 export default function RegisterScreen() {
@@ -28,8 +28,6 @@ export default function RegisterScreen() {
     role: 'freelancer',
   });
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState<'privacyPolicy' | 'termsOfService'>('privacyPolicy');
   const navigation = useNavigation();
   const { mutate: signup, status } = useSignup();
 
@@ -75,18 +73,19 @@ export default function RegisterScreen() {
     });
   };
 
-  const togglePrivacyAccepted = () => {
-    setPrivacyAccepted(!privacyAccepted);
-  };
+  const handleOpenPrivacyPolicy = async () => {
+    try {
+      const url = 'http://xitoapps.com/privacy-policy/';
+      const supported = await Linking.canOpenURL(url);
 
-  const showPrivacyPolicy = () => {
-    setModalType('privacyPolicy' as 'privacyPolicy' | 'termsOfService');
-    setModalVisible(true);
-  };
-
-  const showTermsOfService = () => {
-    setModalType('termsOfService' as 'privacyPolicy' | 'termsOfService');
-    setModalVisible(true);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Cannot open the privacy policy URL');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to open privacy policy');
+    }
   };
 
   return (
@@ -163,34 +162,27 @@ export default function RegisterScreen() {
                   />
                 </View>
 
-                {/* Privacy Policy Checkbox */}
-                <View className="mb-6 flex-row items-center">
+                <View className="mt-4 flex-row items-center">
                   <TouchableOpacity
-                    onPress={togglePrivacyAccepted}
-                    className={`h-6 w-6 items-center justify-center rounded border ${
-                      privacyAccepted
-                        ? 'border-indigo-600 bg-indigo-600'
-                        : 'border-gray-400 bg-white'
-                    }`}>
-                    {privacyAccepted && <MaterialIcons name="check" size={16} color="white" />}
+                    onPress={() => setPrivacyAccepted(!privacyAccepted)}
+                    className="mr-2">
+                    <MaterialIcons
+                      name={privacyAccepted ? 'check-box' : 'check-box-outline-blank'}
+                      size={24}
+                      color={privacyAccepted ? '#E50914' : '#666'}
+                    />
                   </TouchableOpacity>
-                  <Text className="text-gray-700 ml-2 flex-1 text-sm">
-                    I agree to the{' '}
-                    <Text className="font-medium text-indigo-600" onPress={showPrivacyPolicy}>
-                      Privacy Policy
-                    </Text>{' '}
-                    and{' '}
-                    <Text className="font-medium text-indigo-600" onPress={showTermsOfService}>
-                      Terms of Service
-                    </Text>
-                  </Text>
+                  <Text className="text-gray-600">I agree to the </Text>
+                  <TouchableOpacity onPress={handleOpenPrivacyPolicy}>
+                    <Text className="text-primary">Privacy Policy & Terms of Service</Text>
+                  </TouchableOpacity>
                 </View>
 
                 {status === 'pending' ? (
                   <ActivityIndicator size="large" color="#6366F1" className="my-4" />
                 ) : (
                   <Pressable
-                    className="rounded-2xl bg-primary/75 py-4 shadow-lg shadow-primary/30"
+                    className="rounded-2xl bg-primary/75 py-4 shadow-lg shadow-primary/30 mt-2"
                     onPress={
                       privacyAccepted
                         ? handleRegister
@@ -213,12 +205,6 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <PolicyModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        policyType={modalType}
-      />
     </SafeAreaView>
   );
 }
