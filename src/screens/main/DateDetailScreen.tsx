@@ -40,6 +40,7 @@ const DateDetails: React.FC = () => {
   const [actualEarnings, setActualEarnings] = useState<string>('');
   const [localDueAmount, setLocalDueAmount] = useState<number>(initialDetails.dueAmount || 0);
   const [showEarningsModal, setShowEarningsModal] = useState(false);
+  const [actualEarningsError, setActualEarningsError] = useState<string | null>(null);
   const { mutate: deleteEvent } = useDeleteEvent();
   const { mutate: updateEvent } = usePatchEvent();
 
@@ -86,11 +87,17 @@ const DateDetails: React.FC = () => {
 
   // Calculate due amount instantly when actual earnings change
   const handleActualEarningsChange = (text: string) => {
-    setActualEarnings(text);
-    if (details) {
-      const earnings = parseFloat(details.earnings?.toString() || '0');
-      const actual = text ? parseFloat(text) : 0;
+    const earnings = parseFloat(details?.earnings?.toString() || '0');
+    const actual = text ? parseFloat(text) : 0;
+
+    // Validate that actual earnings do not exceed total earnings
+    if (actual <= earnings) {
+      setActualEarnings(text);
       setLocalDueAmount(earnings - actual);
+      setActualEarningsError(null);
+    } else {
+      setActualEarnings(text);
+      setActualEarningsError('Actual earnings cannot exceed total earnings');
     }
   };
 
@@ -257,6 +264,9 @@ const DateDetails: React.FC = () => {
               className="bg-gray-50 border-gray-200 mb-4 rounded-lg border px-4 py-3 text-base"
               autoFocus
             />
+            {actualEarningsError && (
+              <Text className="text-red-500 mb-4">{actualEarningsError}</Text>
+            )}
             <View className="flex-row justify-end gap-4 space-x-3">
               <TouchableOpacity
                 onPress={() => setShowEarningsModal(false)}
@@ -268,8 +278,9 @@ const DateDetails: React.FC = () => {
                   handleActualEarningsUpdate();
                   setShowEarningsModal(false);
                 }}
-                className="rounded-lg bg-red-500 px-4 py-2">
-                <Text className="font-medium text-white">Update</Text>
+                disabled={!!actualEarningsError}
+                className={`rounded-lg px-4 py-2 ${actualEarningsError ? 'bg-red-300' : 'bg-red-500'}`}>
+                <Text className={`font-medium ${actualEarningsError ? 'text-gray-500' : 'text-white'}`}>Update</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -6,12 +6,15 @@ import { getGreeting } from 'utils/utils';
 
 interface HeaderSectionProps {
   user: string | undefined;
+  advanceAmount: number | undefined;
   remainingAmount: number | undefined;
 }
 
-const HeaderSection: React.FC<HeaderSectionProps> = ({ user, remainingAmount }) => {
+const HeaderSection: React.FC<HeaderSectionProps> = ({ user, advanceAmount, remainingAmount }) => {
   const insets = useSafeAreaInsets();
   const greeting = getGreeting();
+
+  const checkBalance = (remainingAmount || 0) - (advanceAmount || 0);
 
   return (
     <View className="bg-red-50" style={{ paddingTop: insets.top }}>
@@ -34,7 +37,13 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ user, remainingAmount }) 
             <Text className="text-2xl font-extrabold text-red-900" numberOfLines={1}>
               {user || 'Guest'}
             </Text>
-            <Text className="text-lg font-semibold text-red-500">Due: ₹{remainingAmount || 0}</Text>
+            {checkBalance > 0 ? (
+              <Text className="text-lg font-semibold text-green-500">Due: ₹{checkBalance}</Text>
+            ) : (
+              <Text className="text-lg font-semibold text-red-500">
+                Advance: ₹{Math.abs(checkBalance)}
+              </Text>
+            )}
           </View>
         </Pressable>
       </View>

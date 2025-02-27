@@ -140,7 +140,9 @@ const BookedDates: React.FC<BookedDatesProps> = ({
     <SafeAreaView className="w-full">
       <View className="relative">
         <ScrollView
-          style={{ maxHeight: 350 }}
+          style={{
+            maxHeight: 350,
+          }}
           nestedScrollEnabled
           className="w-full flex-1"
           showsVerticalScrollIndicator={true}
@@ -227,7 +229,7 @@ const BookedDates: React.FC<BookedDatesProps> = ({
           className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"
           style={{ opacity: 0.9 }}
         />
-        <View
+        {/* <View
           className="absolute bottom-4 right-4 rounded-full bg-white p-2 shadow-md"
           style={{ elevation: 3, opacity: 0.9 }}>
           <MaterialCommunityIcons
@@ -236,7 +238,7 @@ const BookedDates: React.FC<BookedDatesProps> = ({
             color="#dc2626"
             style={{ transform: [{ scale: 1.1 }] }}
           />
-        </View>
+        </View> */}
       </View>
     </SafeAreaView>
   );

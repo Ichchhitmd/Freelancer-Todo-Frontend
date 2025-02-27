@@ -6,6 +6,7 @@ import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
+import { useGetAdvanceReceipts } from 'hooks/finance';
 import { getCurrentNepaliDate } from 'lib/calendar';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -20,6 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setAssignees } from 'redux/slices/eventAssigneeSlice';
 import { selectUserDetails } from 'redux/store';
 import { EventResponse } from 'types/eventTypes';
+
 import { scheduleEventNotifications } from '~/utils/notificationScheduler';
 
 interface NepaliDate {
@@ -34,6 +36,8 @@ const HomeScreen = () => {
   const userDetails = useSelector(selectUserDetails);
   const userName = userDetails?.userName;
   const userId = userDetails?.userId;
+
+  const { data: advanceReceipts } = useGetAdvanceReceipts(userId);
 
   const navigation = useNavigation();
 
@@ -112,7 +116,6 @@ const HomeScreen = () => {
         scheduledIds.add(event.id);
       }
 
-      // Persist scheduled event IDs
       await AsyncStorage.setItem('scheduledEvents', JSON.stringify([...scheduledIds]));
     };
 
@@ -137,7 +140,11 @@ const HomeScreen = () => {
   if (eventsIsLoading || earningsIsLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <HeaderSection user={userName} remainingAmount={remainingAmount} />
+        <HeaderSection
+          user={userName}
+          remainingAmount={remainingAmount}
+          advanceAmount={advanceReceipts?.totalAdvancePayment || 0}
+        />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#E50914" />
           <Text className="text-gray-600 mt-4">Loading your events...</Text>
@@ -198,7 +205,11 @@ const HomeScreen = () => {
   const filteredMonthlyData = filterMonthlyData(monthlyData);
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
-      <HeaderSection user={userName} remainingAmount={remainingAmount} />
+      <HeaderSection
+        user={userName}
+        remainingAmount={remainingAmount}
+        advanceAmount={advanceReceipts?.totalAdvancePayment || 0}
+      />
       <ScrollView
         className="mt-2"
         nestedScrollEnabled

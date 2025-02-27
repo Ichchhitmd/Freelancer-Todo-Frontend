@@ -11,11 +11,16 @@ import { useGetCompanies } from 'hooks/companies';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 interface CompanyDropdownProps {
-  onSelectCompany: (companyId: number | null) => void;
+  onSelectCompany: (companyId: number | null, companyName: string | null) => void;
   activeCompany: string | null;
+  showAllOption?: boolean;
 }
 
-const CompanyDropdown = ({ onSelectCompany, activeCompany }: CompanyDropdownProps) => {
+const CompanyDropdown: React.FC<CompanyDropdownProps> = ({
+  onSelectCompany,
+  activeCompany,
+  showAllOption = true,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filteredCompanies, setFilteredCompanies] = useState<typeof companies>([]);
@@ -24,7 +29,7 @@ const CompanyDropdown = ({ onSelectCompany, activeCompany }: CompanyDropdownProp
   const screenWidth = Dimensions.get('window').width;
 
   const handleCompanySelect = (companyName: string, companyId: number | null) => {
-    onSelectCompany(companyId);
+    onSelectCompany(companyId, companyName);
     toggleDropdown();
   };
 
@@ -102,27 +107,31 @@ const CompanyDropdown = ({ onSelectCompany, activeCompany }: CompanyDropdownProp
               style={{ maxHeight: 300 }}
               scrollEventThrottle={16}
               keyboardShouldPersistTaps="handled">
-              <TouchableOpacity
-                onPress={() => handleCompanySelect('All Companies', null)}
-                className={`border-gray-100 border-b p-4 ${
-                  activeCompany === null ? 'bg-primary/5' : ''
-                }`}>
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons
-                    name="office-building-outline"
-                    size={20}
-                    color={activeCompany === null ? '#E50914' : '#6B7280'}
-                    className="mr-2"
-                  />
-                  <Text
-                    className={`text-base ${
-                      activeCompany === null ? 'font-medium text-primary' : 'text-gray-600'
-                    }`}>
-                    All Companies
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
+              {showAllOption && (
+                <TouchableOpacity
+                  onPress={() => {
+                    onSelectCompany(null, null);
+                    setIsOpen(false);
+                  }}
+                  className={`border-gray-100 border-b p-4 ${
+                    activeCompany === null ? 'bg-primary/5' : ''
+                  }`}>
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons
+                      name="office-building-outline"
+                      size={20}
+                      color={activeCompany === null ? '#E50914' : '#6B7280'}
+                      className="mr-2"
+                    />
+                    <Text
+                      className={`text-base ${
+                        activeCompany === null ? 'font-medium text-primary' : 'text-gray-600'
+                      }`}>
+                      All Companies
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
               {filteredCompanies?.map((company) => (
                 <TouchableOpacity
                   key={company.id}
