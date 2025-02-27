@@ -9,6 +9,7 @@ import { MonthView } from 'components/test/CalendarComponent';
 import { useGetCompanies } from 'hooks/companies';
 import { useGetEventTypes } from 'hooks/eventTypes';
 import { useEvents } from 'hooks/events';
+import { usePatchEvent } from 'hooks/events';
 import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
@@ -112,7 +113,8 @@ const AddWorkForm: React.FC = () => {
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
-  const { mutate: postEvent, mutate: updateEvent } = useEvents();
+  const { mutate: postEvent } = useEvents();
+  const { mutate: updateEvent } = usePatchEvent();
 
   const handleSubmit = useCallback(async () => {
     if (!selectedDates.length) {
@@ -248,11 +250,24 @@ const AddWorkForm: React.FC = () => {
 
       if (isEditMode) {
         await updateEvent(formattedData);
+        navigation.goBack();
       } else {
-        await postEvent(formattedData);
+        postEvent(formattedData, {
+          onSuccess: (data) => {
+            if (data) {
+              navigation.navigate('MainTabs', {
+                screen: 'DateDetails',
+                params: { details: data },
+              });
+            }
+          },
+          onError: (error) => {
+            console.error('Error submitting form:', error);
+            alert('Failed to save work details. Please try again.');
+          },
+        });
       }
 
-      navigation.goBack();
     } catch (e) {
       console.error('Error submitting form:', e);
       alert('Failed to save work details. Please try again.');

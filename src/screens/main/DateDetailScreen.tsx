@@ -247,7 +247,7 @@ const DateDetails: React.FC = () => {
   const detailsId = details.id;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="mb-20 flex-1 bg-white">
       <Modal
         animationType="slide"
         transparent
@@ -265,7 +265,7 @@ const DateDetails: React.FC = () => {
               autoFocus
             />
             {actualEarningsError && (
-              <Text className="text-red-500 mb-4">{actualEarningsError}</Text>
+              <Text className="mb-4 text-red-500">{actualEarningsError}</Text>
             )}
             <View className="flex-row justify-end gap-4 space-x-3">
               <TouchableOpacity
@@ -280,14 +280,17 @@ const DateDetails: React.FC = () => {
                 }}
                 disabled={!!actualEarningsError}
                 className={`rounded-lg px-4 py-2 ${actualEarningsError ? 'bg-red-300' : 'bg-red-500'}`}>
-                <Text className={`font-medium ${actualEarningsError ? 'text-gray-500' : 'text-white'}`}>Update</Text>
+                <Text
+                  className={`font-medium ${actualEarningsError ? 'text-gray-500' : 'text-white'}`}>
+                  Update
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      <ScrollView className="mb-24 flex-1">
+      <ScrollView className=" flex-1">
         <View className="bg-red-400 px-4 py-8">
           <Text className="text-center text-xl font-semibold text-white">
             {details.eventCategory?.name || 'Unknown Event Type'}
@@ -311,7 +314,8 @@ const DateDetails: React.FC = () => {
               <MaterialCommunityIcons name="office-building" size={32} color="#ef4444" />
             </View>
             <Text className="text-gray-900 mt-2 text-xl font-bold">{getCompanyName()}</Text>
-            <Text className="text-gray-500 text-base">
+            <Text className="text-gray-500 my-1 text-base">
+              {details.venueDetails?.name},{' '}
               {details.venueDetails?.location || 'No location provided'}
             </Text>
             <View className="mt-4 flex-row items-center justify-center gap-12">

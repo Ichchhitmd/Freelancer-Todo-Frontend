@@ -128,14 +128,18 @@ const HomeScreen = () => {
 
   const dispatch = useDispatch();
 
-  const assignedBy = events
-    .filter((event): event is EventResponse => event !== undefined)
-    .map((event) => ({
-      assignedBy: event.assignedBy,
-      assignedContactNumber: event.assignedContactNumber as number | null,
-    }));
+  useEffect(() => {
+    if (!events.length) return;
+    
+    const assignedBy = events
+      .filter((event): event is EventResponse => event !== undefined)
+      .map((event) => ({
+        assignedBy: event.assignedBy,
+        assignedContactNumber: event.assignedContactNumber as number | null,
+      }));
 
-  dispatch(setAssignees(assignedBy));
+    dispatch(setAssignees(assignedBy));
+  }, [events, dispatch]);
 
   if (eventsIsLoading || earningsIsLoading) {
     return (
@@ -203,6 +207,8 @@ const HomeScreen = () => {
   const monthlyData = earningsData?.monthly || {};
 
   const filteredMonthlyData = filterMonthlyData(monthlyData);
+
+  console.log('filteredMonthlyData', bookedDatesEarnings);
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
       <HeaderSection

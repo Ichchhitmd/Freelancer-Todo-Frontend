@@ -5,8 +5,9 @@ export const useEvents = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: postEvent,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      return data;
     },
   });
 };

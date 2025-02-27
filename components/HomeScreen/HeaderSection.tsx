@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +14,7 @@ interface HeaderSectionProps {
 const HeaderSection: React.FC<HeaderSectionProps> = ({ user, advanceAmount, remainingAmount }) => {
   const insets = useSafeAreaInsets();
   const greeting = getGreeting();
+  const navigation = useNavigation();
 
   const checkBalance = (remainingAmount || 0) - (advanceAmount || 0);
 
@@ -24,6 +26,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ user, advanceAmount, rema
 
       <View className="bg-white">
         <Pressable
+        onPress={() => navigation.navigate('Profile')}
           className="flex-row items-center p-4"
           android_ripple={{ color: 'rgba(239, 68, 68, 0.1)' }}>
           <View className="mr-4">
