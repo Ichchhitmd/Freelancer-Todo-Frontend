@@ -4,6 +4,7 @@ import HeaderSection from 'components/HomeScreen/HeaderSection';
 import SwipeableUnifiedCard from 'components/cards/UnifiedCard';
 import BookedDates from 'components/rare/BookedDates';
 import UpcomingEventReminder from 'components/rare/UpcomingReminders';
+import { useFetchTotalAdvancePaid } from 'hooks/assignee';
 import { useGetEarnings } from 'hooks/earnings';
 import { useGetEvents } from 'hooks/events';
 import { useGetAdvanceReceipts } from 'hooks/finance';
@@ -38,6 +39,11 @@ const HomeScreen = () => {
   const userId = userDetails?.userId;
 
   const { data: advanceReceipts } = useGetAdvanceReceipts(userId);
+  const { data: assigners } = useFetchTotalAdvancePaid(userId);
+
+  const totalAdvance = Number(assigners?.totalAdvanceBalance || 0) + Number(advanceReceipts?.totalAdvancePayment || 0);
+
+  console.log('totalAdvancePaid', totalAdvance);
 
   const navigation = useNavigation();
 
@@ -129,7 +135,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     if (!events.length) return;
-    
+
     const assignedBy = events
       .filter((event): event is EventResponse => event !== undefined)
       .map((event) => ({
@@ -212,7 +218,7 @@ const HomeScreen = () => {
       <HeaderSection
         user={userName}
         remainingAmount={remainingAmount}
-        advanceAmount={advanceReceipts?.totalAdvancePayment || 0}
+        advanceAmount={totalAdvance}
       />
       <ScrollView
         className="mt-2"

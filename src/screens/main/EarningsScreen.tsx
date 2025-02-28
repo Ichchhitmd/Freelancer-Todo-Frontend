@@ -505,7 +505,7 @@ export default function EarningsScreen() {
             </View>
             {Number(financialsAssignee.advancePaymentBalance) > 0 ? (
               <View className="w-[48%] rounded-xl bg-white/10 p-3">
-                <MaterialCommunityIcons name="cash-clock" size={20} color="white" />
+                <MaterialCommunityIcons name="cash-plus" size={20} color="white" />
                 <Text className="mt-1 text-sm text-white/80">Advance Balance</Text>
                 <Text className="text-xl font-bold text-white">
                   रू{Number(financialsAssignee.advancePaymentBalance).toLocaleString()}

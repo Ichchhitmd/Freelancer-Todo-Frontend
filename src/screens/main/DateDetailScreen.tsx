@@ -1,8 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
 import { useGetEventTypes } from 'hooks/eventTypes';
+import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   Text,
@@ -87,7 +87,7 @@ const DateDetails: React.FC = () => {
 
     // Remove any non-numeric characters except decimal point
     const cleanedText = text.replace(/[^0-9.]/g, '');
-    
+
     // Validate the number
     const number = parseFloat(cleanedText);
     if (isNaN(number)) {
@@ -97,7 +97,7 @@ const DateDetails: React.FC = () => {
     } else {
       setActualEarningsError(null);
     }
-    
+
     setActualEarnings(cleanedText);
   };
 
@@ -113,6 +113,17 @@ const DateDetails: React.FC = () => {
       });
     }
   }, [route.params.refresh, navigation]);
+
+  const advancePaymentEvent = () => {
+    try {
+      if (details?.paymentStatus === 'ADVANCE_RECEIVED') {
+        return details?.earnings - details?.dueAmount || 0;
+      }
+      return 0;
+    } catch {
+      return 0;
+    }
+  };
 
   // Render loading state
   if (isLoading) {
@@ -354,10 +365,18 @@ const DateDetails: React.FC = () => {
               <MaterialCommunityIcons name="office-building" size={32} color="#ef4444" />
             </View>
             <Text className="text-gray-900 mt-2 text-xl font-bold">{getCompanyName()}</Text>
-            <Text className="text-gray-500 my-1 text-base">
-              {details.venueDetails?.name},{' '}
-              {details.venueDetails?.location || 'No location provided'}
-            </Text>
+            {details.venueDetails?.name && details.venueDetails?.location ? (
+              <Text className="text-gray-500 my-1 text-base">
+                {details.venueDetails?.name}
+                {', '}
+                {details.venueDetails?.location}
+              </Text>
+            ) : (
+              <Text className="text-gray-500 my-1 text-base">
+                {details.venueDetails?.location}
+                {details.venueDetails?.name}
+              </Text>
+            )}
             <View className="mt-4 flex-row items-center justify-center gap-12">
               <TouchableOpacity
                 className="flex-row items-center rounded-xl bg-red-500 px-4 py-2"
@@ -411,6 +430,11 @@ const DateDetails: React.FC = () => {
             icon="currency-inr"
             label="Due Amount"
             value={`रू ${localDueAmount.toLocaleString()}`}
+          />
+          <DetailRow
+            icon="currency-inr"
+            label="Advance Amount"
+            value={`रू ${advancePaymentEvent().toLocaleString() || 'Not specified'}`}
           />
         </View>
 

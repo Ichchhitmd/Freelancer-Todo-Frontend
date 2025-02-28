@@ -186,11 +186,11 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                           ? `Call ${event.side.toLowerCase()}'s secondary contact`
                           : 'Secondary Contact'}
                       </Text>
-                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
+                      {/* <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
                         <Text className="text-xs text-blue-800">
                           {event.secondaryContact.phoneNumber}
                         </Text>
-                      </View>
+                      </View> */}
                     </TouchableOpacity>
                   )}
                 </View>
