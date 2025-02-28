@@ -30,13 +30,13 @@ interface SwipeableUnifiedCardProps {
 const SwipeableUnifiedCard: React.FC<SwipeableUnifiedCardProps> = ({ monthlyData, totalData }) => {
   const screenWidth = Dimensions.get('window').width;
   const scrollViewRef = useRef<ScrollView>(null);
-  const [currentIndex, setCurrentIndex] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(2);
 
   useEffect(() => {
     if (scrollViewRef.current && availableMonths.length > 0) {
-      scrollViewRef.current.scrollTo({ x: 0, animated: false });
+      scrollViewRef.current.scrollTo({ x: screenWidth * currentIndex, animated: false });
     }
-  }, []);
+  }, [currentIndex]);
 
   // Return null if no data is available
   if (!monthlyData || Object.keys(monthlyData).length === 0) {

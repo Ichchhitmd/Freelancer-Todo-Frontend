@@ -104,7 +104,6 @@ const HomeScreen = () => {
       for (const event of events) {
         if (scheduledIds.has(event.id)) continue; // Prevent duplicate scheduling
 
-        console.log('Scheduling event notifications for:', event.id);
         await scheduleEventNotifications({
           eventId: event.id,
           eventDate: event.eventDate,
@@ -208,7 +207,6 @@ const HomeScreen = () => {
 
   const filteredMonthlyData = filterMonthlyData(monthlyData);
 
-  console.log('filteredMonthlyData', bookedDatesEarnings);
   return (
     <SafeAreaView className="mb-20 flex-1 gap-2 bg-white">
       <HeaderSection

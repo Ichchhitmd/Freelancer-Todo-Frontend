@@ -6,13 +6,21 @@ import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import SelectDropdown from 'components/rare/SelectDropdown';
 import { MonthView } from 'components/test/CalendarComponent';
+import { useGetAllAssigners } from 'hooks/assignee';
 import { useGetCompanies } from 'hooks/companies';
 import { useGetEventTypes } from 'hooks/eventTypes';
-import { useEvents } from 'hooks/events';
-import { usePatchEvent } from 'hooks/events';
+import { useEvents, usePatchEvent } from 'hooks/events';
 import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 import { Contact, EventRequest, SecondaryContact, VenueDetails } from 'types/eventTypes';
@@ -32,6 +40,8 @@ const AddWorkForm: React.FC = () => {
   const [actualEarning, setActualEarning] = useState<string | null>(null);
   const [assignedBy, setAssignedBy] = useState('');
   const [assignedContactNumber, setAssignedContactNumber] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
+
   const [primaryContact, setPrimaryContact] = useState<Contact>({
     name: '',
     phoneNumber: '',
@@ -46,49 +56,102 @@ const AddWorkForm: React.FC = () => {
   const [side, setSide] = useState('');
   const [companyId, setCompanyId] = useState<number | undefined>();
   const [noCompany, setNoCompany] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [advanceReceived, setAdvanceReceived] = useState<number | undefined>();
-  const [eventCategoryId, setEventCategoryId] = useState(eventTypes?.[0]?.id);
+  const [eventCategoryId, setEventCategoryId] = useState<number | undefined>(undefined);
   const scrollViewRef = useRef(null);
-  const [containerHeight, setContainerHeight] = useState(0);
+  const [showAssignerSuggestions, setShowAssignerSuggestions] = useState(false);
+  const [filteredAssigners, setFilteredAssigners] = useState<typeof assignees>([]);
 
   const handleScrollEnd = (event) => {
     const scrollOffset = event.nativeEvent.contentOffset.y;
-    const itemHeight = 48; // Approximate height of each item (adjust if needed)
-    const middleIndex = Math.round((scrollOffset + containerHeight / 2) / itemHeight);
+    const itemHeight = 40;
+    const selectedIndex = Math.round(scrollOffset / itemHeight);
 
-    if (eventTypes[middleIndex]) {
-      setEventCategoryId(eventTypes[middleIndex].id);
+    if (eventTypes?.[selectedIndex]) {
+      setEventCategoryId(eventTypes[selectedIndex].id);
+      // Ensure we snap exactly to the item
+      requestAnimationFrame(() => {
+        scrollViewRef.current?.scrollTo({
+          y: selectedIndex * itemHeight,
+          animated: true,
+        });
+      });
     }
   };
 
   useEffect(() => {
-    if (isEditMode && details) {
-      if (details.detailNepaliDate.length > 0) {
+    if (isEditMode && details && eventTypes?.length > 0) {
+      if (details.detailNepaliDate?.length > 0) {
         const date = details.detailNepaliDate[0];
         setSelectedDates([
           {
             year: date.nepaliYear,
-            month: date.nepaliMonth - 1, // Adjust month to 0-based index
+            month: date.nepaliMonth - 1,
             day: date.nepaliDay,
             nepaliDate: date.nepaliDay.toString(),
           },
         ]);
       }
-      setEstimatedEarning(details.earnings.toString());
-      setActualEarning(details.actualEarnings?.toString() || '');
-      setAssignedBy(details.assignedBy);
-      setAssignedContactNumber(details.assignedContactNumber);
-      setPrimaryContact(details.primaryContact);
-      if (details.secondaryContact) {
-        setSecondaryContact(details.secondaryContact);
+
+      // Handle time
+      if (details.eventStartTime) {
+        const [hours, minutes] = details.eventStartTime.split(':');
+        const date = new Date();
+        date.setHours(parseInt(hours, 10));
+        date.setMinutes(parseInt(minutes, 10));
+        setTime(date);
       }
-      setVenueDetails(details.venueDetails);
-      setWorkType(details.workType);
-      setSide(details.side);
+
+      setEstimatedEarning(details.earnings?.toString() || '');
+      setActualEarning(details.actualEarnings?.toString() || '');
+
+      // Handle company vs individual
+      if (details.companyId) {
+        setNoCompany(false);
+        setCompanyId(details.companyId);
+        // Set the selected company name for the dropdown
+        if (details.company?.name) {
+          setSelectedCompany(details.company.name);
+        }
+      } else {
+        setNoCompany(true);
+        setAssignedBy(details.assignedBy || '');
+        // Contact number comes without prefix from backend
+        setAssignedContactNumber(details.assignedContactNumber || null);
+      }
+
+      // Handle contacts and venue
+      setPrimaryContact(details.primaryContact || { name: '', phoneNumber: '' });
+      setSecondaryContact(details.secondaryContact);
+      setVenueDetails(details.venueDetails || { location: '' });
+
+      // Handle other fields
+      setWorkType(details.workType || []);
+      setSide(details.side || '');
       setEventCategoryId(details.eventCategoryId);
-      setCompanyId(details.companyId);
+      setAdvanceReceived(details.advanceReceived);
+
+      // Set event category and scroll to it
+      if (scrollViewRef.current && details.eventCategoryId) {
+        const index = eventTypes.findIndex((t) => t.id === details.eventCategoryId);
+        if (index !== -1) {
+          setTimeout(() => {
+            scrollViewRef.current?.scrollTo({
+              y: index * 40,
+              animated: false,
+            });
+          }, 100);
+        }
+      }
     }
-  }, [isEditMode, details]);
+  }, [isEditMode, details, eventTypes]);
+
+  useEffect(() => {
+    if (!isEditMode && eventTypes?.length > 0 && !eventCategoryId) {
+      setEventCategoryId(eventTypes[0].id);
+    }
+  }, [isEditMode, eventTypes, eventCategoryId]);
 
   const { data: eventTypes = [] } = useGetEventTypes();
   const { data: companies = [] } = useGetCompanies();
@@ -112,6 +175,9 @@ const AddWorkForm: React.FC = () => {
   );
 
   const userId = useSelector((state: RootState) => state.auth.user?.id);
+
+  const { data: assignees } = useGetAllAssigners(userId || 0);
+
 
   const { mutate: postEvent } = useEvents();
   const { mutate: updateEvent } = usePatchEvent();
@@ -218,7 +284,7 @@ const AddWorkForm: React.FC = () => {
         advanceReceived: advanceReceived || 0,
         primaryContact: {
           name: primaryContact.name || '',
-          phoneNumber: primaryContact.phoneNumber || '',
+          phoneNumber: primaryContact.phoneNumber?.replace('+977-', '') || '',
           whatsappNumber: primaryContact.whatsappNumber || '',
         },
         venueDetails: {
@@ -230,9 +296,10 @@ const AddWorkForm: React.FC = () => {
           ? {
               secondaryContact: {
                 name: secondaryContact.name || '',
-                phoneNumber: secondaryContact.phoneNumber || '',
+                phoneNumber: secondaryContact.phoneNumber?.replace('+977-', '') || '',
                 relationId: secondaryContact.relationId || 0,
-                relationContactNumber: secondaryContact.relationContactNumber || '',
+                relationContactNumber:
+                  secondaryContact.relationContactNumber?.replace('+977-', '') || '',
               },
             }
           : {}),
@@ -249,9 +316,39 @@ const AddWorkForm: React.FC = () => {
       }
 
       if (isEditMode) {
-        await updateEvent(formattedData);
-        navigation.goBack();
+        try {
+          // Update the event
+          await updateEvent({
+            eventId: details.id,
+            eventData: formattedData,
+          });
+          
+          // Find the selected company details
+          const selectedCompanyDetails = companies?.find(c => c.id === companyId);
+          
+          // Navigate to DateDetail screen with the updated details
+          navigation.navigate('MainTabs', {
+            screen: 'DateDetails',
+            params: { 
+              details: {
+                ...details,
+                ...formattedData,
+                id: details.id,
+                company: companyId ? {
+                  id: companyId,
+                  name: selectedCompanyDetails?.name || ''
+                } : undefined,
+                assignedBy: noCompany ? assignedBy : undefined,
+                assignedContactNumber: noCompany ? assignedContactNumber : undefined
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Error updating event:', error);
+          alert('Failed to update work details. Please try again.');
+        }
       } else {
+        // Create new event
         postEvent(formattedData, {
           onSuccess: (data) => {
             if (data) {
@@ -267,7 +364,6 @@ const AddWorkForm: React.FC = () => {
           },
         });
       }
-
     } catch (e) {
       console.error('Error submitting form:', e);
       alert('Failed to save work details. Please try again.');
@@ -306,6 +402,28 @@ const AddWorkForm: React.FC = () => {
       setTime(selectedTime);
     }
   };
+
+  const handleAssignerChange = useCallback(
+    (text: string) => {
+      setAssignedBy(text);
+      if (assignees) {
+        const filtered = assignees.filter((assigner) =>
+          assigner.name.toLowerCase().includes(text.toLowerCase())
+        );
+        setFilteredAssigners(filtered);
+        setShowAssignerSuggestions(text.length > 0);
+      }
+    },
+    [assignees]
+  );
+
+  const handleAssignerSelect = useCallback((assigner) => {
+    setAssignedBy(assigner.name);
+    // Remove any non-numeric characters and convert to number
+    const cleanNumber = assigner.contactNumber.toString().replace(/\D/g, '');
+    setAssignedContactNumber(parseInt(cleanNumber));
+    setShowAssignerSuggestions(false);
+  }, []);
 
   return (
     <SafeAreaView className="bg-gray-50 flex-1">
@@ -404,6 +522,7 @@ const AddWorkForm: React.FC = () => {
                       <SelectDropdown
                         data={companies?.map((company) => company.name) || []}
                         onSelect={(value) => {
+                          setSelectedCompany(value);
                           const selectedCompany = companies?.find(
                             (company) => company.name === value
                           );
@@ -411,11 +530,8 @@ const AddWorkForm: React.FC = () => {
                             setCompanyId(selectedCompany.id);
                           }
                         }}
-                        defaultButtonText={
-                          isEditMode && details?.company?.name
-                            ? details.company.name
-                            : 'Select Company'
-                        }
+                        defaultValue={selectedCompany}
+                        defaultButtonText={selectedCompany || 'Select Company'}
                       />
                     </View>
                   ) : (
@@ -424,10 +540,32 @@ const AddWorkForm: React.FC = () => {
                         <Text className="text-gray-600 text-sm font-medium">Assigned By</Text>
                         <InputField
                           value={assignedBy}
-                          onChangeText={setAssignedBy}
+                          onChangeText={handleAssignerChange}
                           placeholder="Enter who assigned the work"
                           icon="account"
+                          onBlur={() => {
+                            // Small delay to allow the item selection to complete
+                            setTimeout(() => {
+                              setShowAssignerSuggestions(false);
+                            }, 200);
+                          }}
+                          onFocus={() => setShowAssignerSuggestions(true)}
                         />
+                        {showAssignerSuggestions && (
+                          <View className="absolute top-16 z-10 mt-1 w-full rounded-lg bg-white shadow-lg">
+                            <ScrollView className="max-h-36" nestedScrollEnabled>
+                              {filteredAssigners.map((assigner, index) => (
+                                <TouchableOpacity
+                                  key={index}
+                                  className="border-gray-200 mb-2 rounded-2xl border bg-white p-4 shadow-md"
+                                  onPress={() => handleAssignerSelect(assigner)}>
+                                  <Text className="font-semibold text-black">{assigner.name}</Text>
+                                  <Text className="text-gray-500 mt-1 text-sm">{`+977-${assigner.contactNumber}`}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        )}
                       </View>
                       <View className="flex flex-col gap-2 space-y-2">
                         <Text className="text-gray-600 text-sm font-medium">
@@ -435,9 +573,11 @@ const AddWorkForm: React.FC = () => {
                         </Text>
                         <InputField
                           value={assignedContactNumber?.toString() || ''}
-                          onChangeText={(text) =>
-                            setAssignedContactNumber(text ? Number(text) : null)
-                          }
+                          onChangeText={(text) => {
+                            // Remove any non-numeric characters
+                            const cleanNumber = text.replace(/\D/g, '');
+                            setAssignedContactNumber(cleanNumber ? parseInt(cleanNumber) : null);
+                          }}
                           placeholder="Enter assigner's contact number"
                           keyboardType="numeric"
                           icon="phone"

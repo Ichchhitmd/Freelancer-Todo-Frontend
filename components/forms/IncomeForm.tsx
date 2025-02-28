@@ -16,7 +16,6 @@ const IncomeForm = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const userId = user?.id;
 
-  console.log(userId);
   const { data: companies, isLoading: companiesLoading } = useGetCompanies();
   const [companyId, setCompanyId] = useState(0);
   const { mutate: postIncome } = usePostIncome();
