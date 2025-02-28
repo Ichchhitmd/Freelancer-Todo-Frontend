@@ -79,7 +79,6 @@ export default function EarningsScreen() {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
   const { data: earningsData, refetch: earningsRefetch } = useGetEarnings(userId || 0);
-  console.log('yeta xaaaaaaa', earningsData)
   const { data: eventsData, refetch } = useGetEvents(userId || 0);
   const { data: companiesData } = useGetCompanies();
   const { data: FinancialData, refetch: financialsRefetch } = useGetFinancials(
@@ -87,13 +86,10 @@ export default function EarningsScreen() {
     selectedCompanyId || 0
   );
 
-  console.log("FinancialData", FinancialData)
   const { data: advanceReceipts } = useGetAdvanceReceipts(userId || 0);
   const { data: assigneeFinancials } = useFetchTotalAdvancePaid(userId || 0);
-  console.log('yeta xa', assigneeFinancials);
   const { data: financialsAssignee, refetch: financialsAssigneeRefetch } =
     useFetchAssignerFinancials(userId || 0, selectedAssigneeName || '');
-  console.log('yeta xa', financialsAssignee);
 
   const advancePaymentBalance = advanceReceipts?.totalAdvancePayment || 0;
 
@@ -260,10 +256,6 @@ export default function EarningsScreen() {
     }
   };
 
-  const handleAssignerSelect = (assigneeName: string | null) => {
-    setSelectedAssigneeName(assigneeName);
-  };
-
   const handleViewTypeChange = (type: 'all' | 'company' | 'individual') => {
     setViewType(type);
     if (type === 'all') {
@@ -279,6 +271,7 @@ export default function EarningsScreen() {
   };
 
   const actualReceived = totals.received + Number(advancePaymentBalance);
+
 
   const renderMonthlyCard = (data: MonthlyData) => (
     <TouchableOpacity
@@ -368,9 +361,7 @@ export default function EarningsScreen() {
               <Text className="mt-1 text-sm text-white/80">Received</Text>
               <Text className="text-xl font-bold text-white">
                 रू
-                {(
-                  FinancialData.totalReceived + FinancialData.advancePaymentBalance
-                ).toLocaleString()}
+                {(FinancialData.totalEarnings - FinancialData.totalDue).toLocaleString()}
               </Text>
             </View>
             {FinancialData.totalDue > 0 ? (
@@ -480,6 +471,8 @@ export default function EarningsScreen() {
         </View>
       );
     }
+
+    console.log(financialsAssignee);
 
     return (
       <View className="mt-4">
@@ -613,6 +606,7 @@ export default function EarningsScreen() {
     </View>
   );
 
+
   return (
     <SafeAreaView className="mb-14 flex-1 bg-white">
       <View className="relative bg-primary/35 p-6 pt-16">
@@ -641,7 +635,7 @@ export default function EarningsScreen() {
                 <MaterialCommunityIcons name="cash-check" size={24} color="white" />
                 <Text className="mt-2 text-sm text-white">Received</Text>
                 <Text className="mt-1 text-lg font-bold text-green-300">
-                  रू{totals.received.toLocaleString()}
+                  रू{totals.quoted - totals.due}
                 </Text>
               </View>
               {totals.due > 0 ? (
@@ -664,7 +658,17 @@ export default function EarningsScreen() {
                 <View className="flex-1 items-center">
                   <MaterialCommunityIcons name="cash-minus" size={24} color="white" />
                   <Text className="mt-2 text-sm text-white">No Pending</Text>
-                  <Text className="text-lg font-bold text-green-300">रू0</Text>
+                  <Text className="text-lg font-bold text-green-300">
+                    {`रू ${
+                      viewType === 'company'
+                        ? (FinancialData?.advancePaymentBalance || 0).toLocaleString()
+                        : (
+                            assigneeFinancials?.assigners?.find(
+                              (a) => a.name === selectedAssigneeName
+                            )?.advancePaymentBalance || 0
+                          ).toLocaleString()
+                    }`}
+                  </Text>
                 </View>
               )}
             </View>

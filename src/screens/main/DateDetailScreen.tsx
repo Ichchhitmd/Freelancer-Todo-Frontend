@@ -3,7 +3,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
 import { useGetEventTypes } from 'hooks/eventTypes';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Text,
   ScrollView,
@@ -32,7 +32,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DateDetail'>;
 const DateDetails: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<Props['route']>();
-  const { details: initialDetails, refresh } = route.params;
+  const { details: initialDetails } = route.params;
 
   // Fetch complete event details
   const { data: details, isLoading } = useGetEventById(initialDetails.id);
@@ -52,23 +52,15 @@ const DateDetails: React.FC = () => {
     [eventTypes]
   );
 
-  // Use the refresh function when component mounts
-  React.useEffect(() => {
-    if (refresh) {
-      refresh().then((freshData) => {
-        if (freshData) {
-          navigation.setParams({
-            details: freshData,
-          });
-        }
-      });
-    }
-  }, [refresh, navigation]);
-
   // Update local state when details change
-  React.useEffect(() => {
+  useEffect(() => {
     if (details) {
-      setActualEarnings(details.actualEarnings?.toString() || '');
+      // Only set actualEarnings if it exists and is not zero
+      if (details.actualEarnings && parseFloat(details.actualEarnings.toString()) !== 0) {
+        setActualEarnings(details.actualEarnings.toString());
+      } else {
+        setActualEarnings('');
+      }
       setLocalDueAmount(details.dueAmount || 0);
     }
   }, [details]);
@@ -80,37 +72,80 @@ const DateDetails: React.FC = () => {
     if (initialDetails.company?.name) return initialDetails.company.name;
     // Then try from primary contact
     if (details?.assignedBy) return `${details.assignedBy}'s Event`;
-    if (initialDetails.clientContactPerson1)
-      return `${initialDetails.clientContactPerson1}'s Event`;
+    if (initialDetails.assignedBy) return `${initialDetails.assignedBy}'s Event`;
     return 'Personal Event';
   };
 
   // Calculate due amount instantly when actual earnings change
   const handleActualEarningsChange = (text: string) => {
-    const earnings = parseFloat(details?.earnings?.toString() || '0');
-    const actual = text ? parseFloat(text) : 0;
-
-    // Validate that actual earnings do not exceed total earnings
-    if (actual <= earnings) {
-      setActualEarnings(text);
-      setLocalDueAmount(earnings - actual);
+    // Allow empty input
+    if (text === '') {
+      setActualEarnings('');
       setActualEarningsError(null);
-    } else {
-      setActualEarnings(text);
-      setActualEarningsError('Actual earnings cannot exceed total earnings');
+      return;
     }
+
+    // Remove any non-numeric characters except decimal point
+    const cleanedText = text.replace(/[^0-9.]/g, '');
+    
+    // Validate the number
+    const number = parseFloat(cleanedText);
+    if (isNaN(number)) {
+      setActualEarningsError('Please enter a valid number');
+    } else if (number < 0) {
+      setActualEarningsError('Amount cannot be negative');
+    } else {
+      setActualEarningsError(null);
+    }
+    
+    setActualEarnings(cleanedText);
   };
 
-  if (isLoading || !details) {
+  // Use the refresh function when component mounts
+  useEffect(() => {
+    if (route.params.refresh) {
+      route.params.refresh().then((freshData) => {
+        if (freshData) {
+          navigation.setParams({
+            details: freshData,
+          });
+        }
+      });
+    }
+  }, [route.params.refresh, navigation]);
+
+  // Render loading state
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#E50914" />
+          <ActivityIndicator size="large" color="#ef4444" />
           <Text className="text-gray-600 mt-4">Loading event details...</Text>
         </View>
       </SafeAreaView>
     );
   }
+
+  if (!details) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center p-4">
+          <MaterialCommunityIcons name="alert-circle" size={48} color="#ef4444" />
+          <Text className="text-gray-800 mt-4 text-center text-lg font-medium">
+            Could not load event details
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="mt-4 rounded-lg bg-red-500 px-6 py-3">
+            <Text className="font-medium text-white">Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Use initial ID from route params while details are loading
+  const detailsId = details?.id || initialDetails.id;
 
   const handleDelete = () => {
     Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
@@ -135,6 +170,11 @@ const DateDetails: React.FC = () => {
   const handleActualEarningsUpdate = () => {
     if (!actualEarnings && actualEarnings !== '') {
       Alert.alert('Error', 'Please enter actual earnings');
+      return;
+    }
+
+    if (!details) {
+      Alert.alert('Error', 'Event details not found');
       return;
     }
 
@@ -244,8 +284,6 @@ const DateDetails: React.FC = () => {
       .join('');
   }
 
-  const detailsId = details.id;
-
   return (
     <SafeAreaView className="mb-20 flex-1 bg-white">
       <Modal
@@ -255,7 +293,9 @@ const DateDetails: React.FC = () => {
         onRequestClose={() => setShowEarningsModal(false)}>
         <View className="flex-1 justify-center bg-black/50">
           <View className="mx-4 rounded-xl bg-white p-4">
-            <Text className="text-gray-900 mb-4 text-lg font-semibold">Update Actual Earnings</Text>
+            <Text className="text-gray-900 mb-4 text-lg font-semibold">
+              Received amount till now for this event
+            </Text>
             <TextInput
               value={actualEarnings}
               onChangeText={handleActualEarningsChange}

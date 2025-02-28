@@ -9,6 +9,10 @@ const PAYMENT_STATUS_CONFIG = {
   UNPAID: { color: '#EF4444', label: 'Unpaid' },
   PAID: { color: '#10B981', label: 'Paid' },
   PARTIALLY_PAID: { color: '#F59E0B', label: 'Partially Paid' },
+  ADVANCE_PAID: { color: '#6366F1', label: 'Advance Paid' },
+  ADVANCE_RECEIVED: { color: '#6366F1', label: 'Advance Received' },
+  CANCELLED: { color: '#6B7280', label: 'Cancelled' },
+  PENDING: { color: '#F59E0B', label: 'Pending' }
 } as const;
 
 type PaymentStatusKey = keyof typeof PAYMENT_STATUS_CONFIG;
@@ -44,11 +48,14 @@ export const WorkItem = ({ item, index }: WorkItemProps) => {
     ? item.workType
     : item.workType?.split(',').map((type) => type.trim()) || [];
 
-  const paymentStatus = (item.originalEvent?.paymentStatus || item.paymentStatus || 'UNPAID') as PaymentStatusKey;
+  const paymentStatus = (item.originalEvent?.paymentStatus ||
+    item.paymentStatus ||
+    'UNPAID') as PaymentStatusKey;
   const statusConfig = PAYMENT_STATUS_CONFIG[paymentStatus] || PAYMENT_STATUS_CONFIG.UNPAID;
 
   const dueAmount = item.originalEvent?.dueAmount || 0;
-  const shouldShowDueAmount = (paymentStatus === 'UNPAID' || paymentStatus === 'PARTIALLY_PAID') && dueAmount > 0;
+  const shouldShowDueAmount =
+    (paymentStatus === 'UNPAID' || paymentStatus === 'PARTIALLY_PAID' || paymentStatus === 'ADVANCE_RECEIVED') && dueAmount > 0;
 
   return (
     <Animated.View
@@ -56,27 +63,27 @@ export const WorkItem = ({ item, index }: WorkItemProps) => {
         opacity: fadeAnim,
         transform: [{ translateY }],
       }}
-      className="mb-4 mx-4">
+      className="mx-4 mb-4">
       <View className="rounded-2xl bg-white shadow-sm">
         <View className="p-4">
           {/* Header */}
-          <View className="flex-row items-center justify-between mb-3">
+          <View className="mb-3 flex-row items-center justify-between">
             <View className="flex-row items-center space-x-2">
               <View
                 className={`rounded-lg px-3 py-1.5 ${
                   item.isToday
                     ? 'bg-blue-500'
                     : item.daysDifference < 0
-                    ? 'bg-red-500/10'
-                    : 'bg-green-500/10'
+                      ? 'bg-red-500/10'
+                      : 'bg-green-500/10'
                 }`}>
                 <Text
                   className={`text-sm font-medium ${
                     item.isToday
                       ? 'text-white'
                       : item.daysDifference < 0
-                      ? 'text-red-700'
-                      : 'text-green-700'
+                        ? 'text-red-700'
+                        : 'text-green-700'
                   }`}>
                   <NepaliDateFormatter dates={item.detailNepaliDate} />
                 </Text>
@@ -86,8 +93,8 @@ export const WorkItem = ({ item, index }: WorkItemProps) => {
                   {item.isToday
                     ? 'Today'
                     : item.daysDifference > 0
-                    ? `In ${item.daysDifference} days`
-                    : `${Math.abs(item.daysDifference)} days ago`}
+                      ? `In ${item.daysDifference} days`
+                      : `${Math.abs(item.daysDifference)} days ago`}
                 </Text>
               </View>
             </View>
@@ -106,20 +113,20 @@ export const WorkItem = ({ item, index }: WorkItemProps) => {
           </View>
 
           {/* Company Name */}
-          <Text className="text-gray-900 text-lg font-semibold mb-2">
+          <Text className="text-gray-900 mb-2 text-lg font-semibold">
             {item.companyName || `${item.assignedBy}'s Work`}
           </Text>
 
           {/* Location */}
           {item.location && (
-            <View className="flex-row items-center mb-3">
+            <View className="mb-3 flex-row items-center">
               <MaterialCommunityIcons name="map-marker" size={16} color="#6B7280" />
               <Text className="text-gray-600 ml-1 text-sm">{item.location}</Text>
             </View>
           )}
 
           {/* Tags */}
-          <View className="flex-row flex-wrap gap-1.5 mb-3">
+          <View className="mb-3 flex-row flex-wrap gap-1.5">
             {item.eventType && (
               <View className="rounded-full bg-blue-50 px-2.5 py-1">
                 <Text className="text-xs font-medium text-blue-700">{item.eventType}</Text>

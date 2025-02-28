@@ -103,7 +103,7 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                     <View className="flex-row items-center">
                       <View className="flex-row items-center rounded-full bg-orange-100 px-3 py-1.5">
                         <MaterialCommunityIcons name="calendar-blank" size={14} color="#F59E0B" />
-                        <Text className="ml-2 text-sm font-medium text-orange-800">
+                        <Text className="ml-2 text-base font-medium text-orange-800">
                           {formattedDates}
                         </Text>
                       </View>

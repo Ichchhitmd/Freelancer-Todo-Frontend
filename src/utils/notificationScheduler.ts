@@ -72,12 +72,6 @@ export const scheduleEventNotifications = async ({
 
     const now = dayjs().tz(TIMEZONE);
 
-    console.log('Time details:', {
-      currentTime: now.format('YYYY-MM-DD HH:mm'),
-      eventTime: eventDateTime.format('YYYY-MM-DD HH:mm'),
-      oneDayBefore: eventDateTime.subtract(1, 'day').format('YYYY-MM-DD HH:mm'),
-      oneHourBefore: eventDateTime.subtract(1, 'hour').format('YYYY-MM-DD HH:mm'),
-    });
 
     // Cancel any existing notifications for this event
     const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
@@ -92,7 +86,6 @@ export const scheduleEventNotifications = async ({
     // Schedule notification for 1 day before
     const oneDayBefore = eventDateTime.subtract(1, 'day');
     if (oneDayBefore.isAfter(now)) {
-      console.log('Scheduling 1 day notification for:', oneDayBefore.format('YYYY-MM-DD HH:mm'));
       await Notifications.scheduleNotificationAsync({
         content: {
           title: `Upcoming ${eventType} Tomorrow`,
@@ -108,7 +101,6 @@ export const scheduleEventNotifications = async ({
     // Schedule notification for 1 hour before
     const oneHourBefore = eventDateTime.subtract(1, 'hour');
     if (oneHourBefore.isAfter(now)) {
-      console.log('Scheduling 1 hour notification for:', oneHourBefore.format('YYYY-MM-DD HH:mm'));
       await Notifications.scheduleNotificationAsync({
         content: {
           title: `${eventType} Starting Soon`,
