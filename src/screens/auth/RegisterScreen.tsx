@@ -34,7 +34,6 @@ export default function RegisterScreen() {
     const getLocation = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location access is needed for automatic location input.');
         return;
       }
 
@@ -49,6 +48,7 @@ export default function RegisterScreen() {
   }, []);
 
   const handleRegister = () => {
+    console.log(formData);
     if (!privacyAccepted) {
       Alert.alert('Error', 'Please accept the Privacy Policy and Terms');
       return;
@@ -62,12 +62,13 @@ export default function RegisterScreen() {
 
     signup(formData, {
       onSuccess: (data) => {
+        console.log(data);
         Alert.alert('Success', 'Account created successfully!');
         navigation.navigate('LoginScreen');
       },
       onError: (error) => {
-        handleAxiosError('Signup error:');
-        Alert.alert('Signup Failed', handleAxiosError(error));
+        console.log(error);
+        Alert.alert('Signup Failed', error);
       },
     });
   };
