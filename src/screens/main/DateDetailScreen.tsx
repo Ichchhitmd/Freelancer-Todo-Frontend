@@ -34,6 +34,8 @@ const DateDetails: React.FC = () => {
   const route = useRoute<Props['route']>();
   const { details: initialDetails } = route.params;
 
+  console.log(initialDetails);
+
   // Fetch complete event details
   const { data: details, isLoading } = useGetEventById(initialDetails.id);
   const { data: eventTypes } = useGetEventTypes();
@@ -65,6 +67,10 @@ const DateDetails: React.FC = () => {
     }
   }, [details]);
 
+  if (details?.company?.name) {
+    console.log('Company name:', details.company.name);
+  }
+
   const getCompanyName = () => {
     // First try to get from API response
     if (details?.company?.name) return details.company.name;
@@ -73,7 +79,6 @@ const DateDetails: React.FC = () => {
     // Then try from primary contact
     if (details?.assignedBy) return `${details.assignedBy}'s Event`;
     if (initialDetails.assignedBy) return `${initialDetails.assignedBy}'s Event`;
-    return 'Personal Event';
   };
 
   // Calculate due amount instantly when actual earnings change
@@ -116,8 +121,8 @@ const DateDetails: React.FC = () => {
 
   const advancePaymentEvent = () => {
     try {
-      if (details?.paymentStatus === 'ADVANCE_RECEIVED') {
-        return details?.earnings - details?.dueAmount || 0;
+      if (details?.advanceReceived) {
+        return details.advanceReceived;
       }
       return 0;
     } catch {
@@ -125,7 +130,6 @@ const DateDetails: React.FC = () => {
     }
   };
 
-  // Render loading state
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -343,10 +347,6 @@ const DateDetails: React.FC = () => {
 
       <ScrollView className=" flex-1">
         <View className="bg-red-400 px-4 py-8">
-          <Text className="text-center text-xl font-semibold text-white">
-            {details.eventCategory?.name || 'Unknown Event Type'}
-          </Text>
-
           <View className="flex flex-row items-center justify-center">
             {details.detailNepaliDate?.map((date, index) => (
               <Text
@@ -400,6 +400,11 @@ const DateDetails: React.FC = () => {
 
         <View className="mt-4 bg-white">
           <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Event Details</Text>
+          <DetailRow
+            icon="party-popper"
+            label="Event Type"
+            value={details.eventCategory?.name || 'Not specified'}
+          />
           <DetailRow icon="account-heart" label="Side" value={details.side || 'Not specified'} />
           <DetailRow
             icon="clock-outline"
@@ -422,7 +427,7 @@ const DateDetails: React.FC = () => {
           />
           <DetailRow
             icon="currency-inr"
-            label="Actual Earnings"
+            label="Amount Received Till Now"
             value={actualEarnings ? `रू ${parseFloat(actualEarnings).toLocaleString()}` : 'Not set'}
             isActualEarnings
           />

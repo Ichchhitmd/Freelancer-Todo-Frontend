@@ -22,10 +22,8 @@ const AssignerDropdown: React.FC<AssignerDropdownProps> = ({
     <View className="relative">
       <TouchableOpacity
         onPress={() => setIsOpen(!isOpen)}
-        className="flex-row items-center rounded-lg border border-gray-300 px-4 py-2">
-        <Text className="mr-2 text-gray-700">
-          {activeAssigner || 'Select Individual'}
-        </Text>
+        className="border-gray-300 flex-row items-center rounded-lg border px-4 py-2">
+        <Text className="text-gray-700 mr-2">{activeAssigner || 'Select Individual'}</Text>
         <MaterialCommunityIcons
           name={isOpen ? 'chevron-up' : 'chevron-down'}
           size={20}
@@ -34,13 +32,13 @@ const AssignerDropdown: React.FC<AssignerDropdownProps> = ({
       </TouchableOpacity>
 
       {isOpen && (
-        <View className="absolute top-12 z-10 w-full rounded-lg border border-gray-300 bg-white shadow-lg">
+        <View className="border-gray-300 absolute top-12 z-10 w-full rounded-lg border bg-white shadow-lg">
           <TouchableOpacity
             onPress={() => {
               onSelectAssigner(null);
               setIsOpen(false);
             }}
-            className="border-b border-gray-200 px-4 py-2">
+            className="border-gray-200 border-b px-4 py-2">
             <Text className="text-gray-700">All Individuals</Text>
           </TouchableOpacity>
           {assigners?.map((assigner) => (
@@ -50,7 +48,7 @@ const AssignerDropdown: React.FC<AssignerDropdownProps> = ({
                 onSelectAssigner(assigner.name);
                 setIsOpen(false);
               }}
-              className="border-b border-gray-200 px-4 py-2">
+              className="border-gray-200 border-b px-4 py-2">
               <Text className="text-gray-700">{assigner.name}</Text>
             </TouchableOpacity>
           ))}

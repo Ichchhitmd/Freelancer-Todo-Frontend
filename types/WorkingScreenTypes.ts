@@ -34,6 +34,7 @@ export interface WorkEvent {
   assignedContactNumber: any;
   assignedBy: any;
   paymentStatus?: string;
+  advanceReceived?: number;
   eventDate: string[];
   nepaliEventDate: string[];
   detailNepaliDate: {

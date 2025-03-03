@@ -41,9 +41,8 @@ const HomeScreen = () => {
   const { data: advanceReceipts } = useGetAdvanceReceipts(userId);
   const { data: assigners } = useFetchTotalAdvancePaid(userId);
 
-  const totalAdvance = Number(assigners?.totalAdvanceBalance || 0) + Number(advanceReceipts?.totalAdvancePayment || 0);
-
-  console.log('totalAdvancePaid', totalAdvance);
+  const totalAdvance =
+    Number(assigners?.totalAdvanceBalance || 0) + Number(advanceReceipts?.totalAdvancePayment || 0);
 
   const navigation = useNavigation();
 

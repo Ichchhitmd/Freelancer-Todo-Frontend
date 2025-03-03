@@ -57,7 +57,8 @@ const AddWorkForm: React.FC = () => {
   const [companyId, setCompanyId] = useState<number | undefined>();
   const [noCompany, setNoCompany] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [advanceReceived, setAdvanceReceived] = useState<number | undefined>();
+  const [advanceReceived, setAdvanceReceived] = useState('');
+  const advanceReceivedRef = useRef('');
   const [eventCategoryId, setEventCategoryId] = useState<number | undefined>(undefined);
   const scrollViewRef = useRef(null);
   const [showAssignerSuggestions, setShowAssignerSuggestions] = useState(false);
@@ -70,7 +71,6 @@ const AddWorkForm: React.FC = () => {
 
     if (eventTypes?.[selectedIndex]) {
       setEventCategoryId(eventTypes[selectedIndex].id);
-      // Ensure we snap exactly to the item
       requestAnimationFrame(() => {
         scrollViewRef.current?.scrollTo({
           y: selectedIndex * itemHeight,
@@ -94,7 +94,6 @@ const AddWorkForm: React.FC = () => {
         ]);
       }
 
-      // Handle time
       if (details.eventStartTime) {
         const [hours, minutes] = details.eventStartTime.split(':');
         const date = new Date();
@@ -106,33 +105,27 @@ const AddWorkForm: React.FC = () => {
       setEstimatedEarning(details.earnings?.toString() || '');
       setActualEarning(details.actualEarnings?.toString() || '');
 
-      // Handle company vs individual
       if (details.companyId) {
         setNoCompany(false);
         setCompanyId(details.companyId);
-        // Set the selected company name for the dropdown
         if (details.company?.name) {
           setSelectedCompany(details.company.name);
         }
       } else {
         setNoCompany(true);
         setAssignedBy(details.assignedBy || '');
-        // Contact number comes without prefix from backend
         setAssignedContactNumber(details.assignedContactNumber || null);
       }
 
-      // Handle contacts and venue
       setPrimaryContact(details.primaryContact || { name: '', phoneNumber: '' });
       setSecondaryContact(details.secondaryContact);
       setVenueDetails(details.venueDetails || { location: '' });
 
-      // Handle other fields
       setWorkType(details.workType || []);
       setSide(details.side || '');
       setEventCategoryId(details.eventCategoryId);
-      setAdvanceReceived(details.advanceReceived);
+      setAdvanceReceived(details.advanceReceived?.toString() || '');
 
-      // Set event category and scroll to it
       if (scrollViewRef.current && details.eventCategoryId) {
         const index = eventTypes.findIndex((t) => t.id === details.eventCategoryId);
         if (index !== -1) {
@@ -177,7 +170,6 @@ const AddWorkForm: React.FC = () => {
   const userId = useSelector((state: RootState) => state.auth.user?.id);
 
   const { data: assignees } = useGetAllAssigners(userId || 0);
-
 
   const { mutate: postEvent } = useEvents();
   const { mutate: updateEvent } = usePatchEvent();
@@ -231,11 +223,16 @@ const AddWorkForm: React.FC = () => {
       const detailNepaliDate = [
         {
           nepaliYear: selectedDate.year,
-          nepaliMonth: selectedDate.month + 1, // Convert from 0-based to 1-based month
+          nepaliMonth: selectedDate.month + 1,
           nepaliDay: selectedDate.day,
         },
       ];
 
+      console.log('Raw data before cleaning:', { 
+        advanceReceived, 
+        refValue: advanceReceivedRef.current,
+        type: typeof advanceReceived 
+      });
       const cleanObject = (obj: any) => {
         if (!obj) return obj;
 
@@ -281,7 +278,7 @@ const AddWorkForm: React.FC = () => {
             })
           : '',
         workType: workType || [],
-        advanceReceived: advanceReceived || 0,
+        advanceReceived: advanceReceivedRef.current ? Number(advanceReceivedRef.current) : null,
         primaryContact: {
           name: primaryContact.name || '',
           phoneNumber: primaryContact.phoneNumber?.replace('+977-', '') || '',
@@ -311,61 +308,67 @@ const AddWorkForm: React.FC = () => {
             }),
       });
 
+      console.log('Advance received in formatted data:', formattedData.advanceReceived);
       if (isEditMode && details?.id) {
         formattedData.id = details.id;
       }
 
       if (isEditMode) {
         try {
-          // Update the event
           await updateEvent({
             eventId: details.id,
             eventData: formattedData,
           });
-          
-          // Find the selected company details
-          const selectedCompanyDetails = companies?.find(c => c.id === companyId);
-          
-          // Navigate to DateDetail screen with the updated details
+
+          const selectedCompanyDetails = companies?.find((c) => c.id === companyId);
+
           navigation.navigate('MainTabs', {
             screen: 'DateDetails',
-            params: { 
+            params: {
               details: {
                 ...details,
                 ...formattedData,
                 id: details.id,
-                company: companyId ? {
-                  id: companyId,
-                  name: selectedCompanyDetails?.name || ''
-                } : undefined,
+                company: companyId
+                  ? {
+                      id: companyId,
+                      name: selectedCompanyDetails?.name || '',
+                    }
+                  : undefined,
                 assignedBy: noCompany ? assignedBy : undefined,
-                assignedContactNumber: noCompany ? assignedContactNumber : undefined
-              }
-            }
+                assignedContactNumber: noCompany ? assignedContactNumber : undefined,
+              },
+            },
           });
         } catch (error) {
-          console.error('Error updating event:', error);
           alert('Failed to update work details. Please try again.');
         }
       } else {
-        // Create new event
+        console.log('Formatted data:', formattedData);
         postEvent(formattedData, {
           onSuccess: (data) => {
             if (data) {
+              const selectedCompanyDetails = companies?.find((c) => c.id === companyId);
               navigation.navigate('MainTabs', {
                 screen: 'DateDetails',
-                params: { details: data },
+                params: { 
+                  details: {
+                    ...data,
+                    company: companyId ? {
+                      id: companyId,
+                      name: selectedCompanyDetails?.name || '',
+                    } : undefined
+                  }
+                },
               });
             }
           },
           onError: (error) => {
-            console.error('Error submitting form:', error);
             alert('Failed to save work details. Please try again.');
           },
         });
       }
     } catch (e) {
-      console.error('Error submitting form:', e);
       alert('Failed to save work details. Please try again.');
     }
   }, [
@@ -419,7 +422,6 @@ const AddWorkForm: React.FC = () => {
 
   const handleAssignerSelect = useCallback((assigner) => {
     setAssignedBy(assigner.name);
-    // Remove any non-numeric characters and convert to number
     const cleanNumber = assigner.contactNumber.toString().replace(/\D/g, '');
     setAssignedContactNumber(parseInt(cleanNumber));
     setShowAssignerSuggestions(false);
@@ -544,7 +546,6 @@ const AddWorkForm: React.FC = () => {
                           placeholder="Enter who assigned the work"
                           icon="account"
                           onBlur={() => {
-                            // Small delay to allow the item selection to complete
                             setTimeout(() => {
                               setShowAssignerSuggestions(false);
                             }, 200);
@@ -574,7 +575,6 @@ const AddWorkForm: React.FC = () => {
                         <InputField
                           value={assignedContactNumber?.toString() || ''}
                           onChangeText={(text) => {
-                            // Remove any non-numeric characters
                             const cleanNumber = text.replace(/\D/g, '');
                             setAssignedContactNumber(cleanNumber ? parseInt(cleanNumber) : null);
                           }}
@@ -651,18 +651,22 @@ const AddWorkForm: React.FC = () => {
 
                     <View style={{ marginTop: 20 }}>
                       <InputField
-                        label="Estimated Earning"
                         value={estimatedEarning}
-                        onChangeText={setEstimatedEarning}
+                        onChangeText={(text) => setEstimatedEarning(text)}
                         keyboardType="numeric"
                         placeholder="Enter your earnings for this event"
                         icon="cash"
                       />
 
                       <InputField
-                        label="Advance Received"
                         value={advanceReceived}
-                        onChangeText={setAdvanceReceived}
+                        onChangeText={(text) => {
+                          const cleanedText = text.replace(/[^0-9.]/g, '');
+                          console.log('Setting advance received to:', cleanedText);
+                          setAdvanceReceived(cleanedText);
+                          advanceReceivedRef.current = cleanedText;
+                          console.log('Current ref value:', advanceReceivedRef.current);
+                        }}
                         keyboardType="numeric"
                         placeholder="Enter your advance received for this event"
                         icon="cash"
@@ -671,7 +675,6 @@ const AddWorkForm: React.FC = () => {
                   </View>
                 </View>
               </View>
-
               <View className="mb-8">
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">
                   Contact Information
@@ -686,7 +689,6 @@ const AddWorkForm: React.FC = () => {
                           : 'Primary Contact'}
                     </Text>
                     <InputField
-                      label="Name"
                       value={primaryContact.name}
                       onChangeText={(text) =>
                         setPrimaryContact((prev) => ({ ...prev, name: text }))
@@ -695,7 +697,6 @@ const AddWorkForm: React.FC = () => {
                       icon="account"
                     />
                     <InputField
-                      label="Phone Number"
                       value={primaryContact.phoneNumber}
                       onChangeText={(text) =>
                         setPrimaryContact((prev) => ({ ...prev, phoneNumber: text }))
@@ -716,7 +717,6 @@ const AddWorkForm: React.FC = () => {
                       (Optional)
                     </Text>
                     <InputField
-                      label="Name"
                       value={secondaryContact?.name}
                       onChangeText={(text) =>
                         setSecondaryContact((prev) =>
@@ -734,7 +734,6 @@ const AddWorkForm: React.FC = () => {
                       icon="account"
                     />
                     <InputField
-                      label="Phone Number"
                       value={secondaryContact?.phoneNumber}
                       onChangeText={(text) =>
                         setSecondaryContact((prev) =>
@@ -760,7 +759,6 @@ const AddWorkForm: React.FC = () => {
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">Venue Details</Text>
                 <View className="border-gray-100 space-y-4 rounded-2xl border bg-white p-4 shadow-sm">
                   <InputField
-                    label="Location"
                     value={venueDetails.location}
                     onChangeText={(text) =>
                       setVenueDetails((prev) => ({ ...prev, location: text }))
@@ -769,7 +767,6 @@ const AddWorkForm: React.FC = () => {
                     icon="map-marker"
                   />
                   <InputField
-                    label="Name"
                     value={venueDetails.name}
                     onChangeText={(text) => setVenueDetails((prev) => ({ ...prev, name: text }))}
                     placeholder="Enter venue name"

@@ -15,11 +15,13 @@ export interface SignupData {
   email: string;
   phone: string;
   password: string;
-  location: string;
+  location?: string;
   photo?: string;
   experience?: string;
   role?: string;
   isActive?: boolean;
+  message?: string;
+  error?: string;
 }
 
 export interface LoginData {
