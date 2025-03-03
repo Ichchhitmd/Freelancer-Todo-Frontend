@@ -149,7 +149,6 @@ const HomeScreen = () => {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <HeaderSection
-          user={userName}
           remainingAmount={remainingAmount}
           advanceAmount={advanceReceipts?.totalAdvancePayment || 0}
         />
