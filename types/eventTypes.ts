@@ -39,6 +39,7 @@ export interface EventRequest {
   primaryContact: Contact;
   secondaryContact?: SecondaryContact;
   venueDetails: VenueDetails;
+  advanceReceived?: number;
 }
 
 export interface EventCategory {
@@ -82,6 +83,7 @@ export interface EventDetails {
   earnings: number;
   actualEarnings?: number | null;
   eventStartTime: string;
+  advanceReceived?: number;
   workType: string[];
   assignedBy: string;
   assignedContactNumber: string;

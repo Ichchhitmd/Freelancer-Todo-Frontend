@@ -24,7 +24,6 @@ export default function RegisterScreen() {
     phone: '',
     password: '',
     email: '',
-    location: '',
     role: 'freelancer',
   });
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -55,8 +54,8 @@ export default function RegisterScreen() {
       return;
     }
 
-    const { name, phone, password, email, location } = formData;
-    if (!name || !phone || !password || !email || !location) {
+    const { name, phone, password, email } = formData;
+    if (!name || !phone || !password || !email) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -67,7 +66,7 @@ export default function RegisterScreen() {
         navigation.navigate('LoginScreen');
       },
       onError: (error) => {
-        console.error('Signup error:', error);
+        handleAxiosError('Signup error:');
         Alert.alert('Signup Failed', handleAxiosError(error));
       },
     });
@@ -151,17 +150,6 @@ export default function RegisterScreen() {
                   />
                 </View>
 
-                <View className="bg-gray-100 mb-6 hidden flex-row items-center rounded-lg border-[0.5px] border-slate-200 p-3">
-                  <MaterialIcons name="location-on" size={20} className="text-gray-900 mr-3" />
-                  <TextInput
-                    className="text-gray-900 flex-1 text-base"
-                    placeholder="Fetching location..."
-                    placeholderTextColor="#333333"
-                    value={formData.location}
-                    editable={false}
-                  />
-                </View>
-
                 <View className="mt-4 flex-row items-center">
                   <TouchableOpacity
                     onPress={() => setPrivacyAccepted(!privacyAccepted)}
@@ -182,7 +170,7 @@ export default function RegisterScreen() {
                   <ActivityIndicator size="large" color="#6366F1" className="my-4" />
                 ) : (
                   <Pressable
-                    className="rounded-2xl bg-primary/75 py-4 shadow-lg shadow-primary/30 mt-2"
+                    className="mt-2 rounded-2xl bg-primary/75 py-4 shadow-lg shadow-primary/30"
                     onPress={
                       privacyAccepted
                         ? handleRegister
