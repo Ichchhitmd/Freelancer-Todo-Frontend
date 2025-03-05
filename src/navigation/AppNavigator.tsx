@@ -19,6 +19,9 @@ import WorkScreen from '../screens/main/WorkScreen';
 import HomeScreen from '~/screens/main/HomeScreen';
 import ProfileScreen from '~/screens/main/ProfileScreen';
 import DateDetailScreen from '~/screens/main/DateDetailScreen';
+import ForgotPasswordScreen from '~/screens/auth/ForgotPasswordScreen';
+import OtpScreen from '~/screens/auth/OtpScreen';
+import PasswordResetScreen from '~/screens/auth/PasswordResetScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -78,6 +81,9 @@ export const AppNavigator = () => {
         <>
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+          <Stack.Screen name="OtpScreen" component={OtpScreen} />
+          <Stack.Screen name="PasswordResetScreen" component={PasswordResetScreen} />
         </>
       )}
     </Stack.Navigator>

@@ -56,3 +56,30 @@ export interface ChangePasswordData {
   newPassword: string;
 }
 
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface OtpData {
+  email: string;
+  otp: string;
+}
+
+export interface OtpResponse {
+  message: string;
+  isValid: boolean;
+}
+
+export interface ResetPasswordData {
+  email: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+  success: boolean;
+}

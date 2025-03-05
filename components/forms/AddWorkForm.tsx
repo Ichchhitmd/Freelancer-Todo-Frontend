@@ -6,21 +6,14 @@ import InputField from 'components/common/InputField';
 import HorizontalSelector from 'components/rare/HorizontalScrollSelector';
 import SelectDropdown from 'components/rare/SelectDropdown';
 import { MonthView } from 'components/test/CalendarComponent';
+import EventTypeSelector from 'components/test/EventTypeSelector';
 import { useGetAllAssigners } from 'hooks/assignee';
 import { useGetCompanies } from 'hooks/companies';
 import { useGetEventTypes } from 'hooks/eventTypes';
 import { useEvents, usePatchEvent } from 'hooks/events';
 import { NepaliDateInfo } from 'lib/calendar';
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  SafeAreaView,
-  ScrollView,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
 import { Contact, EventRequest, SecondaryContact, VenueDetails } from 'types/eventTypes';
@@ -34,13 +27,11 @@ const AddWorkForm: React.FC = () => {
   const { isEditMode = false, details = null } =
     (route.params as RootStackParamList['Add Work']) || {};
 
-  // Form states
   const [selectedDates, setSelectedDates] = useState<NepaliDateInfo[]>([]);
   const [estimatedEarning, setEstimatedEarning] = useState('');
   const [actualEarning, setActualEarning] = useState<string | null>(null);
   const [assignedBy, setAssignedBy] = useState('');
   const [assignedContactNumber, setAssignedContactNumber] = useState<number | null>(null);
-  const [containerHeight, setContainerHeight] = useState(0);
 
   const [primaryContact, setPrimaryContact] = useState<Contact>({
     name: '',
@@ -63,22 +54,6 @@ const AddWorkForm: React.FC = () => {
   const scrollViewRef = useRef(null);
   const [showAssignerSuggestions, setShowAssignerSuggestions] = useState(false);
   const [filteredAssigners, setFilteredAssigners] = useState<typeof assignees>([]);
-
-  const handleScrollEnd = (event) => {
-    const scrollOffset = event.nativeEvent.contentOffset.y;
-    const itemHeight = 40;
-    const selectedIndex = Math.round(scrollOffset / itemHeight);
-
-    if (eventTypes?.[selectedIndex]) {
-      setEventCategoryId(eventTypes[selectedIndex].id);
-      requestAnimationFrame(() => {
-        scrollViewRef.current?.scrollTo({
-          y: selectedIndex * itemHeight,
-          animated: true,
-        });
-      });
-    }
-  };
 
   useEffect(() => {
     if (isEditMode && details && eventTypes?.length > 0) {
@@ -228,10 +203,10 @@ const AddWorkForm: React.FC = () => {
         },
       ];
 
-      console.log('Raw data before cleaning:', { 
-        advanceReceived, 
+      console.log('Raw data before cleaning:', {
+        advanceReceived,
         refValue: advanceReceivedRef.current,
-        type: typeof advanceReceived 
+        type: typeof advanceReceived,
       });
       const cleanObject = (obj: any) => {
         if (!obj) return obj;
@@ -351,14 +326,16 @@ const AddWorkForm: React.FC = () => {
               const selectedCompanyDetails = companies?.find((c) => c.id === companyId);
               navigation.navigate('MainTabs', {
                 screen: 'DateDetails',
-                params: { 
+                params: {
                   details: {
                     ...data,
-                    company: companyId ? {
-                      id: companyId,
-                      name: selectedCompanyDetails?.name || '',
-                    } : undefined
-                  }
+                    company: companyId
+                      ? {
+                          id: companyId,
+                          name: selectedCompanyDetails?.name || '',
+                        }
+                      : undefined,
+                  },
                 },
               });
             }
@@ -462,37 +439,11 @@ const AddWorkForm: React.FC = () => {
 
               <View className="mb-8">
                 <Text className="text-gray-800 mb-4 text-lg font-semibold">Event Type</Text>
-                <View
-                  className="border-gray-100 h-[120px] overflow-hidden rounded-2xl border bg-white shadow-sm"
-                  onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}>
-                  <ScrollView
-                    ref={scrollViewRef}
-                    nestedScrollEnabled
-                    showsVerticalScrollIndicator={false}
-                    onMomentumScrollEnd={handleScrollEnd}>
-                    {eventTypes?.map((type) => {
-                      const isSelected = eventCategoryId === type.id;
-                      return (
-                        <TouchableOpacity
-                          key={type.id}
-                          style={{
-                            backgroundColor: isSelected ? '#E50914' : 'white',
-                          }}
-                          className="border-gray-100 w-full border-b last:border-b-0"
-                          onPress={() => setEventCategoryId(type.id)}>
-                          <View className="p-4">
-                            <Text
-                              className={`text-center text-lg font-medium ${
-                                isSelected ? 'text-white' : 'text-gray-700'
-                              }`}>
-                              {type.name}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
+                <EventTypeSelector
+                  eventTypes={eventTypes}
+                  initialSelectedId={eventCategoryId}
+                  onSelectEventType={(id) => setEventCategoryId(id)}
+                />
               </View>
 
               <View className="mb-8">

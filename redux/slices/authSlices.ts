@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User, AuthResponse } from 'types/authTypes';
 
@@ -40,6 +41,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      AsyncStorage.removeItem('cachedCredentials')
     },
   },
 });

@@ -34,15 +34,15 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ advanceAmount, remainingA
           android_ripple={{ color: 'rgba(239, 68, 68, 0.1)' }}>
           <View className="mr-4">
             <View className="h-16 w-16 items-center justify-center rounded-full bg-red-400">
-            {user?.photo ? (
+              {user?.photo ? (
                 <Image
                   source={{ uri: `${process.env.UPLOADS_BASE_URL}/${user.photo}` }}
                   className="h-20 w-20 rounded-full border-4 border-primary/35"
                   onError={() => dispatch(setError('Failed to load profile image'))}
                 />
-            ) : (
-              <Text className="text-3xl font-bold text-white">{getInitials(user?.name)}</Text>
-            )}
+              ) : (
+                <Text className="text-3xl font-bold text-white">{getInitials(user?.name)}</Text>
+              )}
             </View>
           </View>
 
@@ -53,11 +53,11 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({ advanceAmount, remainingA
             </Text>
             {checkBalance > 0 ? (
               <Text className="text-lg font-semibold text-green-500">Due: ₹{checkBalance}</Text>
-            ) : (
+            ) : checkBalance < 0 ? (
               <Text className="text-lg font-semibold text-red-500">
                 Advance: ₹{Math.abs(checkBalance)}
               </Text>
-            )}
+            ) : null}
           </View>
         </Pressable>
       </View>

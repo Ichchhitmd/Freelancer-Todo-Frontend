@@ -1,7 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { handleAxiosError } from 'helper/errorHandling/AxiosErrorHandle';
 import { useSignup } from 'hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import {
@@ -161,10 +160,12 @@ export default function RegisterScreen() {
                       color={privacyAccepted ? '#E50914' : '#666'}
                     />
                   </TouchableOpacity>
+                  <View className="flex-1">
                   <Text className="text-gray-600">I agree to the </Text>
                   <TouchableOpacity onPress={handleOpenPrivacyPolicy}>
                     <Text className="text-primary">Privacy Policy & Terms of Service</Text>
                   </TouchableOpacity>
+                  </View>
                 </View>
 
                 {status === 'pending' ? (

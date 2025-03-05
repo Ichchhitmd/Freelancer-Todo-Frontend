@@ -3,7 +3,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useGetEventTypes } from 'hooks/eventTypes';
 import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
-import React, { useState, useCallback, useEffect } from 'react';
+import { useAddEventIncome } from 'hooks/income';
+import React, { useState, useEffect } from 'react';
 import {
   Text,
   ScrollView,
@@ -14,17 +15,15 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Linking,
+  Platform,
 } from 'react-native';
 import { WorkEvent } from 'types/WorkingScreenTypes';
 
 type RootStackParamList = {
-  DateDetail: {
-    details: WorkEvent;
-  };
-  'Add Work': {
-    isEditMode: boolean;
-    details: WorkEvent;
-  };
+  DateDetail: { details: WorkEvent };
+  'Add Work': { isEditMode: boolean; details: WorkEvent };
+  ReimbursementForm: { detailsId: string };
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DateDetail'>;
@@ -34,234 +33,86 @@ const DateDetails: React.FC = () => {
   const route = useRoute<Props['route']>();
   const { details: initialDetails } = route.params;
 
-  console.log(initialDetails);
-
-  // Fetch complete event details
-  const { data: details, isLoading } = useGetEventById(initialDetails.id);
+  const { data: details, isLoading, refetch } = useGetEventById(initialDetails.id);
   const { data: eventTypes } = useGetEventTypes();
-  const [actualEarnings, setActualEarnings] = useState<string>('');
-  const [localDueAmount, setLocalDueAmount] = useState<number>(initialDetails.dueAmount || 0);
-  const [showEarningsModal, setShowEarningsModal] = useState(false);
-  const [actualEarningsError, setActualEarningsError] = useState<string | null>(null);
   const { mutate: deleteEvent } = useDeleteEvent();
   const { mutate: updateEvent } = usePatchEvent();
+  const { mutate: addEventIncome } = useAddEventIncome();
+  const [showEarningsModal, setShowEarningsModal] = useState(false);
+  const [newIncome, setNewIncome] = useState<string>('');
+  const [incomeError, setIncomeError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('details');
 
-  const getEventTypeName = useCallback(
-    (eventCategoryId: number) => {
-      const eventType = eventTypes?.find((type) => type.id === eventCategoryId);
-      return eventType?.name || 'Unknown';
-    },
-    [eventTypes]
-  );
-
-  // Update local state when details change
-  useEffect(() => {
-    if (details) {
-      // Only set actualEarnings if it exists and is not zero
-      if (details.actualEarnings && parseFloat(details.actualEarnings.toString()) !== 0) {
-        setActualEarnings(details.actualEarnings.toString());
-      } else {
-        setActualEarnings('');
-      }
-      setLocalDueAmount(details.dueAmount || 0);
-    }
-  }, [details]);
-
-  if (details?.company?.name) {
-    console.log('Company name:', details.company.name);
-  }
-
-  const getCompanyName = () => {
-    // First try to get from API response
-    if (details?.company?.name) return details.company.name;
-    // Then try from initial details (WorkEvent)
-    if (initialDetails.company?.name) return initialDetails.company.name;
-    // Then try from primary contact
-    if (details?.assignedBy) return `${details.assignedBy}'s Event`;
-    if (initialDetails.assignedBy) return `${initialDetails.assignedBy}'s Event`;
-  };
-
-  // Calculate due amount instantly when actual earnings change
-  const handleActualEarningsChange = (text: string) => {
-    // Allow empty input
-    if (text === '') {
-      setActualEarnings('');
-      setActualEarningsError(null);
-      return;
-    }
-
-    // Remove any non-numeric characters except decimal point
-    const cleanedText = text.replace(/[^0-9.]/g, '');
-
-    // Validate the number
-    const number = parseFloat(cleanedText);
-    if (isNaN(number)) {
-      setActualEarningsError('Please enter a valid number');
-    } else if (number < 0) {
-      setActualEarningsError('Amount cannot be negative');
-    } else {
-      setActualEarningsError(null);
-    }
-
-    setActualEarnings(cleanedText);
-  };
-
-  // Use the refresh function when component mounts
   useEffect(() => {
     if (route.params.refresh) {
       route.params.refresh().then((freshData) => {
         if (freshData) {
-          navigation.setParams({
-            details: freshData,
-          });
+          navigation.setParams({ details: freshData });
+          refetch();
         }
       });
     }
-  }, [route.params.refresh, navigation]);
+  }, [route.params.refresh, navigation, refetch]);
 
-  const advancePaymentEvent = () => {
-    try {
-      if (details?.advanceReceived) {
-        return details.advanceReceived;
-      }
-      return 0;
-    } catch {
-      return 0;
-    }
+  const getCompanyName = () => {
+    if (details?.company?.name) return details.company.name;
+    if (initialDetails.company?.name) return initialDetails.company.name;
+    if (details?.assignedBy) return `${details.assignedBy}'s Event`;
+    if (initialDetails.assignedBy) return `${initialDetails.assignedBy}'s Event`;
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#ef4444" />
-          <Text className="text-gray-600 mt-4">Loading event details...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleNewIncomeChange = (text: string) => {
+    if (text === '') {
+      setNewIncome('');
+      setIncomeError(null);
+      return;
+    }
+    const cleanedText = text.replace(/[^0-9.]/g, '');
+    const number = parseFloat(cleanedText);
+    if (isNaN(number)) setIncomeError('Please enter a valid number');
+    else if (number <= 0) setIncomeError('Amount must be greater than 0');
+    else setIncomeError(null);
+    setNewIncome(cleanedText);
+  };
 
-  if (!details) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center p-4">
-          <MaterialCommunityIcons name="alert-circle" size={48} color="#ef4444" />
-          <Text className="text-gray-800 mt-4 text-center text-lg font-medium">
-            Could not load event details
-          </Text>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mt-4 rounded-lg bg-red-500 px-6 py-3">
-            <Text className="font-medium text-white">Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleAddIncome = () => {
+    if (!newIncome) return Alert.alert('Error', 'Please enter an amount');
+    if (incomeError) return Alert.alert('Error', incomeError);
 
-  // Use initial ID from route params while details are loading
-  const detailsId = details?.id || initialDetails.id;
+    const parsedIncome = parseFloat(newIncome);
+    addEventIncome(
+      { eventId: details.id, actualEarnings: parsedIncome },
+      {
+        onSuccess: () => {
+          setNewIncome('');
+          setShowEarningsModal(false);
+          Alert.alert('Success', 'Income added successfully');
+          refetch();
+        },
+        onError: (error) => {
+          Alert.alert('Error', 'Failed to add income');
+          console.error(error);
+        },
+      }
+    );
+  };
+
+  const advancePaymentEvent = () => details?.advanceReceived || 0;
+
+  const totalReceived = () =>
+    parseFloat(details?.actualEarnings?.toString() || '0') + advancePaymentEvent();
 
   const handleDelete = () => {
     Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
-          deleteEvent(details.id, {
-            onSuccess: () => {
-              navigation.goBack();
-            },
-          });
+          deleteEvent(details.id, { onSuccess: () => navigation.goBack() });
         },
       },
     ]);
-  };
-
-  const handleActualEarningsUpdate = () => {
-    if (!actualEarnings && actualEarnings !== '') {
-      Alert.alert('Error', 'Please enter actual earnings');
-      return;
-    }
-
-    if (!details) {
-      Alert.alert('Error', 'Event details not found');
-      return;
-    }
-
-    const parsedActualEarnings = actualEarnings ? parseFloat(actualEarnings) : null;
-    updateEvent(
-      {
-        eventId: details.id,
-        eventData: {
-          actualEarnings: parsedActualEarnings,
-          dueAmount: localDueAmount,
-        },
-      },
-      {
-        onSuccess: () => {
-          Alert.alert('Success', 'Actual earnings updated successfully');
-          navigation.setParams({
-            details: {
-              ...details,
-              actualEarnings: parsedActualEarnings,
-              dueAmount: localDueAmount,
-            },
-          });
-        },
-      }
-    );
-  };
-
-  const DetailRow = ({
-    icon,
-    label,
-    value,
-    isActualEarnings = false,
-  }: {
-    icon: string;
-    label: string;
-    value: string;
-    isActualEarnings?: boolean;
-  }) => {
-    if (isActualEarnings) {
-      return (
-        <View className="border-gray-100 border-b px-4 py-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                <MaterialCommunityIcons name={icon} size={24} color="#ef4444" />
-              </View>
-              <View className="ml-4">
-                <Text className="text-gray-500 text-sm font-medium">{label}</Text>
-                <Text className="text-gray-900 mt-1 text-lg font-semibold">{value}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => setShowEarningsModal(true)}
-              className="rounded-xl bg-red-500 px-4 py-2">
-              <Text className="font-medium text-white">Update</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    }
-
-    return (
-      <View className="border-gray-100 flex-row items-center border-b px-4 py-4">
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-          <MaterialCommunityIcons name={icon} size={24} color="#ef4444" />
-        </View>
-        <View className="ml-4 flex-1">
-          <Text className="text-gray-500 text-sm font-medium">{label}</Text>
-          <Text className="text-gray-900 mt-1 text-lg font-semibold">{value}</Text>
-        </View>
-      </View>
-    );
   };
 
   const nepaliMonths = [
@@ -292,52 +143,180 @@ const DateDetails: React.FC = () => {
     [9, '९'],
   ]);
 
-  function engToNepNum(num: number): string {
-    return String(num)
+  const engToNepNum = (num: number) =>
+    String(num)
       .split('')
       .map((ch) => tableOfEngNepNums.get(Number(ch)) ?? ch)
       .join('');
+
+  const DetailCard = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
+    console.log(label, value),
+    <View className="m-1 flex-1 flex-row items-center rounded-xl bg-white p-4 shadow-sm">
+      <View className="h-10 w-10 items-center justify-center rounded-full bg-red-100">
+        <MaterialCommunityIcons name={icon} size={20} color="#ef4444" />
+      </View>
+      <View className="ml-3 flex-1">
+        <Text className="text-gray-500 text-xs font-medium">{label}</Text>
+        <Text className="text-gray-900 text-base font-semibold">{value}</Text>
+      </View>
+    </View>
+  );
+
+  const FinancialCard = ({
+    icon,
+    label,
+    value,
+    highlight = false,
+  }: {
+    icon: string;
+    label: string;
+    value: string;
+    highlight?: boolean;
+  }) => (
+    <View
+      className={`mb-3 flex-row items-center rounded-xl p-3 shadow-sm ${highlight ? 'bg-green-50' : 'bg-white'}`}>
+      <View
+        className={`h-12 w-12 items-center justify-center rounded-full ${highlight ? 'bg-green-200' : 'bg-green-100'}`}>
+        <MaterialCommunityIcons name={icon} size={24} color="#22c55e" />
+      </View>
+      <View className="ml-4 flex-1">
+        <Text className="text-gray-500 text-xs font-medium">{label}</Text>
+        <Text className={`text-lg font-semibold ${highlight ? 'text-green-600' : 'text-gray-900'}`}>
+          {value}
+        </Text>
+      </View>
+    </View>
+  );
+
+  const ContactCard = ({
+    name,
+    phone,
+    type,
+  }: {
+    name: string;
+    phone: string;
+    type: 'primary' | 'secondary' | 'company';
+  }) => {
+    const handlePhonePress = (phone?: string) => {
+      if (!phone) return;
+      Linking.openURL(Platform.OS === 'ios' ? `telprompt:${phone}` : `tel:${phone}`);
+    };
+    if (!name && !phone) return null;
+
+    const getIcon = () => {
+      switch (type) {
+        case 'primary':
+          return 'account-star';
+        case 'secondary':
+          return 'account-supervisor';
+        case 'company':
+          return 'domain';
+        default:
+          return 'account';
+      }
+    };
+
+    const getTitle = () => {
+      switch (type) {
+        case 'primary':
+          return 'Primary Contact';
+        case 'secondary':
+          return 'Secondary Contact';
+        case 'company':
+          return 'Company Contact';
+        default:
+          return 'Contact';
+      }
+    };
+
+    return (
+      <View className="mb-3 rounded-xl bg-white p-4 shadow-sm">
+        <View className="mb-2 flex-row items-center">
+          <MaterialCommunityIcons name={getIcon()} size={18} color="#ef4444" />
+          <Text className="ml-2 font-medium text-red-500">{getTitle()}</Text>
+        </View>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-gray-900 text-base font-semibold">{name || 'N/A'}</Text>
+          <TouchableOpacity
+            className="flex-row items-center rounded-full bg-red-500 px-3 py-1.5"
+            onPress={() => handlePhonePress(phone)}>
+            <MaterialCommunityIcons name="phone" size={16} color="#fff" />
+            <Text className="ml-1 font-medium text-white">{phone || 'N/A'}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="bg-gray-100 flex-1">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#ef4444" />
+          <Text className="text-gray-600 mt-4">Loading event details...</Text>
+        </View>
+      </SafeAreaView>
+    );
   }
 
+  if (!details) {
+    return (
+      <SafeAreaView className="bg-gray-100 flex-1">
+        <View className="flex-1 items-center justify-center p-4">
+          <MaterialCommunityIcons name="alert-circle" size={48} color="#ef4444" />
+          <Text className="text-gray-800 mt-4 text-center text-lg font-medium">
+            Could not load event details
+          </Text>
+          <TouchableOpacity
+            className="mt-4 rounded-lg bg-red-500 px-6 py-3"
+            onPress={() => navigation.goBack()}>
+            <Text className="font-medium text-white">Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const detailsId = details?.id || initialDetails.id;
+
   return (
-    <SafeAreaView className="mb-20 flex-1 bg-white">
+    <SafeAreaView className="bg-gray-100 flex-1">
       <Modal
         animationType="slide"
         transparent
         visible={showEarningsModal}
         onRequestClose={() => setShowEarningsModal(false)}>
         <View className="flex-1 justify-center bg-black/50">
-          <View className="mx-4 rounded-xl bg-white p-4">
-            <Text className="text-gray-900 mb-4 text-lg font-semibold">
-              Received amount till now for this event
-            </Text>
+          <View className="mx-4 rounded-xl bg-white p-5 shadow-lg">
+            <View className="mb-4 flex-row items-center">
+              <MaterialCommunityIcons name="currency-inr" size={24} color="#ef4444" />
+              <Text className="text-gray-900 ml-2 text-lg font-semibold">Add Income</Text>
+            </View>
             <TextInput
-              value={actualEarnings}
-              onChangeText={handleActualEarningsChange}
+              value={newIncome}
+              onChangeText={handleNewIncomeChange}
               keyboardType="numeric"
-              placeholder="Enter actual earnings"
-              className="bg-gray-50 border-gray-200 mb-4 rounded-lg border px-4 py-3 text-base"
+              placeholder="Enter income amount"
+              className="border-gray-200 bg-gray-50 mb-4 rounded-lg border px-4 py-3 text-base"
               autoFocus
             />
-            {actualEarningsError && (
-              <Text className="mb-4 text-red-500">{actualEarningsError}</Text>
-            )}
-            <View className="flex-row justify-end gap-4 space-x-3">
+            {incomeError && <Text className="mb-4 text-red-500">{incomeError}</Text>}
+            <View className="flex-row justify-end gap-4">
               <TouchableOpacity
-                onPress={() => setShowEarningsModal(false)}
-                className="border-gray-200 rounded-lg border px-4 py-2">
+                className="border-gray-200 rounded-lg border px-4 py-2"
+                onPress={() => {
+                  setNewIncome('');
+                  setShowEarningsModal(false);
+                }}>
                 <Text className="text-gray-600 font-medium">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => {
-                  handleActualEarningsUpdate();
-                  setShowEarningsModal(false);
-                }}
-                disabled={!!actualEarningsError}
-                className={`rounded-lg px-4 py-2 ${actualEarningsError ? 'bg-red-300' : 'bg-red-500'}`}>
+                className={`rounded-lg px-4 py-2 ${incomeError || !newIncome ? 'bg-red-300' : 'bg-red-500'}`}
+                onPress={handleAddIncome}
+                disabled={!!incomeError || !newIncome}>
                 <Text
-                  className={`font-medium ${actualEarningsError ? 'text-gray-500' : 'text-white'}`}>
-                  Update
+                  className={`font-medium ${incomeError || !newIncome ? 'text-gray-500' : 'text-white'}`}>
+                  Add
                 </Text>
               </TouchableOpacity>
             </View>
@@ -345,136 +324,159 @@ const DateDetails: React.FC = () => {
         </View>
       </Modal>
 
-      <ScrollView className=" flex-1">
-        <View className="bg-red-400 px-4 py-8">
-          <View className="flex flex-row items-center justify-center">
-            {details.detailNepaliDate?.map((date, index) => (
-              <Text
-                key={index}
-                className="items-center justify-center pt-2 text-center text-3xl font-bold text-white">
-                {nepaliMonths[date.nepaliMonth - 1]} {engToNepNum(date.nepaliDay)}
-                {index !== details.detailNepaliDate.length - 1 && ' , '}
-              </Text>
-            ))}
-          </View>
+      <View className="bg-red-500 px-4 py-8">
+        <View className="flex-row items-center justify-center">
+          {details.detailNepaliDate?.map((date, index) => (
+            <Text key={index} className="pt-2 text-center text-3xl font-bold text-white">
+              {nepaliMonths[date.nepaliMonth - 1]} {engToNepNum(date.nepaliDay)}
+              {index !== details.detailNepaliDate.length - 1 && ' , '}
+            </Text>
+          ))}
         </View>
+      </View>
 
-        <View className="mx-4 -mt-4 rounded-xl bg-white p-4 shadow-lg">
-          <View className="items-center">
-            <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-              <MaterialCommunityIcons name="office-building" size={32} color="#ef4444" />
+      <View className="mx-4 -mt-4 rounded-xl bg-white p-5 shadow-lg">
+        <View className="items-center">
+          <View className="h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <MaterialCommunityIcons name="office-building" size={28} color="#ef4444" />
+          </View>
+          <Text className="text-gray-900 mt-3 text-xl font-bold">{getCompanyName()}</Text>
+          {details.venueDetails?.location && (
+            <View className="mt-1 flex-row items-center">
+              <MaterialCommunityIcons name="map-marker" size={16} color="#ef4444" />
+              <Text className="text-gray-500 ml-1 text-base">
+                {details.venueDetails?.name ? `${details.venueDetails.name}, ` : ''}
+                {details.venueDetails.location}
+              </Text>
             </View>
-            <Text className="text-gray-900 mt-2 text-xl font-bold">{getCompanyName()}</Text>
-            {details.venueDetails?.name && details.venueDetails?.location ? (
-              <Text className="text-gray-500 my-1 text-base">
-                {details.venueDetails?.name}
-                {', '}
-                {details.venueDetails?.location}
-              </Text>
-            ) : (
-              <Text className="text-gray-500 my-1 text-base">
-                {details.venueDetails?.location}
-                {details.venueDetails?.name}
-              </Text>
-            )}
-            <View className="mt-4 flex-row items-center justify-center gap-12">
+          )}
+        </View>
+        <View className="absolute right-4 top-4">
+          <TouchableOpacity
+            className="rounded-full bg-white p-2 shadow-md"
+            onPress={() => navigation.navigate('Add Work', { isEditMode: true, details })}>
+            <MaterialCommunityIcons name="pencil" size={24} color="#ef4444" />
+          </TouchableOpacity>
+        </View>
+        <View className="absolute bottom-4 right-4">
+          <TouchableOpacity className="rounded-full bg-white p-2 shadow-md" onPress={handleDelete}>
+            <MaterialCommunityIcons name="trash-can" size={24} color="#ef4444" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View className="mb-4 mt-4 flex-row justify-around px-4">
+        {['details', 'financial', 'contacts'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            className={`mx-2 flex-1 rounded-full py-3 ${activeTab === tab ? 'bg-red-500' : 'bg-white'} shadow-md`}
+            onPress={() => setActiveTab(tab)}>
+            <Text
+              className={`text-center font-semibold ${activeTab === tab ? 'text-white' : 'text-gray-600'}`}>
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <ScrollView className="flex-1 px-4 pb-4">
+        {activeTab === 'details' && (
+          <View>
+            <View className="flex-row flex-wrap">
+              <DetailCard
+                icon="party-popper"
+                label="Event Type"
+                value={details.eventCategory?.name || 'Not specified'}
+              />
+              <DetailCard
+                icon="account-heart"
+                label="Side"
+                value={details.side || 'Not specified'}
+              />
+            </View>
+            <View className="mt-2 flex-row flex-wrap">
+              <DetailCard
+                icon="clock-outline"
+                label="Start Time"
+                value={details.eventStartTime || 'Not specified'}
+              />
+              <DetailCard
+                icon="camera-outline"
+                label="Work Type"
+                value={details.workType?.join(', ') || 'Not specified'}
+              />
+            </View>
+          </View>
+        )}
+
+        {activeTab === 'financial' && (
+          <View>
+            <FinancialCard
+              icon="currency-inr"
+              label="Total Amount"
+              value={`रू ${parseFloat(details.earnings?.toString() || '0').toLocaleString()}`}
+            />
+            <FinancialCard
+              icon="currency-inr"
+              label="Amount Received Till Now"
+              value={`रू ${totalReceived().toLocaleString()}`}
+              highlight
+            />
+            <FinancialCard
+              icon="currency-inr"
+              label="Due Amount"
+              value={`रू ${parseFloat(details.dueAmount?.toString() || '0').toLocaleString()}`}
+            />
+            <FinancialCard
+              icon="currency-inr"
+              label="Advance Amount"
+              value={`रू ${advancePaymentEvent().toLocaleString()}`}
+            />
+            <View className="mb-24 mt-4 flex-row justify-between gap-2">
               <TouchableOpacity
-                className="flex-row items-center rounded-xl bg-red-500 px-4 py-2"
+                className="flex-1 flex-row items-center justify-center rounded-full bg-green-500 py-3 shadow-md"
                 onPress={() => {
-                  navigation.navigate('Add Work', { isEditMode: true, details });
+                  setNewIncome('');
+                  setShowEarningsModal(true);
                 }}>
-                <MaterialCommunityIcons name="pencil" size={20} color="#ffffff" />
-                <Text className="ml-2 font-semibold text-white">Edit</Text>
+                <MaterialCommunityIcons name="cash-plus" size={20} color="#fff" />
+                <Text className="ml-2 font-semibold text-white">Add Income</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-row items-center rounded-xl bg-red-500 px-4 py-2"
-                onPress={() => {
-                  navigation.navigate('ReimbursementForm', { detailsId });
-                }}>
-                <MaterialCommunityIcons name="cash-plus" size={20} color="#ffffff" />
+                className="flex-1 flex-row items-center justify-center rounded-full bg-red-500 py-3 shadow-md"
+                onPress={() => navigation.navigate('ReimbursementForm', { detailsId })}>
+                <MaterialCommunityIcons name="cash-minus" size={20} color="#fff" />
                 <Text className="ml-2 font-semibold text-white">Add Expense</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        )}
 
-        <View className="mt-4 bg-white">
-          <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Event Details</Text>
-          <DetailRow
-            icon="party-popper"
-            label="Event Type"
-            value={details.eventCategory?.name || 'Not specified'}
-          />
-          <DetailRow icon="account-heart" label="Side" value={details.side || 'Not specified'} />
-          <DetailRow
-            icon="clock-outline"
-            label="Start Time"
-            value={details.eventStartTime || 'Not specified'}
-          />
-          <DetailRow
-            icon="camera-outline"
-            label="Work Type"
-            value={details.workType?.join(', ') || 'Not specified'}
-          />
-        </View>
-
-        <View className="mt-4 bg-white">
-          <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Financial Details</Text>
-          <DetailRow
-            icon="currency-inr"
-            label="Total Amount"
-            value={`रू ${parseFloat(details.earnings?.toString() || '0').toLocaleString()}`}
-          />
-          <DetailRow
-            icon="currency-inr"
-            label="Amount Received Till Now"
-            value={actualEarnings ? `रू ${parseFloat(actualEarnings).toLocaleString()}` : 'Not set'}
-            isActualEarnings
-          />
-          <DetailRow
-            icon="currency-inr"
-            label="Due Amount"
-            value={`रू ${localDueAmount.toLocaleString()}`}
-          />
-          <DetailRow
-            icon="currency-inr"
-            label="Advance Amount"
-            value={`रू ${advancePaymentEvent().toLocaleString() || 'Not specified'}`}
-          />
-        </View>
-
-        <View className="mt-4 bg-white">
-          <Text className="text-gray-900 px-4 py-2 text-lg font-semibold">Contact Information</Text>
-          {details.primaryContact && (
-            <DetailRow
-              icon="account-outline"
-              label="Primary Contact"
-              value={`${details.primaryContact.name} - ${details.primaryContact.phoneNumber}`}
-            />
-          )}
-          {details.secondaryContact && (
-            <DetailRow
-              icon="account-outline"
-              label="Secondary Contact"
-              value={`${details.secondaryContact.name} - ${details.secondaryContact.phoneNumber}`}
-            />
-          )}
-          {details.company && (
-            <DetailRow
-              icon="domain"
-              label="Company Contact"
-              value={`${details.company.contactPerson || 'N/A'} - ${details.company.contactInfo || 'N/A'}`}
-            />
-          )}
-          <View className="p-2">
-            <TouchableOpacity
-              onPress={handleDelete}
-              className="flex items-center justify-center rounded-full bg-red-500 p-3 shadow-md active:opacity-75">
-              <MaterialCommunityIcons name="trash-can" size={24} color="white" />
-              <Text className="text-center text-white">Delete Event</Text>
-            </TouchableOpacity>
+        {activeTab === 'contacts' && (
+          <View>
+            {details.primaryContact && (
+              <ContactCard
+                name={details.primaryContact.name}
+                phone={details.primaryContact.phoneNumber}
+                type="primary"
+              />
+            )}
+            {details.secondaryContact && (
+              <ContactCard
+                name={details.secondaryContact.name}
+                phone={details.secondaryContact.phoneNumber}
+                type="secondary"
+              />
+            )}
+            {details.company && (
+              <ContactCard
+                name={details.company.contactPerson || ''}
+                phone={details.company.contactInfo || ''}
+                type="company"
+              />
+            )}
           </View>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

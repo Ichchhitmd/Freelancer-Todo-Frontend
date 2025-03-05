@@ -190,6 +190,12 @@ export default function LoginScreen() {
                   </View>
                 )}
 
+                <Pressable
+                  className="mt-6"
+                  onPress={() => navigation.navigate('ForgotPasswordScreen')}>
+                  <Text className="text-center text-sm text-red-600">Forgot Password?</Text>
+                </Pressable>
+
                 <Pressable className="mt-6" onPress={() => navigation.navigate('RegisterScreen')}>
                   <Text className="text-gray-600 text-center text-sm">
                     Don't have an account?{' '}

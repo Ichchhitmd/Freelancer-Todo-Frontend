@@ -1,3 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   Text,
@@ -8,13 +11,11 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { formatNepaliDates } from '../utils/NepaliDateFormatter';
-import { getDaysStatus } from 'utils/utils';
 import { EventResponse } from 'types/eventTypes';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from 'types/navigation';
+import { getDaysStatus } from 'utils/utils';
+
+import { formatNepaliDates } from '../utils/NepaliDateFormatter';
 
 interface UpcomingEventReminderProps {
   events: EventResponse[];
@@ -55,13 +56,13 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
 
   return (
     <View className="bg-gray-50 p-4">
-      <Text className="text-gray-900 mb-6 text-2xl font-bold">Upcoming Events 📅</Text>
+      <Text className="text-gray-900 mb-6 text-2xl font-bold">Upcoming Events</Text>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingRight: 10 }}
-        snapToInterval={Dimensions.get('window').width - 32} // Adjust for padding
+        snapToInterval={Dimensions.get('window').width - 32}
         decelerationRate="fast"
         snapToAlignment="center">
         {sortedEvents.map((event, index) => {
@@ -89,8 +90,8 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
               }}>
               <View className="p-5">
                 <View className="mb-3 flex-row items-start justify-between">
-                  <View className="flex-1 pr-2">
-                    <Text className="text-gray-900 text-lg font-bold" numberOfLines={2}>
+                  <View className=" pr-2 w-1/3">
+                    <Text className="text-gray-900 text-lg font-bold" numberOfLines={3}>
                       {getDisplayName(event)}
                     </Text>
                     <Text className="text-gray-600 text-sm">{formatEventName(event)}</Text>
@@ -166,7 +167,9 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       className="bg-gray-50 flex-row items-center rounded-lg p-3">
                       <MaterialCommunityIcons name="phone-outline" size={18} color="#6B7280" />
                       <Text className="ml-3 font-medium text-blue-600">
-                        {event.side ? `Call ${event.side.toLowerCase()}` : 'Primary Contact'}
+                        {event.side
+                          ? `Call ${event.primaryContact?.name} (${event.side})`
+                          : 'Primary Contact'}
                       </Text>
                       <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
                         <Text className="text-xs text-blue-800">
@@ -183,14 +186,14 @@ const UpcomingEventReminder: React.FC<UpcomingEventReminderProps> = ({ events })
                       <MaterialCommunityIcons name="phone-plus-outline" size={18} color="#6B7280" />
                       <Text className="ml-3 font-medium text-blue-600">
                         {event.side
-                          ? `Call ${event.side.toLowerCase()}'s secondary contact`
+                          ? `Call ${event.secondaryContact?.name} (Secondary)`
                           : 'Secondary Contact'}
                       </Text>
-                      {/* <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
+                      <View className="ml-auto rounded-full bg-blue-100 px-2 py-1">
                         <Text className="text-xs text-blue-800">
                           {event.secondaryContact.phoneNumber}
                         </Text>
-                      </View> */}
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>

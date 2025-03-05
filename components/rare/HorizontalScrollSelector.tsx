@@ -12,26 +12,29 @@ interface HorizontalSelectorProps {
   label: string;
   icon: string;
   options: Option[];
-  value: string | string[]; // Value can be a string (single selection) or string[] (multiple selections)
+  value: string | string[];
   onChange: (value: string | string[]) => void;
-  selectMultiple?: boolean; // Optional prop to enable multiple selection
+  selectMultiple?: boolean;
 }
 
-const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({ options, value, onChange, selectMultiple = false }) => {
+const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({
+  options,
+  value,
+  onChange,
+  selectMultiple = false,
+}) => {
   const handleSelection = (optionId: string) => {
     if (selectMultiple) {
-      // If multiple selection is allowed, toggle the option
       if (Array.isArray(value)) {
         if (value.includes(optionId)) {
-          onChange(value.filter((id) => id !== optionId)); // Remove if already selected
+          onChange(value.filter((id) => id !== optionId));
         } else {
-          onChange([...value, optionId]); // Add if not selected
+          onChange([...value, optionId]);
         }
       } else {
-        onChange([optionId]); // If value is a string, switch to array with selected value
+        onChange([optionId]);
       }
     } else {
-      // If single selection, just update with the selected option
       onChange(optionId);
     }
   };
@@ -50,7 +53,7 @@ const HorizontalSelector: React.FC<HorizontalSelectorProps> = ({ options, value,
               key={option.id}
               onPress={() => handleSelection(option.id)}
               activeOpacity={0.7}
-              className={`border-slate-200 shadow-gray-200 mr-3 flex-row items-center rounded-lg border bg-white px-4 py-2.5 shadow-sm`}>
+              className={`shadow-gray-200 mr-3 flex-row items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 shadow-sm`}>
               {option.icon && (
                 <MaterialCommunityIcons
                   name={option.icon}
