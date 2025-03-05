@@ -6,7 +6,7 @@ import { FilterBar } from 'components/WorkingsScreen/FilterBar';
 import { WorkItem } from 'components/WorkingsScreen/WorkItem';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGetEvents } from 'hooks/events';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -45,7 +45,6 @@ export const WorkingScreen = () => {
     setRefreshing(false);
   }, [refetch]);
 
-  // Process raw events into simplified format
   const processEvents = useCallback((events: WorkEvent[]): SimplifiedWorkItem[] => {
     if (!events) return [];
 
@@ -89,7 +88,6 @@ export const WorkingScreen = () => {
     });
   }, []);
 
-  // Filter and sort events
   useEffect(() => {
     if (!allEvents) return;
 
@@ -98,14 +96,12 @@ export const WorkingScreen = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Apply company filter first if active
     if (activeCompany) {
       filteredEvents = filteredEvents.filter((event) =>
         event.companyName?.toLowerCase().includes(activeCompany.toLowerCase())
       );
     }
 
-    // Apply main filter
     switch (activeFilter) {
       case 'upcoming':
         filteredEvents = filteredEvents.filter((event) => event.daysDifference >= 0);
@@ -130,15 +126,14 @@ export const WorkingScreen = () => {
         break;
     }
 
-    // Sort events
     switch (activeSort) {
       case 'date-desc':
         filteredEvents.sort((a, b) => {
           if (a.daysDifference < 0 && b.daysDifference < 0) {
-            return a.daysDifference - b.daysDifference; // Most recent past event first
+            return a.daysDifference - b.daysDifference;
           }
           if (a.daysDifference >= 0 && b.daysDifference >= 0) {
-            return a.daysDifference - b.daysDifference; // Closest future event first
+            return a.daysDifference - b.daysDifference;
           }
           return b.daysDifference - a.daysDifference;
         });
@@ -146,10 +141,10 @@ export const WorkingScreen = () => {
       case 'date-asc':
         filteredEvents.sort((a, b) => {
           if (a.daysDifference < 0 && b.daysDifference < 0) {
-            return b.daysDifference - a.daysDifference; // Oldest past event first
+            return b.daysDifference - a.daysDifference;
           }
           if (a.daysDifference >= 0 && b.daysDifference >= 0) {
-            return b.daysDifference - a.daysDifference; // Furthest future event first
+            return b.daysDifference - a.daysDifference;
           }
           return a.daysDifference - b.daysDifference;
         });
@@ -173,7 +168,6 @@ export const WorkingScreen = () => {
         break;
     }
 
-    // For upcoming events, limit to 10 items
     if (activeFilter === 'upcoming') {
       filteredEvents = filteredEvents.slice(0, 10);
     }
@@ -184,7 +178,7 @@ export const WorkingScreen = () => {
   const handleWorkItemPress = useCallback(
     (item: SimplifiedWorkItem) => {
       if (item.originalEvent) {
-        navigation.navigate('DateDetails', { details: item.originalEvent });
+        navigation.push('DateDetails', { details: item.originalEvent });
       }
     },
     [navigation]

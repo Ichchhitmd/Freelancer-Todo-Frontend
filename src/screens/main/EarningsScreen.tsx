@@ -562,10 +562,10 @@ export default function EarningsScreen() {
     );
   };
 
-  const handleEventPress = (event) => {
+  const handleEventPress = (event: any) => {
     const fullEvent = eventsData?.find((e) => e.id === event.id);
     if (fullEvent) {
-      navigation.navigate('DateDetails', {
+      navigation.push('DateDetails', {
         details: {
           id: fullEvent.id,
           eventDate: fullEvent.nepaliEventDate,
@@ -768,7 +768,7 @@ export default function EarningsScreen() {
         onEventPress={(event) => {
           setModalVisible(false);
           setTimeout(() => {
-            navigation.navigate('DateDetails', {
+            navigation.push('DateDetails', {
               details: event,
               refresh: async () => {
                 const { data } = await queryClient.fetchQuery(['events', event.id], () =>

@@ -228,6 +228,9 @@ const HomeScreen = () => {
           handleDateClick={handleDateClick}
           monthlyTotals={bookedDatesEarnings}
         />
+
+        {events.length > 0 && <UpcomingEventReminder events={events} />}
+
         {!earningsIsLoading && !earningsIsError && (
           <>
             <SwipeableUnifiedCard
@@ -241,8 +244,6 @@ const HomeScreen = () => {
             />
           </>
         )}
-
-        {events.length > 0 && <UpcomingEventReminder events={events} />}
       </ScrollView>
     </SafeAreaView>
   );

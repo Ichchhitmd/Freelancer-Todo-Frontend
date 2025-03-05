@@ -16,12 +16,11 @@ import ChangePasswordScreen from '../screens/main/ChangePasswordScreen';
 import CompanyDetails from '../screens/main/CompanyDetailsScreen';
 import WorkScreen from '../screens/main/WorkScreen';
 
-import HomeScreen from '~/screens/main/HomeScreen';
-import ProfileScreen from '~/screens/main/ProfileScreen';
-import DateDetailScreen from '~/screens/main/DateDetailScreen';
 import ForgotPasswordScreen from '~/screens/auth/ForgotPasswordScreen';
 import OtpScreen from '~/screens/auth/OtpScreen';
 import PasswordResetScreen from '~/screens/auth/PasswordResetScreen';
+import DateDetailScreen from '~/screens/main/DateDetailScreen';
+import HomeScreen from '~/screens/main/HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -75,7 +74,7 @@ export const AppNavigator = () => {
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
           <Stack.Screen name="Add Income" component={IncomeForm} />
           <Stack.Screen name="Add Work" component={WorkScreen} />
-          <Stack.Screen name="DateDetail" component={DateDetailScreen} />
+          <Stack.Screen name="DateDetails" component={DateDetailScreen} />
         </>
       ) : (
         <>

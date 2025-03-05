@@ -1,19 +1,16 @@
-import * as Notifications from 'expo-notifications';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+import * as Notifications from 'expo-notifications';
 
-// Extend dayjs with required plugins
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Set the timezone for Nepal
 const TIMEZONE = 'Asia/Kathmandu';
 dayjs.tz.setDefault(TIMEZONE);
 
-// Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -38,20 +35,17 @@ export const scheduleEventNotifications = async ({
   location,
 }: EventNotificationProps) => {
   try {
-    // Validate inputs
     if (!Array.isArray(eventDate) || eventDate.length === 0 || !eventStartTime) {
       console.error('Invalid event data:', { eventDate, eventStartTime });
       return;
     }
 
-    // Get the first date from the array (format: "YYYY-MM-DD")
     const dateStr = eventDate[0];
     if (!dateStr || !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
       console.error('Invalid date format:', dateStr);
       return;
     }
 
-    // Parse the time (format: "h:mm A" or "HH:mm")
     const timeFormat =
       eventStartTime.includes('AM') || eventStartTime.includes('PM') ? 'h:mm A' : 'HH:mm';
     const parsedTime = dayjs(eventStartTime, timeFormat);
@@ -61,7 +55,6 @@ export const scheduleEventNotifications = async ({
       return;
     }
 
-    // Combine date and time with timezone
     const timeStr = parsedTime.format('HH:mm');
     const eventDateTime = dayjs.tz(`${dateStr} ${timeStr}`, 'YYYY-MM-DD HH:mm', TIMEZONE);
 
@@ -72,8 +65,6 @@ export const scheduleEventNotifications = async ({
 
     const now = dayjs().tz(TIMEZONE);
 
-
-    // Cancel any existing notifications for this event
     const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
     const eventNotifications = existingNotifications.filter(
       (notification) => notification.content.data?.eventId === eventId
@@ -83,7 +74,6 @@ export const scheduleEventNotifications = async ({
       await Notifications.cancelScheduledNotificationAsync(notification.identifier);
     }
 
-    // Schedule notification for 1 day before
     const oneDayBefore = eventDateTime.subtract(1, 'day');
     if (oneDayBefore.isAfter(now)) {
       await Notifications.scheduleNotificationAsync({
@@ -98,7 +88,6 @@ export const scheduleEventNotifications = async ({
       });
     }
 
-    // Schedule notification for 1 hour before
     const oneHourBefore = eventDateTime.subtract(1, 'hour');
     if (oneHourBefore.isAfter(now)) {
       await Notifications.scheduleNotificationAsync({

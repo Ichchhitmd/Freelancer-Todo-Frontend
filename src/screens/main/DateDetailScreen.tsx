@@ -1,8 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useGetEventTypes } from 'hooks/eventTypes';
-import { useDeleteEvent, useGetEventById, usePatchEvent } from 'hooks/events';
+import { useDeleteEvent, useGetEventById } from 'hooks/events';
 import { useAddEventIncome } from 'hooks/income';
 import React, { useState, useEffect } from 'react';
 import {
@@ -30,13 +29,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'DateDetail'>;
 
 const DateDetails: React.FC = () => {
   const navigation = useNavigation();
-  const route = useRoute<Props['route']>();
+  const route = useRoute();
   const { details: initialDetails } = route.params;
 
   const { data: details, isLoading, refetch } = useGetEventById(initialDetails.id);
-  const { data: eventTypes } = useGetEventTypes();
   const { mutate: deleteEvent } = useDeleteEvent();
-  const { mutate: updateEvent } = usePatchEvent();
   const { mutate: addEventIncome } = useAddEventIncome();
   const [showEarningsModal, setShowEarningsModal] = useState(false);
   const [newIncome, setNewIncome] = useState<string>('');
@@ -150,7 +147,6 @@ const DateDetails: React.FC = () => {
       .join('');
 
   const DetailCard = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
-    console.log(label, value),
     <View className="m-1 flex-1 flex-row items-center rounded-xl bg-white p-4 shadow-sm">
       <View className="h-10 w-10 items-center justify-center rounded-full bg-red-100">
         <MaterialCommunityIcons name={icon} size={20} color="#ef4444" />
@@ -427,11 +423,11 @@ const DateDetails: React.FC = () => {
               label="Due Amount"
               value={`रू ${parseFloat(details.dueAmount?.toString() || '0').toLocaleString()}`}
             />
-            <FinancialCard
+            {/* <FinancialCard
               icon="currency-inr"
               label="Advance Amount"
               value={`रू ${advancePaymentEvent().toLocaleString()}`}
-            />
+            /> */}
             <View className="mb-24 mt-4 flex-row justify-between gap-2">
               <TouchableOpacity
                 className="flex-1 flex-row items-center justify-center rounded-full bg-green-500 py-3 shadow-md"
