@@ -24,6 +24,7 @@ export default function RegisterScreen() {
     password: '',
     email: '',
     role: 'freelancer',
+    username: '',
   });
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const navigation = useNavigation();
@@ -53,8 +54,8 @@ export default function RegisterScreen() {
       return;
     }
 
-    const { name, phone, password, email } = formData;
-    if (!name || !phone || !password || !email) {
+    const { name, phone, password, email, username } = formData;
+    if (!name || !phone || !password || !email || !username) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -110,6 +111,17 @@ export default function RegisterScreen() {
                     placeholderTextColor="#333333"
                     value={formData.name}
                     onChangeText={(text) => setFormData({ ...formData, name: text })}
+                  />
+                </View>
+
+                <View className="bg-gray-100 mb-4 flex-row items-center rounded-lg border-[0.5px] border-slate-200 p-3">
+                  <MaterialIcons name="person" size={20} className="text-gray-900 mr-3" />
+                  <TextInput
+                    className="text-gray-900 flex-1 text-base"
+                    placeholder="Username"
+                    placeholderTextColor="#333333"
+                    value={formData.username}
+                    onChangeText={(text) => setFormData({ ...formData, username: text })}
                   />
                 </View>
 
